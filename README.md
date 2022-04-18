@@ -1,7 +1,9 @@
 # matj
-A JS math library for running Matlab scripts
+A JS math library for running Matlab scripts.
 
-At present, the linear algebra part has been completed, including eig, inv, lu, hess, roots and fft
+At present, the linear algebra part has been completed, including eig, inv, lu, hess, roots and fft.
+
+In matj/src/matj_assets/assets/test/, you will find 200+ function tests and plot scripts.
 
 To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
 
