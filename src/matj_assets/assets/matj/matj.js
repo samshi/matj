@@ -2065,7 +2065,6 @@ $.E(M, {
   },
   solve   : s => {
     let ss = analysis(s)
-    // setRoot(ss)
 
     // let mathjax_code = trans2MathJax(ss)
     // mathjax_code     = '$' + mathjax_code + '$'
@@ -2084,7 +2083,6 @@ $.E(M, {
     }
 
     let ss = analysis(s)
-    // setRoot(ss)
     return trans2MathObj(ss)
   }
   /*
@@ -2237,64 +2235,65 @@ $.E(M, {
     }
 
   },
-  limit2 : (f, n, a) => {
+  limit2 : (output, f, n, a, ng = '') => {
+    let result
 
-    let an, a0, n0, a1, n1
-    if(a == Infinity){
-      a0 = 1000
-      n0 = limitVal(n, a0)
-      a1 = 1000000
-      n1 = limitVal(n, a1)
-    }
-    else if(a == -Infinity){
-      a0 = -1000
-      n0 = limitVal(n, a0)
-      a1 = -1000000
-      n1 = limitVal(n, a1)
-    }
-    else{
-      an     = [a, a + 0.05, a + 0.02, a + 0.005]
-      let vn = [
-        limitVal(n, an[1]), limitVal(n, an[2]), limitVal(n, an[3]),
-      ]
-
-      let p = M.polyfit(an.slice(1), vn, 2)
-      n0    = M.polyval(p, an[0])
-      console.log(p, n0)
-    }
-
-    // console.log(n, f, v, a)
-
-    let output = [M.mathjax(n)]
     if(isFinite(a)){
       if(typeof (n) == 'object'){
-        // output.push(n.group)
         if(str2reg('(x^w-1)/(x^w-1)').test(f) && a == 1){
-          LIMIT.特定形式mn(output, f, n, a)
+          result = LIMIT.特定形式mn(output, f, n, a, ng)
         }
         else if(str2reg('(1/sin(x)-1/tan(x))').test(f) && a == 0){
-          LIMIT.特定形式sin_tan(output, f, n, a)
+          result = LIMIT.特定形式sin_tan(output, f, n, a, ng)
         }
-        else if(n.group == 'RD'){
-          output.push('比值类极限')
+        else if(str2reg('sin(pi*x)').test(f) && a == 1){
+          result = LIMIT.特定形式sin_pi(output, f, n, a, ng)
+        }
+        else{
 
-          if(n.p2?.p1?.p2 == '-' && (n.p2.p1.p1.group == 'MI' || n.p2.p1.p2.group == 'MI')){
-            LIMIT.分母有理化(output, f, n, a)
+          if(n.group == 'RD'){
+            output.push('比值类极限')
+
+            if(n.p2?.p1?.p2 == '-' && (n.p2.p1.p1.group == 'MI' || n.p2.p1.p2.group == 'MI')){
+              result = LIMIT.分母有理化(output, f, n, a, ng)
+            }
+            else{
+              result = LIMIT.有限比值(output, f, n, a, ng)
+            }
           }
-          else{
-            LIMIT.有限比值(output, f, n, a)
+          else if(n.group == 'MI'){
+            output.push('幂类极限')
+            result = LIMIT.有限幂(output, f, n, a, ng)
           }
-        }
-        else if(n.group == 'MI'){
-          output.push('幂类极限')
-          LIMIT.有限幂(output, f, n, a)
+          else if(n.group == 'MU'){
+            output.push('乘积类极限，分开计算，其中: ')
+            let v1 = eval(M.limit2(output, 全部复原(n.p1.uuid), n.p1, a, ng))
+            let v2 = eval(M.limit2(output, 全部复原(n.p2.uuid), n.p2, a))
+
+            if(isFinite(v1) && v1 != 0){
+              if(!isFinite(v2)){
+                result = v2
+              }
+              else{
+                result = v1 * v2
+              }
+            }
+            else if(isFinite(v2) && v2 != 0){
+              if(!isFinite(v1)){
+                result = v1
+              }
+              else{
+                result = v1 * v2
+              }
+            }
+
+            output.push('整体极限值为: ' + result)
+          }
         }
       }
       else{
         output.push(typeof (n))
       }
-
-      isNaN(n0) || output.push('参考数值逼近结果: ' + n0.toFixed(M.FIXNUM))
     }
     else{
       //Infinity
@@ -2306,44 +2305,45 @@ $.E(M, {
           n  = n.p2.p1
         }
 
-        let result
+        if(n.group == 'NG'){
+          ng = -1
+          f  = f.slice(1)
+          n  = n.p1
+        }
+
         if(n.group == 'RD'){
           output.push('比值类极限')
 
           if(isAdMiFac(n.p1) && isAdMiFac(n.p2)){
-            LIMIT.分子分母有理化(output, f, n, a)
+            LIMIT.分子分母有理化(output, f, n, a, ng)
           }
           else if(isAdMiFac(n.p2)){
-            LIMIT.分母有理化(output, f, n, a)
+            LIMIT.分母有理化(output, f, n, a, ng)
           }
           else{
-            result = LIMIT.无限比值(output, f, n, a)
+            result = LIMIT.无限比值(output, f, n, a, ng)
           }
         }
         else if(n.group == 'MI'){
           output.push('幂类极限')
         }
         else if(isAdMiFac(n)){
-          result = LIMIT.分子有理化(output, f, n, a)
+          result = LIMIT.分子有理化(output, f, n, a, ng)
         }
 
         if(n0 && result){
-          let v = !isNaN(result) || isFraction(result) ? ' = ' + action(n0.p1, result.toNumber()) : ''
-          output.push('原极限值为: ' + n0.p1 + `(${result})` + v)
+          let v  = !isNaN(result) || isFraction(result) ? ' = ' + action(n0.p1, result.toNumber()) : ''
+          result = n0.p1 + `(${result})` + v
+          output.push('原极限值为: ' + result)
 
         }
       }
       else{
         output.push(typeof (n))
       }
-
-      isNaN(n0) || output.push(`参考数值结果1: f(${a0}) -> ` + n0.toFixed(M.FIXNUM))
-      isNaN(n1) || output.push(`参考数值结果2: f(${a1}) -> ` + n1.toFixed(M.FIXNUM))
-
     }
 
-    return output
-
+    return result
   },
   limit  : (f, v, a) => {
     //Limit of symbolic expression
@@ -2391,24 +2391,93 @@ $.E(M, {
 
     a = a ?? v
 
-    let n
+    let n, f0 = f
+
+    let output = []
     if(typeof (f) == 'string'){
       f = f.replace(/\s/g, '')
       n = trans2MathObj(analysis(f))
     }
-    else if(typeof (n1) == 'object' && f.uuid){
+    else if(typeof (f) == 'object' && f.uuid){
       n = f
       f = 全部复原(f.uuid)
     }
     else{
-      n = f
+      return '参数不对'
     }
 
-    let output = M.limit2(f, n, a)
+    let an, a0, n0, a1, n1
+    if(a == Infinity){
+      a0 = 1000
+      n0 = limitVal(n, a0)
+      a1 = 1000000
+      n1 = limitVal(n, a1)
+    }
+    else if(a == -Infinity){
+      a0 = -1000
+      n0 = limitVal(n, a0)
+      a1 = -1000000
+      n1 = limitVal(n, a1)
+    }
+    else{
+      an     = [a, a + 0.05, a + 0.02, a + 0.005]
+      let vn = [
+        limitVal(n, an[1]), limitVal(n, an[2]), limitVal(n, an[3]),
+      ]
 
+      let p = M.polyfit(an.slice(1), vn, 2)
+      n0    = M.polyval(p, an[0]) //* (ng == '-' ? -1 : 1)
+      console.log(p, n0)
+    }
+
+    // console.log(n, f, v, a)
+    output.push(M.mathjaxLim(n, a))
+
+    let ng = ''
+    if(n.group == 'NG'){
+      ng = '-'
+      f  = f.slice(1)
+      n  = n.p1
+    }
+
+    M.limit2(output, f, n, a, ng)
+
+    if(isFinite(a)){
+      isNaN(n0) || output.push('参考数值逼近结果: ' + n0.toFixed(M.FIXNUM))
+    }
+    else{
+      isNaN(n0) || output.push(`参考数值结果1: f(${a0}) -> ` + n0.toFixed(M.FIXNUM))
+      isNaN(n1) || output.push(`参考数值结果2: f(${a1}) -> ` + n1.toFixed(M.FIXNUM))
+    }
     return output.join('<br>')
   },
 
+  transferLimit: (f, a) => {
+    f = f.replace(/\(([\+\-]?\d+)?[\+\-]?x([\+\-]\d+)?\)/g, (find_str) => {
+      let d    = a
+      find_str = find_str.replace(/[\+\-]?\d+/g, single_num => {
+        d += single_num * 1
+        return ''
+      })
+      find_str = find_str.replace(/\([\+\-]?x\)/, single_x => {
+        if(d == 0){
+          if(single_x == '(x)'){
+            return 'y'
+          }
+          return '(-y)'
+        }
+        return (single_x.slice(0, -1) + (d > 0 ? '+' + d : '-' + (-d)) + ')').replace(/x/g, 'y')
+      })
+
+      return find_str
+    })
+
+    f = f.replace(/x/g, '(y' + (a > 0 ? '+' + a : a) + ')')
+    f = f.replace(/y/g, 'x')
+    console.log(f, a)
+
+    return f
+  }
   /*
     limit
     subs
@@ -4790,13 +4859,11 @@ $.E(M, { //todo
 })
 //显示
 $.E(M, {
-  disp     : a => {
+  disp      : a => {
     addToTableOut('disp', a)
   },
-  mathjax  : s => {
-    //https://www.mathjax.org/#demo
+  mathjaxLim: (s, a, ng='') => {
     let ss = analysis(s)
-    // setRoot(ss)
 
     // let mathjax_code = trans2MathJax(ss)
     // mathjax_code     = '$' + mathjax_code + '$'
@@ -4804,7 +4871,35 @@ $.E(M, {
 
     let math_obj = trans2MathObj(ss)
     console.log(math_obj)
-    let code = '$' + obj2mathjax(math_obj) + '$'
+    let code = '$'
+    if(isFinite(a)){
+      code += `\\lim \\limits_{x \\to ${a}}`
+    }
+    else{
+      code += `\\lim \\limits_{x \\to \\infty}`
+    }
+
+    code += ng
+    code += obj2mathjax(math_obj)
+    code += '$'
+    console.log(code)
+
+    return code
+  },
+  mathjax   : (s, ng = '') => {
+    // https://www.mathjax.org/#demo
+    // MathJax常用符号
+    // https://blog.csdn.net/xuejianbest/article/details/80391999?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_default&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_default&utm_relevant_index=1
+
+    let ss = analysis(s)
+
+    // let mathjax_code = trans2MathJax(ss)
+    // mathjax_code     = '$' + mathjax_code + '$'
+    // console.log(mathjax_code)
+
+    let math_obj = trans2MathObj(ss)
+    console.log(math_obj)
+    let code = '$' + ng + obj2mathjax(math_obj) + '$'
     console.log(code)
 
     return code
@@ -4845,7 +4940,7 @@ $.E(M, {
     addToTableOut('mathjax', output)
      */
   },
-  plot     : (...args) => {
+  plot      : (...args) => {
     plot.apply(this, args)
     // if(typeof (z) == 'undefined'){
     //   plot(x.data || x, y.data || y)
@@ -4854,23 +4949,23 @@ $.E(M, {
     //   plot3(x.data || x, y.data || y, z.data || z)
     // }
   },
-  printline: (a, b) => {
+  printline : (a, b) => {
     addToTableOut(b?.name ?? a, b)
   },
-  surf     : (x, y, z) => {
+  surf      : (x, y, z) => {
     plotsurf(x.data || x, y.data || y, z.data || z)
   },
-  setFixNum: n => {
+  setFixNum : n => {
     M.FIXNUM = Math.max(0, Math.min(15, isNaN(n) ? 4 : n | 0))
     return n
   },
-  title    : a => {
+  title     : a => {
     title(a)
   },
-  xlabel   : a => {
+  xlabel    : a => {
     xlabel(a)
   },
-  ylabel   : a => {
+  ylabel    : a => {
     ylabel(a)
   },
 })
@@ -6911,10 +7006,12 @@ function getDegree(a){
 }
 
 function str2reg(s){
-  let map = '()^/-w'
+  let map = '()^/+-*'
   for(let i = map.length - 1; i >= 0; i--){
     let reg = new RegExp('\\' + map[i], 'g')
     s       = s.replace(reg, '\\' + map[i])
   }
+
+  s = s.replace(/w/g, '\\w')
   return new RegExp(s, 'g')
 }

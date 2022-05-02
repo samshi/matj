@@ -16,7 +16,7 @@ function createMatjArea(f){
     BG : '#900',
   })
 
-  P.zoomin = $.C(f, {
+  P.zoomin  = $.C(f, {
     I : '+',
     L : 550,
     T : 10,
@@ -26,7 +26,7 @@ function createMatjArea(f){
     BD: '2px solid #900'
   }).down(eobj => {
     P_MATJ.S({
-      F:P_MATJ.F_*1+2
+      F: P_MATJ.F_ * 1 + 2
     })
   })
   P.zoomout = $.C(f, {
@@ -39,7 +39,7 @@ function createMatjArea(f){
     BD: '2px solid #900'
   }).down(eobj => {
     P_MATJ.S({
-      F:P_MATJ.F_*1-2
+      F: P_MATJ.F_ * 1 - 2
     })
   })
 
@@ -73,6 +73,7 @@ function createMatjArea(f){
       'breakpoints', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'
     ],
     viewportMargin   : Infinity,
+    // keyMap: 'sublime'
   }
 
   P.editor = CodeMirror(function(elt){
@@ -139,8 +140,10 @@ function codeRun(){
     iframe_head.script_id.R();
   }
 
-  var js_code = 'window.clearAll && window.clearAll();\nvar t0=Date.now()\n' + P_JS.editor.getValue() + '\nshowVariable()'
-  // console.log(js_code)
+  var js_code = 'var t0=Date.now()\nfunction runMatJ(){'
+  js_code += 'window.clearAll && window.clearAll();\n' + P_JS.editor.getValue() + '\n'
+  js_code += '}\nrunMatJ()\nshowVariable()'
+
   iframe_head.script_id = $.c($(iframe_head), {
     type: 'text/javascript'
   }, 'script').I(js_code)

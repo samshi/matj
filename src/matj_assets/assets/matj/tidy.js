@@ -514,6 +514,10 @@ function 替换(s, reg_s){
         return s
       }
 
+      if('output' == reg_s && s == 'return'){
+        return s
+      }
+
       if('output' == reg_s && /end/.test(s)){
         return s
       }
