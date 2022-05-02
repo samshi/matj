@@ -8,7 +8,7 @@ randn 正态分布
 matlab多项式操作
 https://blog.csdn.net/qq_33785671/article/details/52378085
 
-matlab公式符号计算推倒
+matlab公式符号计算
 https://blog.csdn.net/qq_33785671/article/details/52378782
 
 数值代数主要知识点
@@ -17,6 +17,15 @@ https://www.renrendoc.com/paper/88085540.html
 MathJax常用符号
 https://blog.csdn.net/xuejianbest/article/details/80391999
 https://blog.csdn.net/anmin1992/article/details/101122045
+
+Matlab教程
+https://www.w3cschool.cn/matlab/matlab-gvky28jd.html
+
+mathematica实验报告(符号计算)
+https://www.docin.com/p-499001372.html?docfrom=rrela
+
+matlab中符号函数教程,MATLAB程序设计教程(9)——MATLAB符号计算
+https://blog.csdn.net/weixin_28799111/article/details/115816338
 
  */
 
@@ -2035,11 +2044,28 @@ upper	将字符串转换为大写
 strjust	对齐字符数组
 */
 })
-//代数，符号计算
+//代数，符号计算 symbolic math
 $.E(M, {
-  solve : s => {
+  numden  : s => {
+    let ss          = analysis(s)
+    let mathjax_obj = trans2MathObj(ss)
+    if(mathjax_obj.group == 'RD'){
+      return [mathjax_obj.p1, mathjax_obj.p2]
+    }
+
+    return ['', '']
+  },
+  simplify: s => {
+    // (x-2)*(x^2+2*x+4)+(x+5)*(x^2-5*x+25)
+    // ans: 117 2x3
+  },
+  expand  : s => {
+    // (a+b)^3
+    // ans: a^3 + 3a^2b +3ab^2 +b^3
+  },
+  solve   : s => {
     let ss = analysis(s)
-    setRoot(ss)
+    // setRoot(ss)
 
     // let mathjax_code = trans2MathJax(ss)
     // mathjax_code     = '$' + mathjax_code + '$'
@@ -2052,22 +2078,13 @@ $.E(M, {
 
     return code
   },
-  numden: s => {
-    let ss          = analysis(s)
-    let mathjax_obj = trans2MathObj(ss)
-    if(mathjax_obj.group == 'RD'){
-      return [mathjax_obj.p1, mathjax_obj.p2]
-    }
-
-    return ['', '']
-  },
-  sym   : s => {
+  sym     : s => {
     if(/^\d+$/g.test(s) && s > Number.MAX_SAFE_INTEGER){
       return BigInt(s)
     }
 
     let ss = analysis(s)
-    setRoot(ss)
+    // setRoot(ss)
     return trans2MathObj(ss)
   }
   /*
@@ -2089,10 +2106,53 @@ $.E(M, {
     // 如果 X 是不为空的非向量 p×m 矩阵，则 Y = diff(X) 返回大小为 (p-1)×m 的矩阵，其元素是 X 的行之间的差分。
     // Y = [X(2,:)-X(1,:); X(3,:)-X(2,:); ... X(p,:)-X(p-1,:)]
 
-    //差分和近似导数；计算x相邻元素之间的差异。
+    // 差分和近似导数；计算x相邻元素之间的差异。
     // 如果X是向量，则diff（X）返回相邻元素之间的差异的向量，比X短一个元素：[X（2）-X（1）X（3）-X（2）... X（N）-X（N-1）]
     //
     // 如果X是一个矩阵，则diff（X）返回行差的矩阵：[X（2：m，...）-X（1：m-1，:)]
+
+    // diff函数用于对符号表达式求导数。该函数的一般调用格式为：
+    // diff(s)：没有指定变量和导数阶数，则系统按findsym函数指示的默认变量对符号表达式s求一阶导数。
+    // diff(s,’v’)：以v为自变量，对符号表达式s求一阶导数。
+    // diff(s,n)：按findsym函数指示的默认变量对符号表达式s求n阶导数，n为正整数。
+    // diff(s,’v’,n)：以v为自变量，对符号表达式s求n阶导数。
+
+    // syms f(x)
+    // f(x) = sin(x^2);
+    // Df = diff(f,x)
+    // Df(x) = 2xcos(x^2)
+    //
+    // syms x t
+    // Df = diff(sin(x*t^2))
+    // Df = t^2*cos(t^2*x)
+    //
+    // Df = diff(sin(x*t^2),t)
+    // Df = 2*t*x*cos(t^2*x)
+    //
+    // syms x y
+    // Df = diff(x*cos(x*y), y, 2)
+    // Df = −x^3*cos(x*y)
+
+    // 导数公式：
+    // x^a        -> ax^(a-1)
+    // e^x        -> e^x
+    // a^x        -> ln(a)*a^x
+    // loga(x)    -> 1/(x*ln(a))
+    // ln(x)      -> 1/x
+    // sin(x)     -> cos(x)
+    // cos(x)     -> -sin(x)
+    // tan(x)     -> sec(x)^2
+    // cot(x)     -> -csc(x)^2
+    // sec(x)     -> sec(x)tan(x)
+    // csc(x)     -> -csc(x)cot(x)
+    // arcsin(x)  -> 1/sqrt(1-x^2)
+    // arccos(x)  -> -1/sqrt(1-x^2)
+    // arctan(x)  -> 1/(1+x^2)
+    // arccot(x)  -> -1/(1+x^2)
+
+    // fg         -> (f'g+fg')
+    // f/g        -> (f'g-fg')/g^2
+    // 1/f        -> -f'/f^2
 
     if(n > 1){
       return M.diff(M.diff(x, n - 1))
@@ -2176,7 +2236,180 @@ $.E(M, {
       }
     }
 
-  }, /*
+  },
+  limit2 : (f, n, a) => {
+
+    let an, a0, n0, a1, n1
+    if(a == Infinity){
+      a0 = 1000
+      n0 = limitVal(n, a0)
+      a1 = 1000000
+      n1 = limitVal(n, a1)
+    }
+    else if(a == -Infinity){
+      a0 = -1000
+      n0 = limitVal(n, a0)
+      a1 = -1000000
+      n1 = limitVal(n, a1)
+    }
+    else{
+      an     = [a, a + 0.05, a + 0.02, a + 0.005]
+      let vn = [
+        limitVal(n, an[1]), limitVal(n, an[2]), limitVal(n, an[3]),
+      ]
+
+      let p = M.polyfit(an.slice(1), vn, 2)
+      n0    = M.polyval(p, an[0])
+      console.log(p, n0)
+    }
+
+    // console.log(n, f, v, a)
+
+    let output = [M.mathjax(n)]
+    if(isFinite(a)){
+      if(typeof (n) == 'object'){
+        // output.push(n.group)
+        if(str2reg('(x^w-1)/(x^w-1)').test(f) && a == 1){
+          LIMIT.特定形式mn(output, f, n, a)
+        }
+        else if(str2reg('(1/sin(x)-1/tan(x))').test(f) && a == 0){
+          LIMIT.特定形式sin_tan(output, f, n, a)
+        }
+        else if(n.group == 'RD'){
+          output.push('比值类极限')
+
+          if(n.p2?.p1?.p2 == '-' && (n.p2.p1.p1.group == 'MI' || n.p2.p1.p2.group == 'MI')){
+            LIMIT.分母有理化(output, f, n, a)
+          }
+          else{
+            LIMIT.有限比值(output, f, n, a)
+          }
+        }
+        else if(n.group == 'MI'){
+          output.push('幂类极限')
+          LIMIT.有限幂(output, f, n, a)
+        }
+      }
+      else{
+        output.push(typeof (n))
+      }
+
+      isNaN(n0) || output.push('参考数值逼近结果: ' + n0.toFixed(M.FIXNUM))
+    }
+    else{
+      //Infinity
+      if(typeof (n) == 'object'){
+        let n0
+        if(n.group == 'AC'){
+          output.push('先计算' + n.p1 + '内的极限')
+          n0 = n
+          n  = n.p2.p1
+        }
+
+        let result
+        if(n.group == 'RD'){
+          output.push('比值类极限')
+
+          if(isAdMiFac(n.p1) && isAdMiFac(n.p2)){
+            LIMIT.分子分母有理化(output, f, n, a)
+          }
+          else if(isAdMiFac(n.p2)){
+            LIMIT.分母有理化(output, f, n, a)
+          }
+          else{
+            result = LIMIT.无限比值(output, f, n, a)
+          }
+        }
+        else if(n.group == 'MI'){
+          output.push('幂类极限')
+        }
+        else if(isAdMiFac(n)){
+          result = LIMIT.分子有理化(output, f, n, a)
+        }
+
+        if(n0 && result){
+          let v = !isNaN(result) || isFraction(result) ? ' = ' + action(n0.p1, result.toNumber()) : ''
+          output.push('原极限值为: ' + n0.p1 + `(${result})` + v)
+
+        }
+      }
+      else{
+        output.push(typeof (n))
+      }
+
+      isNaN(n0) || output.push(`参考数值结果1: f(${a0}) -> ` + n0.toFixed(M.FIXNUM))
+      isNaN(n1) || output.push(`参考数值结果2: f(${a1}) -> ` + n1.toFixed(M.FIXNUM))
+
+    }
+
+    return output
+
+  },
+  limit  : (f, v, a) => {
+    //Limit of symbolic expression
+
+    // limit(f,var,a) returns the Bidirectional Limit of the symbolic expression f when var approaches a.
+    // limit(f,a) uses the default variable found by symvar.
+    // limit(f) returns the limit at 0.
+    // limit(f,var,a,'left') returns the Left Side Limit of f as var approaches a.
+    // limit(f,var,a,'right') returns the Right Side Limit of f as var approaches a.
+
+    // limit(ln(sin(x)), pi/2)        -> 0
+    // limit((sqrt(x+1)-1)/x, 0)      -> 1/2
+    // limit((1-x^(1/3))/(1-x), 0)    -> 1/3
+    // limit((1-cos(x))/x^2, 0)       -> 1/2
+    // limit((1-1/x)^x, inf)          -> e^-1
+    // limit((x+1)^(1/x), inf)        -> 1
+    // limit(x*sin(1/x), 0)           -> 0
+    // limit((2*x^3+x)/(3*x^3+1), 0)  -> 2/3
+    // limit(sin(a*x)/sin(b*x), 0)    -> a/b
+
+    // f=(x*(exp(sin(x))+1)-2*(exp(tan(x))-1))/(x+a) -> (1/2*a*exp(sin(a))+1/2*a-exp(tan(a))+1)/a
+    // limit((1+2*t/x)^(3*x),x,inf)   -> exp(6*t)
+    // f=x*(sqrt(x^2+1)-x);
+    // limit(f,x,inf,’left’)          -> 1/2
+    // f=(sqrt(x)-sqrt(2)-sqrt(x-2))/sqrt(x*x-4);
+    // limit(f,x,2,’right’)           -> -1/2
+
+    // 极限公式
+    // sin(x)         -> x
+    // tan(x)         -> x
+    // arcsin(x)      -> x
+    // arctan(x)      -> x
+    // 1-cos(x)       -> 1/2*x^2
+    // 1-cos(x^2)     -> 1/2*x^4
+    // (1+x)^(1/n)-1  -> x/n
+    // e^x-1          -> x
+    // e^(x^2)-1      -> x^2
+    // a^x-1          -> x*ln(a)
+    // ln(1+x)        -> x
+    // (1+1/x)^x      -> e      inf
+    // (1+x)^(1/x)    -> e
+
+    // 大学数学求极限常用公式及简单套用
+    // https://baijiahao.baidu.com/s?id=1615042947782687596&wfr=spider&for=pc
+
+    a = a ?? v
+
+    let n
+    if(typeof (f) == 'string'){
+      f = f.replace(/\s/g, '')
+      n = trans2MathObj(analysis(f))
+    }
+    else if(typeof (n1) == 'object' && f.uuid){
+      n = f
+      f = 全部复原(f.uuid)
+    }
+    else{
+      n = f
+    }
+
+    let output = M.limit2(f, n, a)
+
+    return output.join('<br>')
+  },
+
+  /*
     limit
     subs
     collect
@@ -2187,27 +2420,46 @@ $.E(M, {
 })
 //多项式
 $.E(M, {
-  deconv: (u, v) => {
+  deconv    : (u, v) => {
     // 去卷积和多项式除法
     // [q,r] = deconv(u,v) 使用长除法将向量 v 从向量 u 中去卷积，并返回商 q 和余数 r，以使 u = conv(v,q) + r。
     // 如果 u 和 v 是由多项式系数组成的向量，则对它们去卷积相当于将 u 表示的多项式除以 v 表示的多项式。
-    u     = (u.data ?? u).slice()
-    v     = v.data ?? v
+    u = (u.data ?? u).slice()
+    v = v.data ?? v
+
+    if(v.fraction){
+      //有根号
+      let n = 1 / v.fraction
+      if(n % 1 == 0){
+        //整数倍
+        let u1 = []
+        for(let i = u.length - 1; i >= 0; i--){
+          u1[i * n] = i == u.length - 1 ? Math.pow(u[i], n) : u[i]
+        }
+        u = u1
+      }
+    }
+
     let q = []
     let r = []
     let t = []
     let rate
     for(let i = 0, il = u.length - v.length; i <= il; i++){
-      rate = u[i] / v[0]
+      rate = (u[i] ?? 0) / v[0]
       q[i] = rate
       for(let j = v.length - 1; j >= 0; j--){
-        u[i + j] -= v[j] * rate
+        u[i + j] = (u[i + j] ?? 0) - (v[j] || 0) * rate
       }
     }
 
     for(let i = u.length - v.length + 1; i < u.length; i++){
       t.push(u[i])
     }
+
+    if(v.fraction){
+      q.fraction = v.fraction
+    }
+
     return [ndarray(q), ndarray(u.slice()), ndarray(t)]
   },
   dx        : (v) => {
@@ -2218,42 +2470,244 @@ $.E(M, {
     }
     return dv
   },
-  factor    : n => {
-    n = analysis(n)
-    console.log(n)
-    if(Array.isArray(n)){
-      // 多项式因式分解
-      let roots = M.roots(n).single.data
-      let s     = n[0] != 1 ? n[0] + '*' : ''
-      for(var i = 0, l = roots.length; i < l; i++){
-        if(isComplex(roots[i])){
-          let b = -keepZero(2 * roots[i].r)
-          let c = keepZero(roots[i].r ** 2 + roots[i].i ** 2)
-          s += b > 0 ? `(x^2+${b == 1 ? '' : b}x+${c})` : `(x^2-${b == -1 ? '' : -b}x+${c})`
-          i++
+  factorRoot: (n, k, space = 'rational') => {
+    if(!Array.isArray(n)){
+      return 'factorRoot: only array '
+    }
+    // 多项式因式分解
+    let roots  = M.roots(n).single.data
+    let output = []
+    let left   = n
+    if(n[0] != 1){
+      output.push(n[0])
+    }
+    // let s     = n[0] != 1 ? n[0] + '*' : ''
+    let x = k[0]
+    let y = k[1] ?? ''
+
+    for(var i = 0, l = roots.length; i < l; i++){
+      if(isComplex(roots[i]) && space != 'complex'){
+        let b = -keepZero(2 * roots[i].r)
+        let c = keepZero(roots[i].r ** 2 + roots[i].i ** 2)
+        i++
+        if((!isRational(b) || !isRational(c)) && space == 'rational'){
+          continue
+        }
+
+        if(space == 'rational'){
+          let [q, r, s] = M.deconv(left, [1, b, c])
+          console.log(left, q, r, s)
+          left = q.data
+        }
+
+        let bs
+        let cs
+
+        if(b == 0){
+          bs = ''
+        }
+        else if(b == 1){
+          bs = y ? '+' + x + '*' + y : '+' + x
+        }
+        else if(b == -1){
+          bs = y ? '-' + x + '*' + y : '-' + x
+        }
+        else if(b > 0){
+          bs = y ? '+' + b + x + '*' + y : '+' + b + x
         }
         else{
-          if(roots[i] > 0){
-            s += `(x-${roots[i]})`
+          bs = y ? b + x + '*' + y : b + x
+        }
+
+        if(c == 0){
+          cs = ''
+        }
+        else if(c == 1){
+          cs = y ? '+' + y + '^2' : '+1'
+        }
+        else if(c == -1){
+          cs = y ? '-' + y + '^2' : '-1'
+        }
+        else if(c > 0){
+          cs = y ? '+' + b + y + '^2' : '+' + c
+        }
+        else{
+          cs = y ? b + y + '^2' : c
+        }
+
+        output.push(`${x}^2${bs}${cs}`)
+        // s += `(${x}^2${bs}${cs})`
+
+      }
+      else{
+        let r = roots[i]
+        let b
+        if(isComplex(r)){
+          b = -r.r
+          if(b == 0){
+            bs = ''
+          }
+          else if(b == 1){
+            bs = y ? '+' + y : '+1'
+          }
+          else if(b == -1){
+            bs = y ? '-' + y : '-1'
+          }
+          else if(b > 0){
+            bs = y ? '+' + b + y : '+' + b
           }
           else{
-            s += `(x+${-roots[i]})`
+            bs = y ? b + y : b
+          }
+
+          let c = -r.i
+          if(c == 1){
+            bs += y ? '+' + y : '+'
+          }
+          else if(c == -1){
+            bs += y ? '-' + y : '-'
+          }
+          else if(c > 0){
+            bs += y ? '+' + c + y : '+' + c
+          }
+          else{
+            bs += y ? c + y : '' + c
+          }
+          bs += 'i'
+        }
+        else{
+          b = -r
+          if(!isRational(b) && space == 'rational'){
+            continue
+          }
+
+          if(space == 'rational'){
+            let [q, r, s] = M.deconv(left, [1, b])
+            console.log(left, q, r, s)
+            left = q.data
+          }
+
+          if(b == 0){
+            bs = ''
+          }
+          else if(b == 1){
+            bs = y ? '+' + y : '+1'
+          }
+          else if(b == -1){
+            bs = y ? '-' + y : '-1'
+          }
+          else if(b > 0){
+            bs = y ? '+' + b + y : '+' + b
+          }
+          else{
+            bs = y ? b + y : b
           }
 
         }
-      }
 
-      return s
+        output.push(`${x}${bs}`)
+
+        // s += `(${x}${bs})`
+      }
     }
+
+    if(left.length == 1 && left[0] == 1 || space != 'rational'){
+
+    }
+    else{
+      let s = arr2express(left, x)
+
+      output.push(s)
+    }
+    return output
+  },
+  factor    : (n1, space) => {
+    let n
+    if(typeof (n1) == 'string'){
+      n = trans2MathObj(analysis(n1))
+    }
+    else if(typeof (n1) == 'object' && n1.uuid){
+      n  = n1
+      n1 = 全部复原(n1.uuid)
+    }
+    else{
+      n = n1
+    }
+
+    // console.log(n1, n)
 
     if(typeof (n) == 'object' && n.group == 'RD'){
       // 分数因式分解
-      let p2nda  = M.factor(n.p2)
-      p2nda.data = p2nda.data.map(n => fraction(1, n))
-      return M.concatenate(M.factor(n.p1), p2nda)
+      let p2nda = M.factor(n.p2)
+      p2nda     = p2nda.map(n => fraction(1, n))
+      return M.factor(n.p1).concat(...p2nda)
+      // return M.concatenate(M.factor(n.p1), p2nda)
+    }
+
+    if(typeof (n) == 'object' && n.group == 'AD'){
+      // 多项式因式分解
+      let k        = checkXY(n1)
+      let main_key = k[0]
+      let sub_key
+      if(k == false){
+        console.log('多个变量，单项的幂不一致或变量数超过2个，不可分解')
+        return [n1]
+      }
+      else if(k.length == 2){
+        //存在两个变量，
+        main_key = k[0] > k[1] ? k[1] : k[0]
+        sub_key  = k[0] > k[1] ? k[0] : k[1]
+        n        = n1.replace(/\*?\s*[a-z]+(\^\d+)?/g, item => {
+          let s = item
+          if(item[0] == '*'){
+            s = item.slice(1).trim()
+          }
+          if(s.slice(0, sub_key.length) == sub_key){
+            return item[0] == '*' ? '' : 1
+          }
+
+          return item
+        })
+
+        console.log(n1, n)
+        n = trans2MathObj(analysis(n))
+      }
+
+      let obj_arr = []
+      obj_ad2array(obj_arr, n)
+      let c = obj_arr.c
+      delete obj_arr.c
+      let key = Object.keys(obj_arr)
+      if(key[0] != main_key){
+        return 'something wront'
+      }
+
+      obj_arr[k[0]][0] = c
+      return M.factorRoot(obj_arr[k[0]].reverse(), [main_key, sub_key], space)
+    }
+
+    let arr = []
+
+    if(typeof (n) == 'object' && n.group == 'NG'){
+      // 多项式因式分解
+      arr.push(-1)
+      console.log('-1 是第一个因子')
+      n = n.p1
+    }
+
+    if(typeof (n) == 'object' && n.group == 'MU'){
+      // 多项式因式分解
+      obj_mu2array(arr, n)
+      return arr
     }
 
     let numberlize = function(n){
+      if(typeof (n) == 'string'){
+        //如果是BigInt被引号包裹，去掉引号
+        n = n.replace(/n$/, '')
+        n = BigInt(n)
+      }
+
       if(typeof (n) == 'bigint'){
         if(n < Number.MAX_SAFE_INTEGER){
           return parseInt(n)
@@ -2381,22 +2835,7 @@ $.E(M, {
       break
     }
 
-    // let output = ''
-    // let pass = false
-    // for(let i = 0; M.FACTOR[i] <= m; i++){
-    //   if(num % M.FACTOR[i] == 0){
-    //     pass = true
-    //     break
-    //   }
-    // }
-
-    // if(!pass){
-    //   output+=','+num
-    //   M.FACTOR.push(num)
-    // }
-    // console.log(output)
-
-    return ndarray(result)
+    return result // ndarray(result)
 
     function getNextPrime(n){
       while(true){
@@ -2534,7 +2973,7 @@ $.E(M, {
     else if(n == 5){
       //https://baike.baidu.com/item/%E4%B8%80%E5%85%83%E5%9B%9B%E6%AC%A1%E6%96%B9%E7%A8%8B
       //假设一元四次方程x^4+bx^3+cx^2+dx+e=0
-      //先求配平参数y，y是三次方程v的一个实根
+      //先求配平参数y，y是三次方程u的一个实根
       let b = v[1]
       let c = v[2]
       let d = v[3]
@@ -2553,37 +2992,53 @@ $.E(M, {
       ]
       //u1 判别式为0，简化为1元1次方程
       // mx + n = 0
-      let m = Math.sqrt(u1[0])
-      let n = u1[1] / u1[0] / 2 * m
-      // console.log('mn',m,n)
+      if(u1[0]){
+        let m = Math.sqrt(u1[0])
+        let n = u1[1] / u1[0] / 2 * m
+        // console.log('mn',m,n)
 
-      //次数较高的2次方程-1次方程=0
-      let u2_1 = [
-        1, b / 2 - m, y / 2 - n
-      ]
-      let u2_2 = [
-        1, b / 2 + m, y / 2 + n
-      ]
+        //次数较高的2次方程-1次方程=0
+        let u2_1 = [
+          1, b / 2 - m, y / 2 - n
+        ]
+        let u2_2 = [
+          1, b / 2 + m, y / 2 + n
+        ]
 
-      let rootx1 = M.findRoots(u2_1, fuzhu)
-      let rootx2 = M.findRoots(u2_2, fuzhu)
-      console.log(n, fuzhu, '找到的根:', rootx1, rootx2)
+        let rootx1 = M.findRoots(u2_1, fuzhu)
+        let rootx2 = M.findRoots(u2_2, fuzhu)
+        console.log(n, fuzhu, '找到的根:', rootx1, rootx2)
 
-      let result = {
-        real: rootx1.real.concat(...rootx2.real).sort(mysort),
-        imag: (rootx1.imag || []).concat(...(rootx2.imag || []))
+        let result = {
+          real: rootx1.real.concat(...rootx2.real).sort(mysort),
+          imag: (rootx1.imag || []).concat(...(rootx2.imag || []))
+        }
+
+        //let w = v.slice()
+        // for(let i=0; i<result.real.length; i++){
+        //   w       = M.lowerDimension(result.real[i], w)
+        //   console.log('lowerDimension', w)
+        // }
+        // for(let i=0; i<result.imag.length; i+=2){
+        //   w       = M.lowerDimensionComplex(result.imag[i], w)
+        //   console.log('lowerDimension', w)
+        // }
+        return result
       }
+      else{
+        let u2 = [
+          1, b / 2, y / 2
+        ]
 
-      //let w = v.slice()
-      // for(let i=0; i<result.real.length; i++){
-      //   w       = M.lowerDimension(result.real[i], w)
-      //   console.log('lowerDimension', w)
-      // }
-      // for(let i=0; i<result.imag.length; i+=2){
-      //   w       = M.lowerDimensionComplex(result.imag[i], w)
-      //   console.log('lowerDimension', w)
-      // }
-      return result
+        let rootx = M.findRoots(u2, fuzhu)
+
+        let result = {
+          real: rootx.real.concat(...rootx.real).sort(mysort),
+          imag: (rootx.imag || []).concat(...(rootx.imag || []))
+        }
+
+        return result
+      }
     }
     else if(n > 5){
       let to = '无效解', to_v
@@ -2993,7 +3448,11 @@ $.E(M, {
     return NaN
   },
   polyvalNum: (p, x) => {
-    p       = p.data || p
+    p = p.data || p
+    if(p.fraction){
+      x = Math.pow(x, p.fraction)
+    }
+
     let fun = n => {
       let sum = p[0]
       for(let i = 1, l = p.length; i < l; i++){
@@ -3091,7 +3550,23 @@ $.E(M, {
 })
 //变换
 $.E(M, {
-  /*
+  laplace: () => {
+    // laplace(f) returns the Laplace Transform of f. By default, the independent variable is t and the transformation variable is s.
+    // laplace(f,transVar) uses the transformation variable transVar instead of s.
+    // laplace(f,var,transVar) uses the independent variable var and the transformation variable transVar instead of t and s, respectively.
+
+    // syms x y
+    // f = 1/sqrt(x);
+    // laplace(f)
+    // ans =
+    //   pi^(1/2)/s^(1/2)
+
+    // syms a t
+    // f = exp(-a*t);
+    // laplace(f)
+    // ans =
+    //   1/(a + s)
+  }, /*
   laplace
   ilaplace
   fourier
@@ -3100,6 +3575,8 @@ $.E(M, {
 })
 //三角函数
 $.E(M, {
+  // 常用三角函数公式
+  // https://wenku.baidu.com/link?url=WCV1ZboOraYou7UWQtTKrHYCENCUUwKprjpAhwIMobmrjirlSOqFjLvQ5f3SXhkO8wGk17yCZpfuOxc0FoThxTMsxzpPQMdNgoJodS1942fu8vGxe3bfVzL_vGGWsi54
   acosd : a => {
     return angle2degree(action('acos', a))
   },
@@ -3787,6 +4264,9 @@ $.E(M, {
     else if(Array.isArray(a)){
       b = a.map(f)
     }
+    else{
+      b = f(a)
+    }
     return b
   },
   power     : (a, n) => {
@@ -4314,6 +4794,22 @@ $.E(M, {
     addToTableOut('disp', a)
   },
   mathjax  : s => {
+    //https://www.mathjax.org/#demo
+    let ss = analysis(s)
+    // setRoot(ss)
+
+    // let mathjax_code = trans2MathJax(ss)
+    // mathjax_code     = '$' + mathjax_code + '$'
+    // console.log(mathjax_code)
+
+    let math_obj = trans2MathObj(ss)
+    console.log(math_obj)
+    let code = '$' + obj2mathjax(math_obj) + '$'
+    console.log(code)
+
+    return code
+    /*
+    // s是多项式的数组形式
     let output = ''
 
     let fx = (c, n) => {
@@ -4347,6 +4843,7 @@ $.E(M, {
 
     console.log(output)
     addToTableOut('mathjax', output)
+     */
   },
   plot     : (...args) => {
     plot.apply(this, args)
@@ -5203,6 +5700,10 @@ function variableValue(a){
   else if(myNaN(a)){
     return 'NaN'
   }
+  else if(Array.isArray(a)){
+    a = a.map(s => typeof (s) != 'string' ? s : s.replace(/\s*\+\s*/g, ' + ').replace(/\s*\-\s*/g, ' - '))
+    return '[ <br>&nbsp; ' + a.join(', <br>&nbsp; ') + ' <br>]'
+  }
   else{
     return a
   }
@@ -5301,7 +5802,7 @@ function nearZeroVec(v){
   }
 
   for(let i = v.length - 1; i >= 0; i--){
-    if(!v[i] || !nearZero(v[i])){
+    if(v[i] || !nearZero(v[i])){
       return false
     }
   }
@@ -5330,7 +5831,10 @@ function vecadd(a, b, ...m){
   else if(ta == 'object' && tb == 'object'){
     [c, d] = a.length > b.length ? [a.slice(), b] : [b.slice(), a]
     l      = c.length - d.length
-    d.forEach((n, i) => c[i + l] = (c[i + l] || 0) + (n || 0))
+    for(let i = d.length - 1; i >= 0; i--){
+      c[i + l] = (c[i + l] || 0) + (d[i] || 0)
+    }
+
     result = c
   }
 
@@ -5358,23 +5862,28 @@ function vecmulti(a, b, ...m){
   }
   else if(ta == 'number' && tb == 'object'){
     c = b.slice()
-    c.forEach((n, index) => c[index] = (c[index] || 0) * a)
+    for(let i = c.length - 1; i >= 0; i--){
+      c[i] = (c[i] || 0) * a
+    }
+
     result = c
   }
   else if(ta == 'object' && tb == 'number'){
     c = a.slice()
-    c.forEach((n, index) => c[index] = (c[index] || 0) * b)
+    for(let i = c.length - 1; i >= 0; i--){
+      c[i] = (c[i] || 0) * b
+    }
     result = c
   }
   else if(ta == 'object' && tb == 'object'){
     c = []
 
-    a.forEach((an, ai) => {
-      b.forEach((bn, bi) => {
+    for(let ai = a.length - 1; ai >= 0; ai--){
+      for(let bi = b.length - 1; bi >= 0; bi--){
         let i = ai + bi
-        c[i]  = (c[i] || 0) + (an || 0) * (bn || 0)
-      })
-    })
+        c[i]  = (c[i] || 0) + (a[ai] || 0) * (b[bi] || 0)
+      }
+    }
 
     result = c
   }
@@ -6385,4 +6894,27 @@ function UNINDEX(n){
 
 function myNaN(a){
   return isNaN(a) && typeof (a) == 'number'
+}
+
+function isRational(n){
+  return Math.abs(n) % 1 == 0
+}
+
+function getDegree(a){
+  let n = a.length * (a.fraction || 1)
+  if(a.times){
+    if(a.times.log){
+      n += a.times.log
+    }
+  }
+  return n
+}
+
+function str2reg(s){
+  let map = '()^/-w'
+  for(let i = map.length - 1; i >= 0; i--){
+    let reg = new RegExp('\\' + map[i], 'g')
+    s       = s.replace(reg, '\\' + map[i])
+  }
+  return new RegExp(s, 'g')
 }

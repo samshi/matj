@@ -1,7 +1,18 @@
 # matj
-A JS math library for running Matlab scripts.
+MaJ is a JS math library for running Matlab scripts.
 
-At present, the linear algebra part has been completed, including eig, inv, lu, hess, roots and fft.
+MatJ is a online scientific computing platform, which aims to provide open source scientific computing and numerical analysis tools compatible with MATLAB syntax
+
+Matj is a cross platform web DAPP that supports windows, Linux, MacOS, Android and tablets
+
+Include:
+base: ones, zeros, eye, linear, linspace, all trigonometric
+matrix: blkdiag, bounds, cat, diag, flip, repmat, reshape, rot90
+linear algebra: chol, cond, det, eig, hess,hilb, inv, lu, magic, norm, orth, pascal, pinv, qr, rref, svd, tril, triu
+polynomial: factor, fzero, polyval, roots
+differential/integral: diff, polyint, polyder, solve, sym
+
+
 
 In matj/src/matj_assets/assets/test/, you will find 200+ function tests and plot scripts.
 

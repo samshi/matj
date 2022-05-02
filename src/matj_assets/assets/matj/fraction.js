@@ -22,8 +22,8 @@ function Fraction(n, d){
     throw new TypeError()
   }
 
-  this.n = n
-  this.d = d
+  this.n = d > 0 ? n : -n
+  this.d = d > 0 ? d : -d
 
   return this.reduction()
 }
@@ -39,6 +39,8 @@ Fraction.prototype.reduction = function(){
 
 //最大公约数 greatest common divisor
 Fraction.prototype.gcd = function(a, b){
+  a = Math.abs(a)
+  b = Math.abs(b)
   let max = Math.max(a, b)
   let min = Math.min(a, b)
   while(1){
@@ -164,11 +166,15 @@ Number.prototype.toNumber = function(){
   return this
 }
 
-Array.prototype.unique = function(){
-  for(let i = this.length - 1; i >= 0; i--){
-    if(this.indexOf(this[i]) != i){
-      //说明前面还有同样的值
-      this.splice(i, 1)
-    }
-  }
+String.prototype.toNumber = function(){
+  return +this
 }
+
+// Array.prototype.unique = function(){
+//   for(let i = this.length - 1; i >= 0; i--){
+//     if(this.indexOf(this[i]) != i){
+//       //说明前面还有同样的值
+//       this.splice(i, 1)
+//     }
+//   }
+// }

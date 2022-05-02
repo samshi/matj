@@ -107,6 +107,8 @@ function trans2js(s, fgroup = []){
           }
 
           fun = c.slice(0, -10).trim()
+          group += fun
+
           arg = c.slice(-10)
           // c   = `${act}(this.${fun}??"${fun}",${arg})`
           f   = M[fun] ? `"${fun}"` : `typeof(${fun})!='undefined'?${fun}:"${fun}"` //`"${fun}"`
@@ -246,8 +248,11 @@ function trans2js(s, fgroup = []){
             c = '["' + a.join('","') + '"]'
           }
 
-          if(fgroup[0] == 'ACfactor' && !/_AC_/.test(c)){
-            return '"' + 全部复原(c) + '"'
+          if(/A\w(factor|limit|solve|mathjax|simplify|expand)$/.test(fgroup[0])){ // && !/_AC_/.test(c)
+            let s = 全部复原(c)
+            let a = s.split(',')
+            a[0] = '"' + a[0] + '"'
+            return a.join(',')
           }
 
           break

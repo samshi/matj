@@ -124,6 +124,11 @@ function arrConcat(a, d, shape){
         result[i] = a[i]
       }
     }
+
+    if(a.fraction){
+      result.fraction = a.fraction
+    }
+
     return result
   }
   else{

@@ -127,20 +127,20 @@ let SYMS = {
     scientific: ['SN', /[\+\-]?\d(\.\d+)?e[\+\-]?\d+/gi],
     complex   : ['CP', /(([\+\-]\s*)?\d*(\.\d+)?\s*[\+\-]?)?\s*\d+(\.\d+)?[ij]\b/g], //虚数，ij专用，变量不得使用 //-i
 
-    action    : ['AC', /\w+[ \t]*_\d{5}_BR_/g],
+    action: ['AC', /\w+[ \t]*_\d{5}_BR_/g],
 
     //优先级 2 矩阵转置和乘方：转置（.'）、共轭转置（'）、乘方（.^）、矩阵乘方（^）
     dottran: ['DZ', /\w+\s*\.\'/g],  // .' 矩阵转置
     tran   : ['DG', /\w+\s*\'/g],    // ' 矩阵共轭转置
     power  : ['DE', /[\w\.]+\s*\.\^\s*[\w\.]+/g],  // .^ 乘方
-    mpower : ['MI', /[a-z]\s*\^\s*[\w\.]+(?!\^)/ig],    // ^ 矩阵乘方
-    mpower2: ['MI', /_\d{5}_BR_\s*\^\s*[\w\.]+(?!\^)/g],    // ^ 矩阵乘方
+    mpower : ['MI', /[\w\.]+\s*\^\s*[\w\.]+(?!\^)/g],    // ^ 矩阵乘方
+    mpower2: ['MI', /_\d{5}_BR_\s*\^\s*[\w\.]+(?!\^)/g],    // ^ 矩阵乘方 mpower 覆盖 mpower2，多余吗？
 
     //优先级 3 一元加法（+）、—元减法（-）、取反（~）
 
     //优先级 4 乘法（.*）、矩阵乘法（*）、右除（./）、左除（.\）、矩阵右除（/）、矩阵左除（\）
-    times   : ['DM', /[\+\-]?\s*[\w\.]*\w+\s*\.\*\s*[\w\.]*\w+/],  // .* 乘
-    mtimes  : ['MU', /[\+\-]?\s*[\w\.]*\w+\s*\*\s*[\w\.]*\w+/],    // * 矩阵乘
+    times   : ['DM', /[\w\.]*\w+\s*\.\*\s*[\w\.]*\w+/],  // .* 乘
+    mtimes  : ['MU', /[\w\.]*\w+\s*\*\s*[\w\.]*\w+/],    // * 矩阵乘
     rdivide : ['DR', /[\w\.]*\w+\s*\.\/\s*[\w\.]*\w+/],  // 右除（./）
     ldivide : ['DL', /[\w\.]*\w+\s*\.\\\s*[\w\.]*\w+/],  // 左除（.\）
     mrdivide: ['RD', /[\w\.]*\w+\s*\/\s*[\w\.]*\w+/],    // 矩阵右除（/）
@@ -152,6 +152,7 @@ let SYMS = {
     '+noblank': ['AD', /[\w\.]+[\+\-][\w\.]+/], // '-'       : ['MN', /[\+\-]?[\w\.]+\s*\-\s*[\w\.]+/g],
     // '-noblank': ['MN', /[\w\.]+\-[\w\.]+/g],
     '~'       : ['NT', /[\~\!]\s*[\w\.]+/g],
+    nagtive   : ['NG', /\-\s*[_a-zA-Z]([\w\.]*\w)*/g],      // 自负 -xxx
 
     //优先级 6 冒号运算符（:）
 
@@ -176,8 +177,492 @@ let SYMS = {
   },
 }
 
+let LIMIT = {
+  特定形式mn     : (output, f, n, a) => {
+    let x = n.p1.p1.p1.p2
+    let y = n.p2.p1.p1.p2
+    output.push(`分子分解为多项式: $(x-1)(x^{${x}-1}+x^{${x}-2}+...+1)$`)
+    output.push(`分母分解为多项式: $(x-1)(x^{${y}-1}+x^{${y}-2}+...+1)$`)
+    result = `${x}/${y}`
+    output.push(`极限值为: ${result}`)
+    return result
+  },
+  特定形式sin_tan: (output, f, n, a) => {
+    let f1 = f.replace(str2reg('1/sin(x)-1/tan(x)'), '(1-cos(x))/sin(x)')
+    let n1 = trans2MathObj(analysis(f1))
+    output.push('转换为: ' + M.mathjax(n1))
+    let n2 = objSimplify(n1)
+    // output.push('转换为: ' + M.mathjax(n2))
+    output.push(...M.limit2('', n2, a).slice(0, -1))
+    // return result
+  },
+  无限比值       : (output, f, n, a) => {
+    let n_d   = [0]
+    n_d.const = []
+    infiniteDegree(n_d, n.p1)
+    output.push('分子简化为多项式: ' + arr2express(n_d, 'x'))
+
+    let d_d   = [0]
+    d_d.const = []
+    infiniteDegree(d_d, n.p2)
+    output.push('分母简化为多项式: ' + arr2express(d_d, 'x'))
+
+    let n_d_l = getDegree(n_d)
+    let d_d_l = getDegree(d_d)
+    let result
+    if(n_d_l == d_d_l){
+      let fra = fraction(n_d[0], d_d[0])
+      result  = polyCombine([fra, ...n_d.const], d_d.const)
+      output.push('比值级数一致，极限值为: ' + result)
+      if(isFraction(fra)){
+        fra.d > 10 && output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+      }
+    }
+    else if(n_d_l > d_d_l){
+      let [q, u, t] = M.deconv(n_d, d_d)
+      console.log({
+        q,
+        u,
+        t
+      })
+      if(nearZeroVec(u.data)){
+        output.push('分子因式分解: (' + arr2express(d_d, 'x') + ')(' + arr2express(q.data, 'x') + ')')
+        output.push('约分后: ' + arr2express(q.data, 'x'))
+        result = M.polyval(q, a)
+        output.push('极限值为: ' + result)
+      }
+      else{
+        result = Infinity
+        output.push('分子级数高，极限值为: ' + result)
+      }
+    }
+    else{
+      result = 0
+      output.push('分母级数高，极限值为: ' + result)
+    }
+
+    return result
+  },
+  有限比值       : (output, f, n, a) => {
+    let numerator   = limitVal(n.p1, a)
+    let denominator = limitVal(n.p2, a)
+    if(!denominator){
+      output.push('分母极限值为零')
+      let n_d   = []
+      n_d.const = []
+      limitDegree(n_d, n.p1)
+      output.push('分子简化为多项式: ' + arr2express(n_d, 'x'))
+
+      let d_d   = []
+      d_d.const = []
+      limitDegree(d_d, n.p2)
+      output.push('分母简化为多项式: ' + arr2express(d_d, 'x'))
+
+      let n_d_l = getDegree(n_d)
+      let d_d_l = getDegree(d_d)
+      let result
+      if(n_d_l == d_d_l){
+        let fra = fraction(n_d[0], d_d[0])
+        result  = polyCombine([fra, ...n_d.const], d_d.const)
+        output.push('比值级数一致，极限值为: ' + result)
+        isFraction(fra)
+        fra.d > 10 && output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+      }
+      else if(n_d_l > d_d_l){
+        let [q, u, t] = M.deconv(n_d, d_d)
+        console.log({
+          q,
+          u,
+          t
+        })
+        if(nearZeroVec(u.data)){
+          output.push('分子因式分解: (' + arr2express(d_d, 'x') + ')(' + arr2express(q.data, 'x') + ')')
+          output.push('约分后: ' + arr2express(q.data, 'x'))
+          result = M.polyval(q, a)
+          output.push('极限值为: ' + result)
+        }
+        else{
+          result = 0
+          output.push('分子级数高，极限值为: ' + result)
+        }
+      }
+      else{
+        result = Infinity
+        output.push('分母级数高，极限值为: ' + result)
+      }
+      return result
+    }
+    else{
+      result = fraction(numerator, denominator)
+      output.push('极限值为: ' + result)
+      denominator > 10 && output.push(result + ' = ' + result.toNumber())
+    }
+  },
+  有限幂        : (output, f, n, a) => {
+    let mi_value = limitVal(n.p2, a)
+    let result
+    if(!isFinite(mi_value)){
+      output.push('幂极限值为: ' + mi_value)
+      let e_mi = limitMiAd(n.p1)
+      output.push('极限转换为: e^' + e_mi + '*' + 全部复原(n.p2.uuid))
+
+      let [x_mi, x_c] = limitMu(e_mi, n.p2)
+      if(x_c[0] == 1){
+        x_c.shift()
+      }
+
+      let mi = (x_mi == 0 ? '' : (x_c.length ? '(' : '') + (x_mi == 1 ? 'x*' : 'x^' + x_mi + '*') + x_c.join('*')) + (x_c.length ? ')' : '')
+      result = 'e' + (mi ? '^' + mi : '')
+      output.push('极限值为: ' + result)
+    }
+
+    return result
+  },
+  分母有理化      : (output, f, n, a) => {
+    let p1 = objCopy(n.p1)
+    if(p1.fgroup){
+      p1.fgroup = ['MU']
+    }
+
+    let n1 = {
+      group: 'RD',
+      p1   : {
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : p1,
+        p2    : {
+          fgroup: ['MU'],
+          group : 'BR',
+          p1    : {
+            fgroup: ['BR'],
+            group : 'AD',
+            p1    : n.p2.p1.p1,
+            p2    : '+',
+            p3    : n.p2.p1.p3
+          }
+        }
+      },
+      p2   : {
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : {
+          fgroup: ['MU'],
+          group : 'BR',
+          p1    : n.p2
+        },
+        p2    : {
+          fgroup: ['MU'],
+          group : 'BR',
+          p1    : {
+            fgroup: ['MU'],
+            group : 'AD',
+            p1    : n.p2.p1.p1,
+            p2    : '+',
+            p3    : n.p2.p1.p3
+          }
+        }
+      }
+    }
+
+    output.push('分母有理化: ' + M.mathjax(n1))
+
+    let n2 = {
+      group: 'RD',
+      p1   : {
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : p1,
+        p2    : {
+          fgroup: ['MU'],
+          group : 'BR',
+          p1    : {
+            fgroup: ['BR'],
+            group : 'AD',
+            p1    : objCopy(n.p2.p1.p1),
+            p2    : '+',
+            p3    : objCopy(n.p2.p1.p3)
+          }
+        }
+      },
+      p2   : objSimplify({
+        fgroup: ['RD'],
+        group : 'AD',
+        p1    : getPow2(n.p2.p1.p1, 'MU'),
+        p2    : '-',
+        p3    : getPow2(n.p2.p1.p3, 'MU')
+      })
+    }
+
+    output.push('简化为: ' + M.mathjax(n2))
+
+    if(!isNaN(n2.p2)){
+
+    }
+    else if(sameObj(noBr(n2.p1.p1), n2.p2)){
+      n2 = noBr(n2.p1.p2)
+
+      output.push('简化为: ' + M.mathjax(n2))
+    }
+    else{
+      let arr_p1 = []
+      limitDegree(arr_p1, n2.p1.p1)
+      console.log(arr_p1)
+
+      // let p2 = {
+      //   fgroup: ['RD'],
+      //   group : 'AD',
+      //   p1    : getPow2(n.p2.p1.p1, 'MU'),
+      //   p2    : '-',
+      //   p3    : getPow2(n.p2.p1.p3, 'MU')
+      // }
+
+      let p2 = n2.p2
+
+      let arr_p2 = []
+      limitDegree(arr_p2, p2)
+      console.log(arr_p2)
+
+      if(getDegree(arr_p1) >= getDegree(arr_p2)){
+        let [q, u, t] = M.deconv(arr_p1, arr_p2)
+        if(nearZeroVec(u.data)){
+          let p1 = arr2Obj(q.data)
+          if(p1 == 1){
+            n2 = noBr(n2.p2)
+          }
+          else if((1 / p1) % 1 == 0){
+            //是分子为1的分数
+            n2 = {
+              group: 'RD',
+              p1   : noBr(n2.p1.p2),
+              p2   : 1 / p1
+            }
+          }
+          else{
+            n2 = {
+              group: 'MU',
+              p1   : p1,
+              p2   : n2.p1.p2
+            }
+          }
+
+          output.push('约分后: ' + M.mathjax(n2))
+        }
+      }
+      else{
+        let [q, u, t] = M.deconv(arr_p2, arr_p1)
+        if(nearZeroVec(u.data)){
+          let p1 = arr2Obj(q.data)
+          if(p1 == 1){
+            n2 = noBr(n2.p1.p2)
+          }
+          else{
+            n2 = {
+              group: 'RD',
+              p1   : noBr(n2.p1.p2),
+              p2   : p1
+            }
+          }
+
+          output.push('约分后: ' + M.mathjax(n2))
+        }
+      }
+    }
+
+    let fac = fraction(limitVal(noBr(n2).p1, a), limitVal(noBr(n2).p2, a))
+    if(fac.d > 10000){
+      fac = fac.toNumber()
+    }
+    let result = n2.group == 'RD' ? fac : limitVal(n2, a)
+
+    output.push('极限值为: ' + result)
+  },
+  分子有理化      : (output, f, n, a) => {
+    let n1 = {
+      group: 'RD',
+      p1   : {
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : {
+          fgroup: ['MU'],
+          group : 'BR',
+          p1    : n
+        },
+        p2    : {
+          fgroup: ['MU'],
+          group : 'BR',
+          p1    : {
+            fgroup: ['BR'],
+            group : 'AD',
+            p1    : n.p1,
+            p2    : '+',
+            p3    : n.p3
+          }
+        }
+      },
+      p2   : {
+        fgroup: ['RD'],
+        group : 'AD',
+        p1    : n.p1,
+        p2    : '+',
+        p3    : n.p3
+      }
+    }
+
+    output.push('分子有理化: ' + M.mathjax(n1))
+
+    let n2 = {
+      group: 'RD',
+      p1   : {
+        fgroup: ['RD'],
+        group : 'AD',
+        p1    : n.p1.p1.p1,
+        p2    : '-',
+        p3    : {
+          fgroup: ['AD'],
+          group : 'MI',
+          p1    : n.p1.p1.p1.p3,
+          p2    : 2
+        }
+      },
+      p2   : {
+        fgroup: ['RD'],
+        group : 'AD',
+        p1    : n.p1,
+        p2    : '+',
+        p3    : n.p3
+      }
+    }
+    output.push('简化为: ' + M.mathjax(n2))
+
+    let n_d   = [0]
+    n_d.const = []
+    infiniteDegree(n_d, n2.p1)
+    output.push('分子简化为多项式: ' + arr2express(n_d, 'x'))
+
+    let d_d   = [0]
+    d_d.const = []
+    infiniteDegree(d_d, n2.p2)
+    output.push('分母简化为多项式: ' + arr2express(d_d, 'x'))
+
+    let n_d_l = getDegree(n_d)
+    let d_d_l = getDegree(d_d)
+    let result
+    if(n_d_l == d_d_l){
+      let fra = fraction(n_d[0], d_d[0])
+      result  = polyCombine([fra, ...n_d.const], d_d.const)
+      output.push('比值级数一致，极限值为: ' + result)
+      isFraction(fra)
+      fra.d > 10 && output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+    }
+    else if(n_d_l > d_d_l){
+      let sign = n_d[0] / d_d[0] > 0 ? '正' : '负'
+      output.push('分子级数高，极限值为: ' + sign + '无穷大')
+      result = n_d[0] / d_d[0] > 0 ? Infinity : -Infinity
+    }
+    else{
+      output.push('分母级数高，极限值为: 0')
+      result = 0
+    }
+
+    return result
+  },
+  分子分母有理化    : (output, f, n, a) => {
+    let n_p = {
+      group: 'AD',
+      p1   : noBr(n.p1).p1,
+      p2   : '+',
+      p3   : noBr(n.p1).p3
+    }
+
+    let d_p = {
+      group: 'AD',
+      p1   : noBr(n.p2).p1,
+      p2   : '+',
+      p3   : noBr(n.p2).p3
+    }
+
+    let n1 = {
+      group: 'RD',
+      p1   : {
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : {
+          fgroup: ['MU'],
+          group : 'MU',
+          p1    : addBr(n.p1, 'MU'),
+          p2    : addBr(n_p, 'MU')
+        },
+        p2    : addBr(d_p, 'MU')
+      },
+      p2   : {
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : {
+          fgroup: ['MU'],
+          group : 'MU',
+          p1    : addBr(n.p2, 'MU'),
+          p2    : addBr(d_p, 'MU')
+        },
+        p2    : addBr(n_p, 'MU')
+      },
+    }
+
+    output.push('分子分母有理化: ' + M.mathjax(n1))
+
+    let n2 = {
+      group: 'RD',
+      p1   : {
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : objSimplify({
+          fgroup: ['MU'],
+          group : 'AD',
+          p1    : getPow2(n.p1.p1.p1, 'MU'),
+          p2    : '-',
+          p3    : getPow2(n.p1.p1.p3, 'MU')
+        }),
+        p2    : addBr(d_p, 'MU')
+      },
+      p2   : {
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : objSimplify({
+          fgroup: ['MU'],
+          group : 'AD',
+          p1    : getPow2(n.p2.p1.p1, 'MU'),
+          p2    : '-',
+          p3    : getPow2(n.p2.p1.p3, 'MU')
+        }),
+        p2    : addBr(n_p, 'MU')
+      },
+    }
+
+    output.push('简化为: ' + M.mathjax(n2))
+
+    if(isFinite(a)){
+      LIMIT.有限比值(output, f, n2, a)
+    }
+    else{
+      LIMIT.无限比值(output, f, n2, a)
+    }
+  },
+}
+
+function addBr(obj, fg){
+  if(obj.group == 'BR'){
+    obj.fgroup = [fg]
+    return obj
+  }
+
+  return {
+    fgroup: [fg],
+    group : 'BR',
+    p1    : obj
+  }
+}
+
 function analysis(source_code){
-  if(typeof(source_code)!='string'){
+  if(typeof (source_code) != 'string'){
     return source_code
   }
 
@@ -314,16 +799,16 @@ function 替换语句(s, reg_s){
   //优先级 4 乘法（.*）、矩阵乘法（*）、右除（./）、左除（.\）、矩阵右除（/）、矩阵左除（\）
   while(true){
     let m = s.split(/(\.\*|\*|\.\/|\.\\|\/|\\)/g)
-    if(m.length<3){
+    if(m.length < 3){
       break
     }
     // console.log('优先级 4', m, s)
     //
     // console.log('dodo', m, s)
     let s0 = s
-    let s1 = m.slice(0, m.length-3).join('')
-    let s2 = m.slice(m.length-3).join('')
-    switch(m[m.length-2]){
+    let s1 = m.slice(0, m.length - 3).join('')
+    let s2 = m.slice(m.length - 3).join('')
+    switch(m[m.length - 2]){
       case '.*':
         s = s1 + 替换(s2, 'times', 'once')
         break
@@ -354,6 +839,8 @@ function 替换语句(s, reg_s){
   // s = s.replace(/\bend\s*-/g, '-') //what ?? 避免出现end-1，直接用-1替代
   // s = 替换(s, reg_s == '[' ? '-noblank' : '-')
   s = 替换(s, '~')
+
+  s = 替换(s, 'nagtive')
 
   //优先级 6 冒号运算符（:）
 
@@ -707,6 +1194,9 @@ function trans2MathJax(s, fgroup = []){
         case 'NT':
           c = c.replace(/\s*\~\s*/, '!')
           break
+        case 'NG':
+
+          break
         case 'OB':
           // if(fgroup[0] == 'CA'){
           //   a = c.slice(1, -1).split(',')
@@ -735,7 +1225,7 @@ function trans2MathJax(s, fgroup = []){
 }
 
 function trans2MathObj(uuid, fgroup = [], j = 0){
-  uuid = uuid.trim()
+  uuid = typeof (uuid) == 'string' ? uuid.trim() : uuid
   if(!/^_\d{5}_\w\w_$/g.test(uuid)){
     // console.error('trans2MathObj only accept uuid', s)
     return uuid
@@ -743,16 +1233,16 @@ function trans2MathObj(uuid, fgroup = [], j = 0){
 
   var act, fun, arg, obj = {}
 
-  var group  = getGroup(uuid)
-  var source = getUuidCode(group, uuid)
-  var fgroup = fgroup.slice()
+  var group          = getGroup(uuid)
+  var source         = getUuidCode(group, uuid)
+  var fgroup         = fgroup.slice()
   var current_fgroup = fgroup.slice()
   fgroup.unshift(group)
 
   var obj = {
     uuid,
     group,
-    fgroup:current_fgroup,
+    fgroup: current_fgroup,
     source
   }
 
@@ -765,22 +1255,22 @@ function trans2MathObj(uuid, fgroup = [], j = 0){
       obj.p2 = trans2MathObj(c.slice(-10), fgroup, j = 1)
       break
     case 'AD':
-      a = c.match(/\+|\-/)
+      a      = c.match(/\+|\-/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(a[0], fgroup, j = 1)
       obj.p3 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 2)
       break
     case 'AS':
-      a            = c.split(/\s*\=\s*/)
+      a      = c.split(/\s*\=\s*/)
       obj.p1 = trans2MathObj(a[0], fgroup)
       obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'BR':
-      c = c.slice(1, -1)
+      c      = c.slice(1, -1)
       obj.p1 = trans2MathObj(c, fgroup)
       break
     case 'CN':
-      a = c.match(/[\>\<\=\~\!]+/)
+      a      = c.match(/[\>\<\=\~\!]+/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(a[0], fgroup, j = 1)
       obj.p3 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 2)
@@ -795,92 +1285,95 @@ function trans2MathObj(uuid, fgroup = [], j = 0){
       obj.p2 = trans2MathObj(im, fgroup, j = 1)
       break
     case 'DA':
-      a = c.match(/&&/)
+      a      = c.match(/&&/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'DE':
-      a = c.match(/\.\^/)
+      a      = c.match(/\.\^/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'DG':
-      a = c.match(/\'/)
+      a      = c.match(/\'/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       break
     case 'DL':
-      a = c.split(/\s*\.\\\s*/g)
+      a      = c.split(/\s*\.\\\s*/g)
       obj.p1 = trans2MathObj(a[0], fgroup)
       obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'DM':
-      a = c.match(/\.\*/)
+      a      = c.match(/\.\*/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'DO':
-      a = c.match(/\|\|/)
+      a      = c.match(/\|\|/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'DR':
-      a = c.split(/\s*\.\/\s*/g)
+      a      = c.split(/\s*\.\/\s*/g)
       obj.p1 = trans2MathObj(a[0], fgroup)
       obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'DZ':
-      a = c.match(/\.\'/)
+      a      = c.match(/\.\'/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       break
     case 'LD':
-      a = c.match(/\\/)
+      a      = c.match(/\\/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'LG':
-      c = c.replace(/\|/g, '||')
-      c = c.replace(/\&/g, '&&')
-      a = c.split(/\s*(\|\||\&\&)\s*/g)
+      c      = c.replace(/\|/g, '||')
+      c      = c.replace(/\&/g, '&&')
+      a      = c.split(/\s*(\|\||\&\&)\s*/g)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'MA':
-      c   = c.slice(-1) == ';' ? c.slice(0, -1) : c
-      a   = c.split(/\s*\=\s*/g)
+      c      = c.slice(-1) == ';' ? c.slice(0, -1) : c
+      a      = c.split(/\s*\=\s*/g)
       obj.p1 = trans2MathObj(a[0], fgroup)
       obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'MI':
-      a = c.match(/\^/)
+      a      = c.match(/\^/)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'MN': //被add代替
-      a = c.split(/\s*\-\s*/g)
+      a      = c.split(/\s*\-\s*/g)
       obj.p1 = trans2MathObj(a[0], fgroup)
       obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'MU':
-      a = c.split(/\s*\*\s*/g)
+      a      = c.split(/\s*\*\s*/g)
       obj.p1 = trans2MathObj(a[0], fgroup)
       obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'NE':
-      c = c.replace(/\s*\~\=\s*/, '!=')
-      a = c.split(/\s*\!\=\s*/g)
+      c      = c.replace(/\s*\~\=\s*/, '!=')
+      a      = c.split(/\s*\!\=\s*/g)
       obj.p1 = trans2MathObj(a[0], fgroup)
       obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
+    case 'NG':
+      obj.p1 = trans2MathObj(c.slice(1), fgroup)
+      break
     case 'NT':
-      c = c.replace(/\s*\~\s*/, '!')
-      a = c.split(/\s*\!\s*/g)
+      c      = c.replace(/\s*\~\s*/, '!')
+      a      = c.split(/\s*\!\s*/g)
       obj.p1 = trans2MathObj(a[0], fgroup)
       obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'OB':
       break
     case 'RD':
-      a = c.match(/\//)
+      a      = c.match(/\//)
       obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
@@ -893,27 +1386,27 @@ function trans2MathObj(uuid, fgroup = [], j = 0){
   return obj
 }
 
-function obj2mathjax(obj, n){
-  if(typeof(obj)!='object' || !obj.group){
+function obj2mathjax(obj, n, sqrt){
+  if(typeof (obj) != 'object' || !obj.group){
     // console.log('pass', obj)
     return obj
   }
   let str = ''
   switch(obj.group){
     case 'AC':
-      str = obj2mathjax(obj.p1, 1)+obj2mathjax(obj.p2, 2)
+      str = obj2mathjax(obj.p1, 1) + obj2mathjax(obj.p2, 2)
       // obj.p1 = trans2MathObj(c.slice(0, -10).trim(), fgroup)
       // obj.p2 = trans2MathObj(c.slice(-10), fgroup, j = 1)
       break
     case 'AD':
-      str = obj2mathjax(obj.p1, 1)+obj.p2+obj2mathjax(obj.p3, 3)
+      str = obj2mathjax(obj.p1, 1) + obj.p2 + obj2mathjax(obj.p3, 3)
       // a = c.match(/\+|\-/)
       // obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       // obj.p2 = trans2MathObj(a[0], fgroup, j = 1)
       // obj.p3 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 2)
       break
     case 'AS':
-      str = obj2mathjax(obj.p1, 1)+'='+obj2mathjax(obj.p2, 2)
+      str = obj2mathjax(obj.p1, 1) + '=' + obj2mathjax(obj.p2, 2)
       // a            = c.split(/\s*\=\s*/)
       // obj.p1 = trans2MathObj(a[0], fgroup)
       // obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
@@ -922,19 +1415,19 @@ function obj2mathjax(obj, n){
       if(/DR|DL|RD/.test(obj.fgroup[0])){
         str = obj2mathjax(obj.p1, 1)
       }
-      else if(/MI/.test(obj.fgroup[0]) && n==2){
+      else if(/MI/.test(obj.fgroup[0]) && (n == 2 || sqrt)){
         str = obj2mathjax(obj.p1, 1)
       }
       else{
         // console.log('BR', obj.fgroup[0], obj.p1)
-        str = ' \\left('+obj2mathjax(obj.p1, 1)+' \\right)'
+        str = ' \\left(' + obj2mathjax(obj.p1, 1) + ' \\right)'
       }
 
       // c = c.slice(1, -1)
       // obj.p1 = trans2MathObj(c, fgroup)s
       break
     case 'CN':
-      str = obj2mathjax(obj.p1, 1)+obj.p2+obj2mathjax(obj.p3, 3)
+      str = obj2mathjax(obj.p1, 1) + obj.p2 + obj2mathjax(obj.p3, 3)
       // a = c.match(/[\>\<\=\~\!]+/)
       // obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       // obj.p2 = trans2MathObj(a[0], fgroup, j = 1)
@@ -942,8 +1435,8 @@ function obj2mathjax(obj, n){
       break
     case 'CP':
       let imag = obj2mathjax(obj.p3, 3)
-      let sign = imag[0]=='-' ? '-' : '+'
-      str = obj2mathjax(obj.p1, 1)+obj.p2+sign+obj2mathjax(obj.p3, 3)+'i'
+      let sign = imag[0] == '-' ? '-' : '+'
+      str      = obj2mathjax(obj.p1, 1) + obj.p2 + sign + obj2mathjax(obj.p3, 3) + 'i'
 
       // c      = c.replace(/\s*/g, '')
       // let im = c.match(/[\+\-]?\s*\d*(\.\d+)?[ij]/g)
@@ -954,27 +1447,27 @@ function obj2mathjax(obj, n){
       // obj.p2 = trans2MathObj(im, fgroup, j = 1)
       break
     case 'DA':
-      str = obj2mathjax(obj.p1, 1)+'&&'+obj2mathjax(obj.p2, 2)
+      str = obj2mathjax(obj.p1, 1) + '&&' + obj2mathjax(obj.p2, 2)
 
       // a = c.match(/&&/)
       // obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       // obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'DE':
-      str = '{'+obj2mathjax(obj.p1, 1)+'}.^{'+obj2mathjax(obj.p2, 2)+'}'
+      str = '{' + obj2mathjax(obj.p1, 1) + '}.^{' + obj2mathjax(obj.p2, 2) + '}'
 
       // a = c.match(/\.\^/)
       // obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       // obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'DG':
-      str = '{'+obj2mathjax(obj.p1, 1)+"}'"
+      str = '{' + obj2mathjax(obj.p1, 1) + "}'"
 
       // a = c.match(/\'/)
       // obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
       break
     case 'DL':
-      str = ' \\frac{'+obj2mathjax(obj.p1, 1)+'}{'+obj2mathjax(obj.p2, 2)+'}'
+      str = ' \\frac{' + obj2mathjax(obj.p1, 1) + '}{' + obj2mathjax(obj.p2, 2) + '}'
 
       // a = c.split(/\s*\.\\\s*/g)
       // obj.p1 = trans2MathObj(a[0], fgroup)
@@ -991,7 +1484,7 @@ function obj2mathjax(obj, n){
       // obj.p2 = trans2MathObj(c.slice(a.index + a[0].length), fgroup, j = 1)
       break
     case 'DR':
-      str = ' \\frac{'+obj2mathjax(obj.p1, 1)+'}{'+obj2mathjax(obj.p2, 2)+'}'
+      str = ' \\frac{' + obj2mathjax(obj.p1, 1) + '}{' + obj2mathjax(obj.p2, 2) + '}'
 
       // a = c.split(/\s*\.\/\s*/g)
       // obj.p1 = trans2MathObj(a[0], fgroup)
@@ -1020,7 +1513,15 @@ function obj2mathjax(obj, n){
       // obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'MI':
-      str = '{'+obj2mathjax(obj.p1, 1)+'}^{'+obj2mathjax(obj.p2, 2)+'}'
+      if(obj.p2.group == 'BR' && obj.p2.p1.source == '1/2'){
+        str = '\\sqrt{' + obj2mathjax(obj.p1, 1, 'sqrt') + '}'
+      }
+      else if(obj.p2.group == 'BR' && /1\/\d+/.test(obj.p2.p1.source)){
+        str = `\\sqrt[${obj.p2.p1.p2}]{` + obj2mathjax(obj.p1, 1, 'sqrt') + '}'
+      }
+      else{
+        str = '{' + obj2mathjax(obj.p1, 1) + '}^{' + obj2mathjax(obj.p2, 2) + '}'
+      }
 
       // a = c.match(/\^/)
       // obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
@@ -1032,7 +1533,14 @@ function obj2mathjax(obj, n){
       // obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'MU':
-      str = obj2mathjax(obj.p1, 1)+obj2mathjax(obj.p2, 2)
+      let p1 = obj2mathjax(obj.p1, 1)
+      if(p1 == -1){
+        str += '-'
+      }
+      else{
+        str += p1
+      }
+      str += obj2mathjax(obj.p2, 2)
 
       // a = c.split(/\s*\*\s*/g)
       // obj.p1 = trans2MathObj(a[0], fgroup)
@@ -1044,6 +1552,8 @@ function obj2mathjax(obj, n){
       // obj.p1 = trans2MathObj(a[0], fgroup)
       // obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
+    case 'NG':
+      str = '-' + obj2mathjax(obj.p1)
     case 'NT':
       // c = c.replace(/\s*\~\s*/, '!')
       // a = c.split(/\s*\!\s*/g)
@@ -1053,7 +1563,7 @@ function obj2mathjax(obj, n){
     case 'OB':
       break
     case 'RD':
-      str = ' \\frac{'+obj2mathjax(obj.p1, 1)+'}{'+obj2mathjax(obj.p2, 2)+'}'
+      str = ' \\frac{' + obj2mathjax(obj.p1, 1) + '}{' + obj2mathjax(obj.p2, 2) + '}'
 
       // a = c.match(/\//)
       // obj.p1 = trans2MathObj(c.slice(0, a.index), fgroup)
@@ -1068,4 +1578,1137 @@ function obj2mathjax(obj, n){
   }
 
   return str
+}
+
+function obj_ad2array(obj_arr, obj){
+  let synbal = {}
+  let x      = obj2num_mi(obj_arr, obj.p1)
+  if(x){
+    for(let s in x){
+      synbal[s] = (synbal[s] || 0) + x[s]
+    }
+  }
+  let p2 = obj.p2
+  x      = obj2num_mi(obj_arr, obj.p3, p2)
+  if(x){
+    for(let s in x){
+      synbal[s] = (synbal[s] || 0) + x[s]
+    }
+  }
+
+  return synbal
+}
+
+function obj2num_mi(obj_arr, obj, sign = '+'){
+  let p = 1
+  if(typeof (obj) == 'object' && obj.group == 'AD'){
+    return obj_ad2array(obj_arr, obj)
+  }
+  if(typeof (obj) == 'object' && obj.group == 'MU'){
+    p   = obj.p1
+    obj = obj.p2
+  }
+
+  let mi
+  if(typeof obj == 'string' && /[a-zA-Z]+/.test(obj)){
+    if(!obj_arr[obj]){
+      obj_arr[obj] = []
+    }
+    obj_arr[obj][1] = (obj_arr[obj][1] || 0) * 1 + (sign == '-' ? -p : p) * 1
+    let symbol_obj  = {}
+    symbol_obj[obj] = 1
+    return symbol_obj
+  }
+
+  if(!isNaN(obj)){
+    obj_arr.c = (obj_arr.c || 0) * 1 + (sign == '-' ? -obj : obj) * 1
+    return ''
+  }
+
+  if(typeof (obj) == 'object' && obj.group == 'MI' && typeof obj.p1 == 'string'){
+    if(!obj_arr[obj.p1]){
+      obj_arr[obj.p1] = []
+    }
+
+    obj_arr[obj.p1][obj.p2] = (obj_arr[obj.p1][obj.p2] || 0) * 1 + (sign == '-' ? -p : p) * 1
+    let symbol_obj          = {}
+    symbol_obj[obj.p1]      = 1
+    return symbol_obj
+  }
+  else if(typeof (obj) == 'object' && obj.group == 'MU'){
+
+  }
+}
+
+function obj_mu2array(arr, obj){
+  obj_mu2obj(arr, obj.p1)
+  obj_mu2obj(arr, obj.p2)
+}
+
+function obj_mu2obj(arr, item){
+  if(typeof (item) == 'string'){
+    arr.push(item)
+    return
+  }
+
+  if(typeof (item) == 'object' && item.group == 'MI'){
+    for(let i = item.p2 - 1; i >= 0; i--){
+      arr.push(item.p1)
+    }
+    return
+  }
+
+  if(typeof (item) == 'object' && item.group == 'AD'){
+    let fac = M.factor(item)
+    arr.push(...fac)
+    return
+  }
+
+  if(typeof (item) == 'object' && item.group == 'MU'){
+    obj_mu2array(arr, item)
+    return
+  }
+
+  if(typeof (item) == 'object' && item.group == 'BR'){
+    obj_mu2obj(arr, item.p1)
+    return
+  }
+
+}
+
+function checkXY(s){
+  let a      = s.split(/[\+\-]/g)
+  let symbol = {}
+  let b      = a.map(item => {
+    let mi_d = 0
+    item.replace(/\^\d+/g, mi => {
+      // console.log(mi)
+      mi = mi.slice(1)
+      mi_d += mi - 1
+      return ''
+    })
+    item.replace(/[a-z]+/gi, x => {
+      // console.log(x)
+      mi_d++
+      symbol[x] = 1
+      return ''
+    })
+    // console.log(item, mi_d)
+    return mi_d
+  })
+
+  // console.log(a, b)
+  let k = Object.keys(symbol)
+
+  if(k.length == 1){
+    return k
+  }
+
+  if(k.length > 2){
+    return false
+  }
+
+  for(let i = b.length - 1; i > 0; i--){
+    if(b[i] != b[0]){
+      return false
+    }
+  }
+
+  return k
+}
+
+function limitVal(obj, a){
+  if(obj == 'x'){
+    return a
+  }
+
+  if(obj == 'e'){
+    return Math.E
+  }
+
+  if(!isNaN(obj)){
+    return obj
+  }
+
+  // console.log(obj)
+  switch(obj.group){
+    case 'AC':
+      let result = action(obj.p1, limitVal(obj.p2, a))
+      return result
+    case 'AD':
+      return limitVal(obj.p1, a) * 1 + limitVal(obj.p3, a) * (obj.p2 == '-' ? -1 : 1)
+    case 'BR':
+      return limitVal(obj.p1, a)
+    case 'DL':
+      return limitVal(obj.p1, a) / limitVal(obj.p2, a)
+    case 'MI':
+      let n  = limitVal(obj.p1, a)
+      let p2 = noBr(obj.p2)
+      if(n < 0 && p2.group == 'RD'){
+        let n1 = M.pow(n, limitVal(p2.p1, a))
+        if(n1 < 0){
+          return -M.pow(-n1, 1 / limitVal(p2.p2, a))
+        }
+        return M.pow(n1, 1 / limitVal(p2.p2, a))
+      }
+      return M.pow(n, limitVal(p2, a))
+    case 'MU':
+      return limitVal(obj.p1, a) * limitVal(obj.p2, a)
+    case 'NG':
+      return -1 * limitVal(obj.p1, a)
+    case 'RD':
+      return limitVal(obj.p1, a) / limitVal(obj.p2, a)
+    case 'PI':
+      return pi
+  }
+}
+
+function limitDegree(a, obj, r = 1){
+  if(typeof (obj) == 'string' || typeof (obj) == 'number'){
+    if(obj == 'x'){
+      a.reverse()
+      a[1] = (a[1] || 0) + r
+      a.reverse()
+      return a
+    }
+    else if(!isNaN(obj)){
+      a.reverse()
+      a[0] = (a[0] || 0) + obj * r
+      a.reverse()
+
+      return a
+    }
+    else{
+      constAdd(a, obj)
+      return 1
+    }
+  }
+
+  switch(obj.group){
+    case 'AC':
+      switch(obj.p1){
+        case 'sin':
+        case 'tan':
+        case 'asin':
+        case 'atan':
+          return limitDegree(a, obj.p2)
+        case 'cos':
+          let cos_a = []
+          limitDegree(cos_a, obj.p2)
+          cos_a = vecadd(1, vecmulti(cos_a, cos_a, -1 / 2))
+          cos_a = vecadd(a, vecmulti(cos_a, r))
+          for(let i = Math.max(a.length, cos_a.length) - 1; i >= 0; i--){
+            a[i] = cos_a[i] || 0
+          }
+          return
+        case 'log':
+          let aaa = []
+          limitDegree(aaa, obj.p2)
+          if(aaa.length > 1){
+            limitDegree(a, -1)
+            limitDegree(a, obj.p2)
+          }
+          else{
+            constAdd(a, `log(${obj.p2.p1})`)
+          }
+
+          return
+      }
+      return ''
+    case 'AD':
+      limitDegree(a, obj.p1, r)
+      limitDegree(a, obj.p3, obj.p2 == '-' ? -r : r)
+      return
+    case 'BR':
+      return limitDegree(a, obj.p1, r)
+    case 'DL':
+      // return limitVal(obj.p1, a) / limitVal(obj.p2, a)
+      return
+    case 'MI':
+      if(obj.p1 == 'x'){
+        a.reverse()
+        let v = limitVal(obj.p2)
+        if(v % 1 == 0){
+          a[v] = 1
+        }
+        else{
+          a[1]       = 1
+          a.fraction = v
+          a[0]       = Math.pow(a[0], 1 / v)
+        }
+
+        a.reverse()
+        // return M.pow(limitVal(obj.p1, a), limitVal(obj.p2, a))
+        return v
+      }
+      else if(obj.p1 == 'e'){
+        limitDegree(a, 1)
+        limitDegree(a, obj.p2)
+      }
+      else if(!isNaN(obj.p1)){
+        limitDegree(a, obj.p1, r)
+        limitDegree(a, obj.p2, r)
+      }
+      else if(typeof (obj.p1) == 'string'){
+        limitDegree(a, r)
+        limitDegree(a, obj.p2, r)
+        constAdd(a, `log(${obj.p1})`)
+      }
+      else if(obj.p1.group){
+        let e_mi = limitMiAd(obj.p1)
+        console.log(e_mi)
+        console.log('极限转换为: e^' + (e_mi?.source || e_mi) + '*' + 全部复原(obj.p2.uuid))
+
+        let [x_mi, x_c] = limitMu(e_mi, obj.p2)
+        if(x_c[0] == 1){
+          x_c.shift()
+        }
+
+        let n_obj = {
+          group: 'MI',
+          p1   : 'e'
+        }
+
+        if(x_c.length){
+          if(x_mi == 0){
+            n_obj.p2 = x_c.join('*')
+          }
+          else if(x_mi == 1){
+            n_obj.p2 = {
+              group: 'MU',
+              p1   : 'x',
+              p2   : x_c.join('*')
+            }
+          }
+          else{
+            n_obj.p2 = {
+              group: 'MU',
+              p1   : {
+                group: 'MI',
+                p1   : 'x',
+                p2   : x_mi
+              },
+              p2   : x_c.join('*')
+            }
+          }
+        }
+        else{
+          if(x_mi == 0){
+            n_obj = 1
+          }
+          else if(x_mi == 1){
+            n_obj = 'e'
+          }
+          else{
+            n_obj.p2 = {
+              group: 'MI',
+              p1   : 'x',
+              p2   : x_mi
+            }
+          }
+        }
+
+        limitDegree(a, n_obj)
+
+        // let mi = (x_mi == 0 ? '' : (x_c.length ? '(' : '') + (x_mi == 1 ? 'x*' : 'x^' + x_mi + '*') + x_c.join('*')) + (x_c.length ? ')' : '')
+        // console.log('结果：e' + (mi ? '^' + mi : ''))
+
+        return //'e' + (mi ? '^' + mi : '')
+      }
+      return
+    case 'MU':
+      let [x_mi, x_c] = limitMu(obj.p1, obj.p2, r)
+      a.reverse()
+      a[x_mi] = (a[x_mi] || 1) * x_c[0]
+      a.reverse()
+      if(x_c.length > 1){
+        constAdd(a, ...x_c.slice(1))
+      }
+
+      // return limitDegree(a, obj.p1)
+      return
+    case 'NG':
+      // return -1 * limitVal(obj.p1, a)
+      return
+    case 'RD':
+      // return limitVal(obj.p1, a) / limitVal(obj.p2, a)
+      return
+    case 'PI':
+      return pi
+  }
+}
+
+function limitMiAd(obj){
+  switch(obj.group){
+    case 'AD':
+      let output = ''
+
+      if(obj.p1 - 1){
+        return {
+          group: 'AD',
+          p1   : obj.p1 - 1,
+          p2   : '+',
+          p3   : obj.p2
+        }
+      }
+      else if(obj.p2 == '-'){
+        return {
+          group: 'MU',
+          p1   : -1,
+          p2   : obj.p2
+        }
+      }
+      else{
+        return obj.p3
+      }
+
+    case 'BR':
+      return limitMiAd(obj.p1)
+  }
+}
+
+function limitMu(...a){
+  let x_mi = 0
+  let x_c  = [1]
+  for(let i = 0, il = a.length; i < il; i++){
+    if(typeof (a[i]) == 'string' || typeof (a[i]) == 'number'){
+      if(a[i] == 'x'){
+        x_mi += 1
+      }
+      else if(!isNaN(a[i])){
+        x_c[0] *= a[i]
+      }
+      else{
+        x_c.push(a[i])
+      }
+    }
+    else if(typeof (a[i] == 'object')){
+      switch(a[i].group){
+        case 'BR':
+          let [br_x_mi, br_x_c] = limitMu(a[i].p1)
+          x_mi += br_x_mi
+          x_c[0] *= br_x_c[0]
+          x_c.push(...br_x_c.slice(1))
+          break
+        case 'RD':
+          let [rd_n_x_mi, rd_n_x_c] = limitMu(a[i].p1)
+          x_mi += rd_n_x_mi
+          x_c[0] *= rd_n_x_c[0]
+          x_c.push(...rd_n_x_c.slice(1))
+
+          let [rd_d_x_mi, rd_d_x_c] = limitMu(a[i].p2)
+          x_mi -= rd_d_x_mi
+          x_c[0] /= rd_d_x_c[0]
+          for(let i = rd_d_x_c.length - 1; i > 0; i--){
+            let n = x_c.indexOf(rd_d_x_c[i])
+            if(n > 0){
+              x_c.splice(n, 1)
+            }
+            else if(n < 0){
+              x_c.push('1/' + rd_d_x_c[i])
+            }
+          }
+          break
+        case 'MU':
+          let [mu_x_mi, mu_x_c] = limitMu(a[i].p1, a[i].p2)
+          x_mi += mu_x_mi
+          x_c[0] *= mu_x_c[0]
+          x_c.push(...mu_x_c.slice(1))
+          break
+        case 'MI':
+          if(a[i].p1 == 'x' && !isNaN(a[i].p2)){
+            x_mi += a[i].p2 * 1
+          }
+          break
+        case 'AC':
+          let arr = []
+          limitDegree(arr, a[i])
+          arr.reverse()
+
+          if(arr.length){
+            x_mi += arr.length - 1
+            x_c[0] *= arr[arr.length - 1]
+          }
+          x_c.push(...(arr.const || []))
+          break
+      }
+    }
+  }
+
+  return [x_mi, x_c]
+}
+
+function arr2express(arr, x){
+  while(arr[0] === 0){
+    arr.shift()
+  }
+
+  let s = ''
+  let a
+
+  let fra = arr.fraction ?? 1
+
+  for(let i = 0, l = arr.length; i < l; i++){
+    a = arr[i]
+    if(a){
+      if(a > 0){
+        s += i > 0 ? '+' : ''
+      }
+      else{
+        s += '-'
+        a = -a
+      }
+
+      let n = l - 1 - i
+      if(n > 0 && n != 1 / fra){
+        if(a < 1 && (1 / a) % 1 == 0){
+          s += x + '^' + n * fra + '/' + (1 / a)
+        }
+        else{
+          if(a != 1){
+            s += a + '*'
+          }
+          s += x + '^' + n * fra
+        }
+
+      }
+      else if(n == 1 / fra){
+        if(a < 1 && (1 / a) % 1 == 0){
+          s += x + '/' + (1 / a)
+        }
+        else{
+          if(a != 1){
+            s += a + '*'
+          }
+          s += x
+        }
+      }
+      else if(n == 0){
+        s += a
+      }
+    }
+  }
+
+  if(arr.const){
+    s = polyCombine([...arr.const, s])
+    // s = arr.const.join('*') + '*' + (/[\+\-]/.test(s) ? brackets(s) : s)
+  }
+
+  if(arr.times){
+    for(let ac in arr.times){
+      s += '*' + ac + '(x' + (arr.times[ac] != 1 ? '^' + arr.times[ac] : '') + ')'
+    }
+  }
+  return s
+}
+
+function polyCombine(a = [], b = []){
+  let result_n0 = 1
+  let result_n  = []
+  let result_d  = []
+  for(let i = 0, il = a.length; i < il; i++){
+    if(a[i]){
+      let c = ('' + a[i]).split('/')
+      if(isNaN(c[0])){
+        result_n.push(c[0])
+      }
+      else{
+        // result_n0 *= c[0]
+        result_n0 = result_n0.mul(c[0])
+      }
+
+      if(c[1]){
+        if(isNaN(c[1])){
+          result_d.push(c[1])
+        }
+        else{
+          // result_n0 /= c[1]
+          result_n0 = result_n0.div(c[1])
+        }
+      }
+    }
+  }
+
+  for(let i = 0, il = b.length; i < il; i++){
+    if(b[i]){
+      let c = ('' + b[i]).split('/')
+      if(isNaN(c[0])){
+        result_d.push(c[0])
+      }
+      else{
+        // result_n0 /= c[0]
+        result_n0 = result_n0.div(c[0])
+      }
+
+      if(c[1]){
+        if(isNaN(c[1])){
+          result_d.push(c[1])
+        }
+        else{
+          // result_n0 *= c[1]
+          result_n0 = result_n0.mul(c[1])
+        }
+      }
+    }
+  }
+
+  let result = result_n0
+
+  if(result_n.length){
+    if(result_n0 != 1){
+      result += '*'
+    }
+    else{
+      result = ''
+    }
+
+    result += result_n.join('*')
+  }
+
+  if(result_d.length){
+    result += '/' + (result_d.length == 1 ? result_d[0] : brackets(result_n.join('*')))
+  }
+
+  return result
+}
+
+function brackets(s){
+  return `(${s})`
+}
+
+function constAdd(a, ...arr){
+  if(!a.const){
+    a.const = []
+  }
+
+  a.const.push(...arr)
+}
+
+function infiniteDegree(a, obj, r = 1, plus){
+  if(typeof (obj) == 'string'){
+    if(obj == 'x'){
+      a.reverse()
+      a[1] = (a[1] || 0) + r
+      a.reverse()
+      return a
+    }
+    else if(!isNaN(obj)){
+      a.reverse()
+      a[0] = (a[0] || 0) + obj * r
+      a.reverse()
+
+      return a
+    }
+    else{
+      constAdd(a, obj)
+      return 1
+    }
+  }
+
+  switch(obj.group){
+    case 'AC':
+      switch(obj.p1){
+        case 'sin':
+        case 'cos':
+          return 0
+        case 'log':
+          let _a = []
+          infiniteDegree(_a, obj.p2)
+          if(_a.length){
+            a[plus] = {
+              log: (_a.length - 1) * r
+            }
+          }
+          return
+      }
+      return ''
+    case 'AD':
+      infiniteDegree(a, obj.p1)
+      infiniteDegree(a, obj.p3, obj.p2 == '-' ? -1 : 1, 'plus')
+      return
+    case 'BR':
+      return infiniteDegree(a, obj.p1)
+    case 'MI':
+      let [x1_mi, x1_c] = infiniteMu(obj.p1)
+      let [x2_mi, x2_c] = infiniteMu(obj.p2)
+      let mi            = x1_mi * x2_c[0]
+      let c             = Math.pow(x1_c[0], x2_c[0])
+      a.reverse()
+      a[mi] = (a[mi] || 0) + c * r
+      a.reverse()
+      while(a[0] == 0){
+        a.shift()
+      }
+
+      return
+    case 'MU':
+      let [x_mi, x_c] = infiniteMu(obj.p1, obj.p2)
+      if(x_mi < 1 && (1 / x_mi) % 1 == 0){
+        a.fraction = x_mi
+        x_mi       = 1
+      }
+
+      a.reverse()
+      a[x_mi] = (a[x_mi] || 1) * x_c[0]
+      a.reverse()
+
+      if(x_c.length > 1){
+        constAdd(a, ...x_c.slice(1))
+      }
+
+      if(x_c.times){
+        a.times = x_c.times
+      }
+
+      // return infiniteDegree(a, obj.p1)
+      return
+    case 'PI':
+      return pi
+  }
+}
+
+function infiniteMu(...a){
+  let x_mi = 0
+  let x_c  = [1]
+  for(let i = 0, il = a.length; i < il; i++){
+    if(typeof (a[i]) == 'string' || typeof (a[i]) == 'number'){
+      if(a[i] == 'x'){
+        x_mi += 1
+      }
+      else if(a[i] != '1'){
+        x_c[0] *= a[i]
+      }
+    }
+    else if(typeof (a[i] == 'object')){
+      switch(a[i].group){
+        case 'AD':
+          let [ad1_x_mi, ad1_x_c] = infiniteMu(a[i].p1)
+          let [ad3_x_mi, ad3_x_c] = infiniteMu(a[i].p3)
+
+          if(ad1_x_mi > ad3_x_mi){
+            return [ad1_x_mi, ad1_x_c]
+          }
+          else if(ad1_x_mi < ad3_x_mi){
+            return [ad3_x_mi, ad3_x_c.map(v => v *= a[i].p2 == '+' ? 1 : -1)]
+          }
+          else{
+            return [
+              ad3_x_mi, ad3_x_c.map((v, index) => {
+                v *= a[i].p2 == '+' ? 1 : -1
+                v += (ad1_x_c[index] || 0) // 会不会漏过ad1_x_c存在而ad3_x_c不存在的内容？
+                return v
+              })
+            ]
+          }
+          break
+        case 'BR':
+          let [br_x_mi, br_x_c] = infiniteMu(a[i].p1)
+          x_mi += br_x_mi
+          x_c[0] *= br_x_c[0]
+          x_c.push(...br_x_c.slice(1))
+          break
+        case 'RD':
+          let [rd_n_x_mi, rd_n_x_c] = infiniteMu(a[i].p1)
+          x_mi += rd_n_x_mi
+          x_c[0] *= rd_n_x_c[0]
+          x_c.push(...rd_n_x_c.slice(1))
+
+          let [rd_d_x_mi, rd_d_x_c] = infiniteMu(a[i].p2)
+          x_mi -= rd_d_x_mi
+          x_c[0] /= rd_d_x_c[0]
+          for(let i = rd_d_x_c.length - 1; i > 0; i--){
+            let n = x_c.indexOf(rd_d_x_c[i])
+            if(n > 0){
+              x_c.splice(n, 1)
+            }
+            else if(n < 0){
+              x_c.push('1/' + rd_d_x_c[i])
+            }
+          }
+          break
+        case 'MU':
+          let [mu_x_mi, mu_x_c] = infiniteMu(a[i].p1, a[i].p2)
+          x_mi += mu_x_mi
+          x_c[0] *= mu_x_c[0]
+          x_c.push(...mu_x_c.slice(1))
+          break
+        case 'MI':
+          let [mi1_x_mi, mi1_x_c] = infiniteMu(a[i].p1)
+          let [mi2_x_mi, mi2_x_c] = infiniteMu(a[i].p2)
+          x_mi += mi1_x_mi * mi2_x_c[0]
+          x_c[0] *= Math.pow(mi1_x_c[0], mi2_x_c[0])
+          break
+        case 'AC':
+          let arr = []
+          infiniteDegree(arr, a[i], 1, 'times')
+          arr.reverse()
+
+          if(arr.length){
+            x_mi += arr.length - 1
+            x_c[0] *= arr[arr.length - 1]
+          }
+          x_c.push(...(arr.const || []))
+
+          if(arr.times){
+            x_c.times = arr.times
+          }
+          break
+      }
+    }
+  }
+
+  return [x_mi, x_c]
+}
+
+function getPow2(obj, fg){
+  if(!typeof (obj) == 'object' || !obj.group){
+    if(!isNaN(obj)){
+      return Math.pow(obj, 2)
+    }
+    return {
+      fgroup: [fg],
+      group : 'MI',
+      p1    : obj,
+      p2    : 2
+    }
+  }
+
+  switch(obj.group){
+    case 'BR':
+      let p1 = getPow2(obj.p1)
+      if(typeof (p1) == 'object' && p1.group == 'BR'){
+        obj = p1
+      }
+      else{
+        obj.p1 = p1
+      }
+      return obj
+    case 'MI':
+      let p2 = getMu2(obj.p2)
+      if(p2 == 1 || typeof (p2) == 'object' && p2.group == 'BR' && p2.p1 == 1){
+        obj = obj.p1
+      }
+      else if(!isNaN(obj.p1) && !isNaN(p2)){
+        obj = Math.pow(obj.p1, obj.p2)
+      }
+      else{
+        obj.p2 = p2
+      }
+
+      return obj
+    case 'RD':
+      obj.p1 = getPow2(obj.p1)
+      obj.p2 = getPow2(obj.p2)
+      return obj
+    default:
+      return {
+        fgroup: [fg],
+        group : 'MI',
+        p1    : obj,
+        p2    : 2
+      }
+  }
+}
+
+function getMu2(obj, fg){
+  if(!typeof (obj) == 'object' || !obj.group){
+    if(!isNaN(obj)){
+      return obj * 2
+    }
+    return {
+      fgroup: [fg],
+      group : 'MU',
+      p1    : obj,
+      p2    : 2
+    }
+  }
+
+  switch(obj.group){
+    case 'BR':
+      let p1 = getMu2(obj.p1)
+      if(typeof (p1) == 'object'){
+        obj.p1 = p1
+      }
+      else{
+        obj = p1
+      }
+      return obj
+    case 'RD':
+      if(!isNaN(obj.p1) && !isNaN(obj.p2)){
+        return 2 * obj.p1 / obj.p2
+      }
+      obj.p1 = getMu2(obj.p1)
+      return obj
+    default:
+      return {
+        fgroup: [fg],
+        group : 'MU',
+        p1    : obj,
+        p2    : 2
+      }
+  }
+}
+
+function objCopy(obj){
+  return JSON.parse(JSON.stringify(obj))
+}
+
+function sameObj(a, b){
+  if(a.group == b.group && a.p1 == b.p1 && a.p2 == b.p2){
+    return true
+  }
+}
+
+function noBr(obj){
+  return obj.group == 'BR' ? noBr(obj.p1) : obj
+}
+
+function arr2Obj(a){
+  while(!a[0]){
+    a.shift()
+  }
+
+  let il = a.length
+  if(il == 1){
+    return a[0]
+  }
+  let obj = {
+    group: 'AD',
+    p1   : setMi(il - 1, a[0], a.fraction)
+  }
+  for(let i = 1; i < il; i++){
+    if(a[i]){
+      obj.p2 = a[i] > 0 ? '+' : '-'
+      obj.p3 = setMi(il - 1 - i, Math.abs(a[i]), a.fraction)
+      if(i != il - 1){
+        obj = {
+          group: 'AD',
+          p1   : obj,
+        }
+      }
+    }
+    else if(i == il - 1){
+      return obj.p1
+    }
+  }
+
+  return obj
+}
+
+function setMi(n, v, fraction = 1){
+  if(n == 0){
+    if(fraction != 1){
+      if(v == 0){
+        return 0
+      }
+      else{
+        let v1 = keepZero(Math.pow(Math.abs(v), fraction))
+        if(v1 % 1 == 0){
+          //开方整数
+          return (v >= 0 ? 1 : -1) * v1
+        }
+        else if(v > 0){
+          return {
+            group: 'MI',
+            p1   : v,
+            p2   : {
+              fgroup: ['MI'],
+              group : 'RD',
+              p1    : 1,
+              p2    : 1 / fraction
+            }
+          }
+        }
+        else if(v < 0){
+          return {
+            group: 'MU',
+            p1   : '-1',
+            p2   : {
+              fgroup: ['MU'],
+              group : 'MI',
+              p1    : -v,
+              p2    : {
+                fgroup: ['MI'],
+                group : 'RD',
+                p1    : 1,
+                p2    : 1 / fraction
+              }
+            }
+          }
+        }
+      }
+
+    }
+
+    return v
+  }
+
+  if(n * fraction == 1){
+    if(v == 1){
+      return 'x'
+    }
+
+    return {
+      group: 'MU',
+      p1   : v,
+      p2   : 'x'
+    }
+  }
+
+  if(v == 1){
+    return {
+      group: 'MI',
+      p1   : 'x',
+      p2   : {
+        fgroup: ['MI'],
+        group : 'RD',
+        p1    : n,
+        p2    : 1 / fraction
+      }
+    }
+  }
+
+  let p1 = keepZero(Math.pow(Math.abs(v), n * fraction))
+  if(p1 % 1 == 0){
+    //把数字从根号中提出
+
+    if(v >= 0){
+      return {
+        // fgroup: ['MU'],
+        group: 'MU',
+        p1   : p1,
+        p2   : {
+          group: 'MI',
+          p1   : 'x',
+          p2   : {
+            fgroup: ['MI'],
+            group : 'RD',
+            p1    : n,
+            p2    : 1 / fraction
+          }
+        }
+      }
+    }
+    else if(v < 0){
+      return {
+        // fgroup: ['MU'],
+        group: 'MU',
+        p1   : -p1,
+        p2   : {
+          group: 'MI',
+          p1   : 'x',
+          p2   : {
+            fgroup: ['MI'],
+            group : 'RD',
+            p1    : n,
+            p2    : 1 / fraction
+          }
+        }
+      }
+    }
+  }
+
+  if(v >= 0){
+    return {
+      // fgroup: ['MU'],
+      group: 'MI',
+      p1   : {
+        fgroup: ['MI'],
+        group : 'BR',
+        p1    : {
+          fgroup: ['BR'],
+          group : 'MU',
+          p1    : v,
+          p2    : 'x'
+        }
+      },
+      p2   : {
+        fgroup: ['MI'],
+        group : 'RD',
+        p1    : n,
+        p2    : 1 / fraction
+      }
+    }
+  }
+  else if(v < 0){
+    return {
+      // fgroup: ['MU'],
+      group: 'MU',
+      p1   : -1,
+      p2   : {
+        group: 'MI',
+        p1   : {
+          fgroup: ['MI'],
+          group : 'BR',
+          p1    : {
+            fgroup: ['BR'],
+            group : 'MU',
+            p1    : v,
+            p2    : 'x'
+          }
+        },
+        p2   : {
+          fgroup: ['MI'],
+          group : 'RD',
+          p1    : n,
+          p2    : 1 / fraction
+        }
+      }
+    }
+  }
+}
+
+function objSimplify(obj){
+  if(obj.group == 'MU' && noBr(obj.p1).group == 'RD' && noBr(obj.p2).group == 'RD'){
+    //两个分数相乘，变成一个分数
+    let obj2 = {
+      group: 'RD',
+      p1   : objSimplify({
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : noBr(obj.p1).p1,
+        p2    : noBr(obj.p2).p1
+      }),
+      p2   : objSimplify({
+        fgroup: ['RD'],
+        group : 'MU',
+        p1    : noBr(obj.p1).p2,
+        p2    : noBr(obj.p2).p2
+      })
+    }
+    return obj2
+  }
+
+  if(obj.group == 'MU'){
+    if(obj.p1 == 1){
+      return obj.p2
+    }
+
+    if(obj.p2 == 1){
+      return obj.p1
+    }
+
+    return obj
+  }
+
+  let arr = []
+  limitDegree(arr, obj)
+  return arr2Obj(arr)
+}
+
+function getDegree(arr){
+  return arr.length * (arr.fraction || 1)
+}
+
+function isAdMiFac(obj){
+  obj = noBr(obj)
+  if(obj?.p2 == '-'){
+    if(obj.p1.group == 'MI' && noBr(obj.p1.p2).group == 'RD'){
+      return true
+    }
+
+    if(obj.p3.group == 'MI' && noBr(obj.p3.p2).group == 'RD'){
+      return true
+    }
+  }
 }

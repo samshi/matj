@@ -350,7 +350,7 @@ function 替换语句(s, reg_s){
       break
     }
 
-    console.log('dodo', m, s)
+    // console.log('dodo', m, s)
     let s0 = s
     switch(m[1]){
       case '.*':
