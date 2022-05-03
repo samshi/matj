@@ -301,8 +301,8 @@ let LIMIT = {
         output.push('极限值为: ' + result)
       }
       else{
-        result = Infinity
-        output.push(`分子级数高，极限值为: ${ng}` + result)
+        result = Infinity * (ng=='-'?-1:1)
+        output.push(`分子级数高，极限值为: ` + M.mathjaxInf(result))
       }
     }
     else{
@@ -363,8 +363,8 @@ let LIMIT = {
         }
       }
       else{
-        result = Infinity
-        output.push(`分母级数高，极限值为: ${ng}` + result)
+        result = Infinity * (ng=='-'?-1:1)
+        output.push(`分母级数高，极限值为: ` + M.mathjaxInf(result))
       }
       return result
     }
@@ -380,11 +380,11 @@ let LIMIT = {
     let mi_value = limitVal(n.p2, a)
     let result
     if(!isFinite(mi_value)){
-      output.push('幂极限值为: ' + ng + mi_value)
+      output.push('幂极限值为: ' + M.mathjaxInf(mi_value))
       if(n.p1 == 'e'){
         if(mi_value == Infinity){
-          output.push('极限值为 ' + mi_value)
-          result = mi_value
+          result = mi_value * (ng=='-'?-1:1)
+          output.push('极限值为 ' + M.mathjaxInf(mi_value))
         }
         else{
           output.push('极限值为 0')
@@ -653,9 +653,9 @@ let LIMIT = {
       }
     }
     else if(n_d_l > d_d_l){
-      let sign = n_d[0] / d_d[0] * (ng == '-' ? -1 : 1) > 0 ? '正' : '负'
-      output.push('分子级数高，极限值为: ' + sign + '无穷大')
-      result = n_d[0] / d_d[0] * (ng == '-' ? -1 : 1) > 0 ? Infinity : -Infinity
+      let sign = Math.sign(n_d[0] / d_d[0] * (ng == '-' ? -1 : 1))
+      result = sign * Infinity
+      output.push('分子级数高，极限值为: ' + M.mathjaxInf(result))
     }
     else{
       output.push('分母级数高，极限值为: 0')

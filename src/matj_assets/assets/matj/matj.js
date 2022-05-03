@@ -2278,24 +2278,26 @@ $.E(M, {
             output.push(M.mathjaxLim(n.p2, a))
             let v2 = eval(M.limit2(output, 全部复原(n.p2.uuid), n.p2, a))
 
-            if(isFinite(v1) && v1 != 0){
-              if(!isFinite(v2)){
-                result = v2
-              }
-              else{
-                result = v1 * v2
-              }
-            }
-            else if(isFinite(v2) && v2 != 0){
-              if(!isFinite(v1)){
-                result = v1
-              }
-              else{
-                result = v1 * v2
-              }
-            }
+            // if(isFinite(v1) && v1 != 0){
+            //   if(!isFinite(v2)){
+            //     result = v2
+            //   }
+            //   else{
+            //     result = v1 * v2
+            //   }
+            // }
+            // else if(isFinite(v2) && v2 != 0){
+            //   if(!isFinite(v1)){
+            //     result = v1
+            //   }
+            //   else{
+            //     result = v1 * v2
+            //   }
+            // }
 
-            output.push('整体极限值为: ' + result)
+            result = v1 * v2
+
+            output.push('整体极限值为: ' + M.mathjaxInf(result))
           }
         }
       }
@@ -2416,9 +2418,9 @@ $.E(M, {
 
     let an, a0, n0, a1, n1
     if(a == Infinity){
-      a0 = 1000
+      a0 = 10000
       n0 = limitVal(n, a0)
-      a1 = 1000000
+      a1 = 100000000
       n1 = limitVal(n, a1)
     }
     else if(a == -Infinity){
@@ -2435,6 +2437,10 @@ $.E(M, {
 
       let p = M.polyfit(an.slice(1), vn, 2)
       n0    = M.polyval(p, an[0]) //* (ng == '-' ? -1 : 1)
+
+      if(isNaN(n0)){
+        n0 = vn[2]
+      }
     }
 
     // console.log(n, f, v, a)
@@ -2450,7 +2456,7 @@ $.E(M, {
     M.limit2(output, f, n, a, ng)
 
     if(isFinite(a)){
-      isNaN(n0) || output.push('参考数值逼近结果: ' + n0.toFixed(M.FIXNUM))
+      isNaN(n0) || output.push('参考数值逼近结果: ' + M.mathjaxInf(n0.toFixed(M.FIXNUM)))
     }
     else{
       isNaN(n0) || output.push(`参考数值结果1: f(${a0}) -> ` + n0.toFixed(M.FIXNUM))
@@ -2481,7 +2487,7 @@ $.E(M, {
       })
 
       console.log(find_str)
-      return `(${sign}y` + (d==0? '' : d > 0 ? '+' + d : '-' + (-d)) + ')'
+      return `(${sign}y` + (d == 0 ? '' : d > 0 ? '+' + d : '-' + (-d)) + ')'
     })
 
     f = f.replace(/x/g, '(y' + (a > 0 ? '+' + a : a) + ')')
@@ -4873,6 +4879,16 @@ $.E(M, { //todo
 $.E(M, {
   disp      : a => {
     addToTableOut('disp', a)
+  },
+  mathjaxInf: (s) => {
+    if(s == Infinity){
+      return `$ \\infty $`
+    }
+    else if(s == -Infinity){
+      return `$ -\\infty $`
+    }
+
+    return s
   },
   mathjaxLim: (s, a, ng = '') => {
     let ss = analysis(s)
