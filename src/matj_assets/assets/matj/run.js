@@ -140,7 +140,7 @@ function clearAll(){
   //加载的库似乎有变量泄漏：length
   console.log('length before', window['length'])
   delete window.length
-  console.log('length after', window['length'])
+  // console.log('length after', window['length'])
   for(let key in VLIST){
     if(VLIST.hasOwnProperty(key)){
       delete VLIST[key]
@@ -185,7 +185,7 @@ function showVariable(){
 
   table.I(s)
 
-  console.log(SYMS)
+  // console.log(SYMS)
   if(MathJax.typeset){
     MathJax.typeset()
   }

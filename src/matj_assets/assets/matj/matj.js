@@ -2246,13 +2246,19 @@ $.E(M, {
         else if(str2reg('(1/sin(x)-1/tan(x))').test(f) && a == 0){
           result = LIMIT.特定形式sin_tan(output, f, n, a, ng)
         }
+        else if(str2reg('(tan(x)-sin(x))').test(f) && a == 0){
+          result = LIMIT.特定形式tan_sin(output, f, n, a, ng)
+        }
         else if(str2reg('sin(pi*x)').test(f) && a == 1){
           result = LIMIT.特定形式sin_pi(output, f, n, a, ng)
+        }
+        else if((str2reg('tan((pi*x)/2)').test(f) || str2reg('tan(pi*x/2)').test(f)) && a == 1){
+          result = LIMIT.特定形式tan_pi_2(output, f, n, a, ng)
         }
         else{
 
           if(n.group == 'RD'){
-            output.push('比值类极限')
+            output.push('有限比值类极限')
 
             if(n.p2?.p1?.p2 == '-' && (n.p2.p1.p1.group == 'MI' || n.p2.p1.p2.group == 'MI')){
               result = LIMIT.分母有理化(output, f, n, a, ng)
@@ -2262,12 +2268,14 @@ $.E(M, {
             }
           }
           else if(n.group == 'MI'){
-            output.push('幂类极限')
+            output.push('有限幂类极限')
             result = LIMIT.有限幂(output, f, n, a, ng)
           }
           else if(n.group == 'MU'){
             output.push('乘积类极限，分开计算，其中: ')
+            output.push(M.mathjaxLim(n.p1, a))
             let v1 = eval(M.limit2(output, 全部复原(n.p1.uuid), n.p1, a, ng))
+            output.push(M.mathjaxLim(n.p2, a))
             let v2 = eval(M.limit2(output, 全部复原(n.p2.uuid), n.p2, a))
 
             if(isFinite(v1) && v1 != 0){
@@ -2427,7 +2435,6 @@ $.E(M, {
 
       let p = M.polyfit(an.slice(1), vn, 2)
       n0    = M.polyval(p, an[0]) //* (ng == '-' ? -1 : 1)
-      console.log(p, n0)
     }
 
     // console.log(n, f, v, a)
@@ -2454,22 +2461,27 @@ $.E(M, {
 
   transferLimit: (f, a) => {
     f = f.replace(/\(([\+\-]?\d+)?[\+\-]?x([\+\-]\d+)?\)/g, (find_str) => {
-      let d    = a
+      let d
+      let sign = ''
+      find_str = find_str.replace(/[\+\-]?x/, single_x => {
+        if(single_x == '-x'){
+          d    = -a
+          sign = '-'
+        }
+        else{
+          d = a
+        }
+
+        return ''
+      })
+
       find_str = find_str.replace(/[\+\-]?\d+/g, single_num => {
         d += single_num * 1
         return ''
       })
-      find_str = find_str.replace(/\([\+\-]?x\)/, single_x => {
-        if(d == 0){
-          if(single_x == '(x)'){
-            return 'y'
-          }
-          return '(-y)'
-        }
-        return (single_x.slice(0, -1) + (d > 0 ? '+' + d : '-' + (-d)) + ')').replace(/x/g, 'y')
-      })
 
-      return find_str
+      console.log(find_str)
+      return `(${sign}y` + (d==0? '' : d > 0 ? '+' + d : '-' + (-d)) + ')'
     })
 
     f = f.replace(/x/g, '(y' + (a > 0 ? '+' + a : a) + ')')
@@ -3586,7 +3598,7 @@ $.E(M, {
 
     let B = ndarray(b, [n, 1])
 
-    console.log(a, b)
+    // console.log(a, b)
     return M.flipud(M.mldivide(A, B))
 
   },
@@ -4862,7 +4874,7 @@ $.E(M, {
   disp      : a => {
     addToTableOut('disp', a)
   },
-  mathjaxLim: (s, a, ng='') => {
+  mathjaxLim: (s, a, ng = '') => {
     let ss = analysis(s)
 
     // let mathjax_code = trans2MathJax(ss)
@@ -4870,8 +4882,8 @@ $.E(M, {
     // console.log(mathjax_code)
 
     let math_obj = trans2MathObj(ss)
-    console.log(math_obj)
-    let code = '$'
+    // console.log(math_obj)
+    let code     = '$'
     if(isFinite(a)){
       code += `\\lim \\limits_{x \\to ${a}}`
     }
@@ -4882,7 +4894,7 @@ $.E(M, {
     code += ng
     code += obj2mathjax(math_obj)
     code += '$'
-    console.log(code)
+    // console.log(code)
 
     return code
   },

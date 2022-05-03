@@ -178,7 +178,7 @@ let SYMS = {
 }
 
 let LIMIT = {
-  特定形式mn     : (output, f, n, a, ng) => {
+  特定形式mn      : (output, f, n, a, ng) => {
     let x = n.p1.p1.p1.p2
     let y = n.p2.p1.p1.p2
     output.push(`分子分解为多项式: ${ng}$(x-1)(x^{${x}-1}+x^{${x}-2}+...+1)$`)
@@ -187,7 +187,7 @@ let LIMIT = {
     output.push(`极限值为: ${result}`)
     return result
   },
-  特定形式sin_tan: (output, f, n, a, ng) => {
+  特定形式sin_tan : (output, f, n, a, ng) => {
     let f1 = f.replace(str2reg('1/sin(x)-1/tan(x)'), '(1-cos(x))/sin(x)')
     let n1 = trans2MathObj(analysis(ng + f1))
     output.push('转换为: ' + M.mathjax(n1))
@@ -196,7 +196,16 @@ let LIMIT = {
     return M.limit2(output, '', n2, a)
     // return result
   },
-  特定形式sin_pi : (output, f, n, a, ng) => {
+  特定形式tan_sin : (output, f, n, a, ng) => {
+    let f1 = f.replace(str2reg('tan(x)-sin(x)'), 'tan(x)*(1-cos(x))')
+    let n1 = trans2MathObj(analysis(ng + f1))
+    output.push('转换为: ' + M.mathjax(n1))
+    // let n2 = objSimplify(n1)
+    // output.push('转换为: ' + M.mathjax(n2))
+    return M.limit2(output, '', n1, a)
+    // return result
+  },
+  特定形式sin_pi  : (output, f, n, a, ng) => {
     output.push('将非零极值转换为零极值')
 
     f = M.transferLimit(f, a)
@@ -221,7 +230,36 @@ let LIMIT = {
     return M.limit2(output, f, n, a, ng)
     //LIMIT.特定形式sin_tan(output, f, n, a, ng)
   },
-  无限比值       : (output, f, n, a, ng) => {
+  特定形式tan_pi_2: (output, f, n, a, ng) => {
+    output.push('将非零极值转换为零极值')
+
+    f = M.transferLimit(f, a)
+    a = 0
+    n = trans2MathObj(analysis(f))
+
+    output.push(M.mathjaxLim(n, a, ng))
+
+    output.push('继续简化')
+    if(str2reg('tan((pi*(x+1))/2)').test(f)){
+      f = f.replace('tan((pi*(x+1))/2)', 'tan(pi*x/2+pi/2)')
+    }
+    else{
+      f = f.replace('tan(pi*(x+1)/2)', 'tan(pi*x/2+pi/2)')
+    }
+    n = trans2MathObj(analysis(f))
+    output.push(M.mathjaxLim(n, a, ng))
+
+    output.push('继续简化')
+    f = f.replace('*tan(pi*x/2+pi/2)', '/tan(-pi*x/2)')
+    f = f.replace('/tan(pi*x/2+pi/2)', '*tan(-pi*x/2)')
+    f = f.replace('tan(pi*x/2+pi/2)', '1/tan(-pi*x/2)')
+    n = trans2MathObj(analysis(f))
+    output.push(M.mathjaxLim(n, a, ng))
+
+    return M.limit2(output, f, n, a, ng)
+    //LIMIT.特定形式sin_tan(output, f, n, a, ng)
+  },
+  无限比值        : (output, f, n, a, ng) => {
     let n_d   = [0]
     n_d.const = []
     infiniteDegree(n_d, n.p1)
@@ -237,10 +275,16 @@ let LIMIT = {
     let result
     if(n_d_l == d_d_l){
       let fra = fraction(n_d[0] * (ng == '-' ? -1 : 1), d_d[0])
-      result  = polyCombine([fra, ...n_d.const], d_d.const)
+      if(n_d.const.length || d_d.const.length){
+        result = polyCombine([fra, ...n_d.const], d_d.const)
+      }
+      else{
+        result = fra
+      }
+
       output.push('比值级数一致，极限值为: ' + result)
-      if(isFraction(fra)){
-        fra.d > 10 && output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+      if(isFraction(fra) && fra.d > 10){
+        output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
       }
     }
     else if(n_d_l > d_d_l){
@@ -268,7 +312,7 @@ let LIMIT = {
 
     return result
   },
-  有限比值       : (output, f, n, a, ng) => {
+  有限比值        : (output, f, n, a, ng) => {
     let numerator   = limitVal(n.p1, a)
     let denominator = limitVal(n.p2, a)
     if(!denominator){
@@ -288,10 +332,16 @@ let LIMIT = {
       let result
       if(n_d_l == d_d_l){
         let fra = fraction(n_d[0] * (ng == '-' ? -1 : 1), d_d[0])
-        result  = polyCombine([fra, ...n_d.const], d_d.const)
+        if(n_d.const.length || d_d.const.length){
+          result = polyCombine([fra, ...n_d.const], d_d.const)
+        }
+        else{
+          result = fra
+        }
+
         output.push('比值级数一致，极限值为: ' + result)
-        if(isFraction(fra)){
-          fra.d > 10 && output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+        if(isFraction(fra) && fra.d > 10){
+          output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
         }
       }
       else if(n_d_l > d_d_l){
@@ -326,7 +376,7 @@ let LIMIT = {
 
     return result
   },
-  有限幂        : (output, f, n, a, ng) => {
+  有限幂         : (output, f, n, a, ng) => {
     let mi_value = limitVal(n.p2, a)
     let result
     if(!isFinite(mi_value)){
@@ -357,7 +407,7 @@ let LIMIT = {
 
     return result
   },
-  分母有理化      : (output, f, n, a, ng) => {
+  分母有理化       : (output, f, n, a, ng) => {
     let p1 = objCopy(n.p1)
     if(p1.fgroup){
       p1.fgroup = ['MU']
@@ -517,7 +567,7 @@ let LIMIT = {
 
     return result
   },
-  分子有理化      : (output, f, n, a, ng) => {
+  分子有理化       : (output, f, n, a, ng) => {
     let n1 = {
       group: 'RD',
       p1   : {
@@ -590,10 +640,17 @@ let LIMIT = {
     let result
     if(n_d_l == d_d_l){
       let fra = fraction(n_d[0] * (ng == '-' ? -1 : 1), d_d[0])
-      result  = polyCombine([fra, ...n_d.const], d_d.const)
+      if(n_d.const.length || d_d.const.length){
+        result = polyCombine([fra, ...n_d.const], d_d.const)
+      }
+      else{
+        result = fra
+      }
+
       output.push('比值级数一致，极限值为: ' + result)
-      isFraction(fra)
-      fra.d > 10 && output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+      if(isFraction(fra) && fra.d > 10){
+        output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+      }
     }
     else if(n_d_l > d_d_l){
       let sign = n_d[0] / d_d[0] * (ng == '-' ? -1 : 1) > 0 ? '正' : '负'
@@ -607,7 +664,7 @@ let LIMIT = {
 
     return result
   },
-  分子分母有理化    : (output, f, n, a, ng) => {
+  分子分母有理化     : (output, f, n, a, ng) => {
     let n_p = {
       group: 'AD',
       p1   : noBr(n.p1).p1,
@@ -734,8 +791,6 @@ function analysis(source_code){
   }
 
   // console.log('结果')
-  SYMS.root = s
-
   var restor_code = 全部复原(s)
 
   if(source_code != restor_code){
@@ -1897,8 +1952,53 @@ function limitDegree(a, obj, r = 1){
       }
       return ''
     case 'AD':
-      limitDegree(a, obj.p1, r)
-      limitDegree(a, obj.p3, obj.p2 == '-' ? -r : r)
+      let p1_arr = []
+      limitDegree(p1_arr, obj.p1, r)
+      let p3_arr = []
+      limitDegree(p3_arr, obj.p3, obj.p2 == '-' ? -r : r)
+
+      if(!a.length && !a.fraction){
+        if(p1_arr.fraction == p3_arr.fraction){
+          a.fraction = p1_arr.fraction
+          p1_arr.map((n, i) => {
+            arrAdd(a, p1_arr.length - 1 - i, n)
+          })
+          p3_arr.map((n, i) => {
+            arrAdd(a, p3_arr.length - 1 - i, n)
+          })
+        }
+        else if(!p1_arr.fraction && p1_arr.length == 1){
+          a.fraction   = p3_arr.fraction
+          let p1_arr_0 = p1_arr[p1_arr.length - 1]
+          arrAdd(a, p1_arr.length - 1, Math.sign(p1_arr_0) * Math.pow(Math.abs(p1_arr_0), 1 / a.fraction))
+          p3_arr.map((n, i) => {
+            arrAdd(a, p3_arr.length - 1 - i, n)
+          })
+        }
+        else if(!p3_arr.fraction && p3_arr.length == 1){
+          a.fraction   = p1_arr.fraction
+          let p3_arr_0 = p3_arr[p3_arr.length - 1]
+          arrAdd(a, p3_arr.length - 1, Math.sign(p3_arr_0) * Math.pow(Math.abs(p3_arr_0), 1 / a.fraction))
+          p1_arr.map((n, i) => {
+            arrAdd(a, p1_arr.length - 1 - i, n)
+          })
+        }
+        else{
+          console.warn('todo')
+        }
+      }
+      else if(a.length && !a.fraction && !p1_arr.fracton && !p3_arr.fraction){
+        p1_arr.map((n, i) => {
+          arrAdd(a, p1_arr.length - 1 - i, n)
+        })
+        p3_arr.map((n, i) => {
+          arrAdd(a, p3_arr.length - 1 - i, n)
+        })
+      }
+      else{
+        console.warn('todo')
+      }
+
       return
     case 'BR':
       return limitDegree(a, obj.p1, r)
@@ -1911,11 +2011,16 @@ function limitDegree(a, obj, r = 1){
         if(v % 1 == 0){
           arrAdd(a, v, 1)
         }
-        else{
-          arrAdd(a, 1, 1)
-          // 下面一行是替代作用
-          arrAdd(a, 0, Math.pow(a[a.length - 1], 1 / v) - a[a.length - 1])
+        else if(!a.fraction){
           a.fraction = v
+          arrAdd(a, 1, 1)
+          let a_const = a[a.length - 1] || 0
+
+          // 下面一行是替代作用
+          arrAdd(a, 0, Math.pow(a_const, 1 / v) - a_const)
+        }
+        else{
+          console.warn('todo')
         }
 
         // return M.pow(limitVal(obj.p1, a), limitVal(obj.p2, a))
@@ -1926,8 +2031,18 @@ function limitDegree(a, obj, r = 1){
         limitDegree(a, obj.p2, r)
       }
       else if(!isNaN(obj.p1)){
-        limitDegree(a, obj.p1, r)
-        limitDegree(a, obj.p2, r)
+        // console.warn('todo')
+        let v = limitVal(obj.p2)
+        if(v % 1 ==0){
+          limitDegree(a, Math.pow(Math.abs(obj.p1), v) * Math.sign(obj.p1*r))
+        }
+        else if((1 / v) % 1 ==0){
+          a.fraction = v
+          limitDegree(a, obj.p1, r)
+        }
+        //
+        // limitDegree(a, obj.p1, r)
+        // limitDegree(a, obj.p2)
       }
       else if(typeof (obj.p1) == 'string'){
         limitDegree(a, r)
@@ -2006,12 +2121,32 @@ function limitDegree(a, obj, r = 1){
       // return limitDegree(a, obj.p1)
       return
     case 'NG':
-      // return -1 * limitVal(obj.p1, a)
-      return
+      return limitDegree(a, obj.p1, -r)
     case 'RD':
-      // return limitVal(obj.p1, a) / limitVal(obj.p2, a)
-      return
+      // let rd_p1 = []
+      // limitDegree(rd_p1, obj.p1, r)
+      limitDegree(a, obj.p1, r)
+      let rd_p2 = []
+      limitDegree(rd_p2, obj.p2)
+      if(rd_p2.length == 1){
+        // 分母是常量
+        let v = rd_p2[0]
+        if(isNaN(v)){
+          a.const.push('1/' + v)
+        }
+        else if(v != 0){
+          for(let i = a.length - 1; i >= 0; i--){
+            a[i] = (a[i] || 0) / v
+          }
+        }
+      }
+      else{
+        console.warn('todo')
+      }
+
+      return a
     case 'PI':
+      a.const.push('pi')
       return pi
   }
 }
@@ -2062,6 +2197,26 @@ function limitMu(...a){
     }
     else if(typeof (a[i] == 'object')){
       switch(a[i].group){
+        case 'AD':
+          let [ad1_x_mi, ad1_x_c] = limitMu(a[i].p1)
+          let [ad3_x_mi, ad3_x_c] = limitMu(a[i].p3)
+
+          if(ad1_x_mi > ad3_x_mi){
+            return [ad1_x_mi, ad1_x_c]
+          }
+          else if(ad1_x_mi < ad3_x_mi){
+            return [ad3_x_mi, ad3_x_c.map(v => v *= a[i].p2 == '+' ? 1 : -1)]
+          }
+          else{
+            return [
+              ad3_x_mi, ad3_x_c.map((v, index) => {
+                v *= a[i].p2 == '+' ? 1 : -1
+                v += (ad1_x_c[index] || 0) // 会不会漏过ad1_x_c存在而ad3_x_c不存在的内容？
+                return v
+              })
+            ]
+          }
+          break
         case 'BR':
           let [br_x_mi, br_x_c] = limitMu(a[i].p1)
           x_mi += br_x_mi
@@ -2118,13 +2273,17 @@ function limitMu(...a){
   return [x_mi, x_c]
 }
 
-function arr2express(arr, x){
-  for(let i=arr.length-1; i>=0; i--){
+function clearArr(arr){
+  for(let i = arr.length - 1; i >= 0; i--){
     arr[i] = arr[i] || 0
   }
   while(arr.length && arr[0] === 0){
     arr.shift()
   }
+}
+
+function arr2express(arr, x){
+  clearArr(arr)
 
   let s = ''
   let a
@@ -2253,6 +2412,17 @@ function polyCombine(a = [], b = []){
 
   if(result_d.length){
     result += '/' + (result_d.length == 1 ? result_d[0] : brackets(result_n.join('*')))
+  }
+
+  //处理一下正负号
+  let sign = 0
+  result   = ('' + result).replace(/\-/g, ng => {
+    sign++
+    return ''
+  })
+
+  if(sign % 2){
+    result = '-' + result
   }
 
   return result
@@ -2535,9 +2705,7 @@ function noBr(obj){
 }
 
 function arr2Obj(a){
-  while(!a[0]){
-    a.shift()
-  }
+  clearArr(a)
 
   let il = a.length
   if(il == 1){
