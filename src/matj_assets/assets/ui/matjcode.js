@@ -72,8 +72,7 @@ function createMatjArea(f){
     gutters          : [
       'breakpoints', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'
     ],
-    viewportMargin   : Infinity,
-    // keyMap: 'sublime'
+    viewportMargin   : Infinity, // keyMap: 'sublime'
   }
 
   P.editor = CodeMirror(function(elt){
@@ -140,9 +139,13 @@ function codeRun(){
     iframe_head.script_id.R();
   }
 
-  var js_code = 'var t0=Date.now()\nfunction runMatJ(){'
-  js_code += 'window.clearAll && window.clearAll();\n' + P_JS.editor.getValue() + '\n'
-  js_code += '}\nrunMatJ()\nshowVariable()'
+  var js_code = 'var t0=Date.now()\n'
+  // js_code += 'function runMatJ(){\n'
+  js_code += 'window.clearAll && window.clearAll();\n'
+  js_code += P_JS.editor.getValue() + '\n'
+  // js_code += '}\n'
+  // js_code += 'runMatJ()\n'
+  js_code += 'showVariable()'
 
   iframe_head.script_id = $.c($(iframe_head), {
     type: 'text/javascript'

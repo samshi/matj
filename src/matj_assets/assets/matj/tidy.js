@@ -17,8 +17,11 @@ var TIDY = {
     '#'   : ['RF', /#[^\n]*/g],
     '\/\/': ['RF', /\/\/[^\n]*/g], // '/*'  : ['RF', /[ \r]*[^\\]\/\*(.|\n)*?[^\\]\*\//g],
 
-    '\'' : ['CE', /(?<=[^\w])\s*'.*?'/g], //如果碰到 a = 'I\'m' 或 W'*A - D*W' 怎么办 todo
-    '"'  : ['ST', /".*?"/g],
+    '\''  : ['CE', /(?<=[^\w])\s*'.*?'/g], //如果碰到 a = 'I\'m' 或 W'*A - D*W' 怎么办 todo
+    '"'   : ['ST', /".*?"/g],
+
+    'stop': ['RB', /stop[\s\S]+(?=\n)/g],
+
     '...': ['NN', /\s*\.\.\.[^\n]*\n/g],
 
     'dot': ['DT', /[a-zA-Z]\w*(\.\w+)+/g],
@@ -101,14 +104,13 @@ var TIDY = {
     assignment: ['AS', /\w+\s*[\+\-]?=\s*[\w\.\+\- ]+\;?/g], //赋值语句 s* `+`?`= s* \w
     multias   : ['MA', /_\d{5}_(AE|BE)_\s*[\+\-]?=\s*[\w\.\+\-]+;?/g], //赋值语句 s* `+`?`= s* \w
 
-    return        : ['RT', /\breturn\b(\s*\w+)?/g],
-    if            : ['IF', /\bif\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
-    for           : ['FR', /\bfor\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g], // elseif    : ['EI', /\belse\s+_\d{5}_IF_/g],
-    while         : ['WH', /\bwhile\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
-    switch        : ['SW', /\bswitch\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
-    try           : ['TY', /\btry\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
-    func          : ['FN', /\bfunction\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end\w*/g],
-
+    return: ['RT', /\breturn\b(\s*\w+)?/g],
+    if    : ['IF', /\bif\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
+    for   : ['FR', /\bfor\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g], // elseif    : ['EI', /\belse\s+_\d{5}_IF_/g],
+    while : ['WH', /\bwhile\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
+    switch: ['SW', /\bswitch\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
+    try   : ['TY', /\btry\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
+    func  : ['FN', /\bfunction\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end\w*/g],
 
     id: ['ID', /_\d{5}_[A-Z]{2}_/g]
   },
@@ -209,6 +211,9 @@ function tidy(source_code){
   s = 替换(s, '\/\/')         //替换注释
 
   s = 替换引号对(s)
+
+  s = 替换(s, 'stop')         //程序终止
+
   s = 替换(s, '...')          //替换mablab续行
 
   s = 替换(s, 'dot')

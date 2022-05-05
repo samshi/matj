@@ -259,6 +259,90 @@ let LIMIT = {
     return M.limit2(output, f, n, a, ng)
     //LIMIT.特定形式sin_tan(output, f, n, a, ng)
   },
+  特定形式tan_pi: (output, f, n, a, ng) => {
+    output.push('将非零极值转换为零极值')
+
+    f = M.transferLimit(f, a)
+    a = 0
+    n = trans2MathObj(analysis(f))
+
+    output.push(M.mathjaxLim(n, a, ng))
+
+    output.push('继续简化')
+    f = f.replace('tan(-x)', '(-tan(x))')
+    f = f.replace('tan(pi*(x+1)/2)', 'tan(pi*x/2+pi/2)')
+    f = f.replace(/\.*tan\([\w\*]+\+pi\/2\)/, str=>{
+      let pre_arr = str.split('tan')
+      let pre_str = pre_arr[0]
+      let other_str = str.slice(4, -6)
+      if(pre_str.slice(-1)=='*'){
+        return '-'+pre_str.slice(0, -1)+`/tan(${other_str})`
+      }
+      else if(pre_str.slice(-1)=='/'){
+        return '-'+pre_str.slice(0, -1)+`*tan(${other_str})`
+      }
+      else{
+        return `(-1)/tan(${other_str})`
+      }
+    })
+    n = trans2MathObj(analysis(f))
+
+    if(n.group == 'MU' && n.p1.group == 'RD'){
+      let p1 = noBr(n.p2)
+      if(noBr(n.p1.p1) ==-1 && p1.group == 'NG'){
+        n = {
+          group:'RD',
+          p1: p1.p1,
+          p2: n.p1.p2
+        }
+      }
+      else if(n.p1.p1 !=1){
+        p1 = {
+          group: 'MU',
+          p1: n.p1.p1,
+          p2: p1
+        }
+      }
+      else{
+        n = {
+          group:'RD',
+          p1: p1,
+          p2: n.p1.p2
+        }
+      }
+    }
+
+    f = obj2str(n)
+    output.push(M.mathjaxLim(n, a, ng))
+
+    return M.limit2(output, f, n, a, ng)
+    //LIMIT.特定形式sin_tan(output, f, n, a, ng)
+  },
+  特定形式log_log : (output, f, n, a, ng) => {
+    output.push('对数相减转换为对数内相除')
+    let f1 = f.replace('log(x+1)-log(x)', 'log(1+1/x)')
+    let n1 = trans2MathObj(analysis(f1))
+    output.push('原式转换为: ' + M.mathjaxLim(n1, a, ng))
+
+    let f2 = '(1+1/x)^x=e'
+    let n2 = trans2MathObj(analysis(f2))
+    output.push('根据极限公式: ' + M.mathjaxLim(n2, Infinity))
+
+    let f3 = f1.replace('log(1+1/x)', 'log(e^(1/x))')
+    let n3 = trans2MathObj(analysis(f3))
+    output.push('原式转换为: ' + M.mathjaxLim(n3, a, ng))
+
+    let f4 = f3.replace('log(e^(1/x))', '1/x')
+    let n4 = trans2MathObj(analysis(f4))
+    output.push('原式转换为: ' + M.mathjaxLim(n4, a, ng))
+
+    let [x_mi, x_c] = infiniteMu(n4)
+    result          = showMiC(x_mi, x_c, ng)
+
+    output.push('极限值为: ' + result)
+
+    return result
+  },
   无限比值        : (output, f, n, a, ng) => {
     let n_d   = [0]
     n_d.const = []
@@ -270,51 +354,11 @@ let LIMIT = {
     infiniteDegree(d_d, n.p2)
     output.push('分母简化为多项式: ' + arr2express(d_d, 'x'))
 
-    let n_d_l = getDegree(n_d)
-    let d_d_l = getDegree(d_d)
-    let result
-    if(n_d_l == d_d_l){
-      let fra = fraction(n_d[0] * (ng == '-' ? -1 : 1), d_d[0])
-      if(n_d.const.length || d_d.const.length){
-        result = polyCombine([fra, ...n_d.const], d_d.const)
-      }
-      else{
-        result = fra
-      }
-
-      output.push('比值级数一致，极限值为: ' + result)
-      if(isFraction(fra) && fra.d > 10){
-        output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
-      }
-    }
-    else if(n_d_l > d_d_l){
-      let [q, u, t] = M.deconv(n_d, d_d)
-      console.log({
-        q,
-        u,
-        t
-      })
-      if(nearZeroVec(u.data)){
-        output.push(`分子因式分解: ${ng}(` + arr2express(d_d, 'x') + ')(' + arr2express(q.data, 'x') + ')')
-        output.push(`约分后: ${ng}` + arr2express(q.data, 'x'))
-        result = M.polyval(q, a) * (ng == '-' ? -1 : 1)
-        output.push('极限值为: ' + result)
-      }
-      else{
-        result = Infinity * (ng=='-'?-1:1)
-        output.push(`分子级数高，极限值为: ` + M.mathjaxInf(result))
-      }
-    }
-    else{
-      result = 0
-      output.push('分母级数高，极限值为: ' + result)
-    }
-
-    return result
+    return showAdResult2(output, n_d, d_d, a, ng)
   },
   有限比值        : (output, f, n, a, ng) => {
     let numerator   = limitVal(n.p1, a)
-    let denominator = limitVal(n.p2, a)
+    let denominator = +limitVal(n.p2, a)
     if(!denominator){
       output.push('分母极限值为零')
       let n_d   = []
@@ -327,46 +371,7 @@ let LIMIT = {
       limitDegree(d_d, n.p2)
       output.push('分母简化为多项式: ' + arr2express(d_d, 'x'))
 
-      let n_d_l = getDegree(n_d)
-      let d_d_l = getDegree(d_d)
-      let result
-      if(n_d_l == d_d_l){
-        let fra = fraction(n_d[0] * (ng == '-' ? -1 : 1), d_d[0])
-        if(n_d.const.length || d_d.const.length){
-          result = polyCombine([fra, ...n_d.const], d_d.const)
-        }
-        else{
-          result = fra
-        }
-
-        output.push('比值级数一致，极限值为: ' + result)
-        if(isFraction(fra) && fra.d > 10){
-          output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
-        }
-      }
-      else if(n_d_l > d_d_l){
-        let [q, u, t] = M.deconv(n_d, d_d)
-        console.log({
-          q,
-          u,
-          t
-        })
-        if(nearZeroVec(u.data)){
-          output.push(`分子因式分解: ${ng}(` + arr2express(d_d, 'x') + ')(' + arr2express(q.data, 'x') + ')')
-          output.push(`约分后: ${ng}` + arr2express(q.data, 'x'))
-          result = M.polyval(q, a) * (ng == '-' ? -1 : 1)
-          output.push('极限值为: ' + result)
-        }
-        else{
-          result = 0
-          output.push('分子级数高，极限值为: ' + result)
-        }
-      }
-      else{
-        result = Infinity * (ng=='-'?-1:1)
-        output.push(`分母级数高，极限值为: ` + M.mathjaxInf(result))
-      }
-      return result
+      return showAdResult2(output, n_d, d_d, a, ng)
     }
     else{
       result = fraction(numerator * (ng == '-' ? -1 : 1), denominator)
@@ -376,14 +381,14 @@ let LIMIT = {
 
     return result
   },
-  有限幂         : (output, f, n, a, ng) => {
+  无限幂         : (output, f, n, a, ng) => {
     let mi_value = limitVal(n.p2, a)
     let result
     if(!isFinite(mi_value)){
       output.push('幂极限值为: ' + M.mathjaxInf(mi_value))
       if(n.p1 == 'e'){
         if(mi_value == Infinity){
-          result = mi_value * (ng=='-'?-1:1)
+          result = mi_value * (ng == '-' ? -1 : 1)
           output.push('极限值为 ' + M.mathjaxInf(mi_value))
         }
         else{
@@ -392,19 +397,91 @@ let LIMIT = {
         }
       }
       else{
-        let e_mi = limitMiAd(n.p1)
-        output.push(`极限转换为: ${ng}e^` + e_mi + '*' + 全部复原(n.p2.uuid))
+        let e_mi    = limitMiAd(n.p1)
+        let e_mi_mi = obj2str({
+          group: 'RD',
+          p1   : addBr(e_mi.p2),
+          p2   : addBr(e_mi.p1)
+        })
+
         let [x_mi, x_c] = limitMu(e_mi, n.p2)
-        if(x_c[0] == 1){
-          x_c.shift()
+
+        if(x_mi == 0 && x_c[0] == 1 && x_c.length == 1 && !x_c.fraction){
+          result = 'e'
+        }
+        else{
+          let e_mi_mi_str = obj2str(e_mi_mi)
+          let e_mi_str    = obj2str(e_mi)
+          let p2_str      = obj2str(n.p2)
+          let f1          = `${ng}(1+(${e_mi_str}))^((${e_mi_mi_str})*(${e_mi_str})*${p2_str})`
+          let n1          = trans2MathObj(analysis(f1))
+          output.push('极限转换为: ' + M.mathjaxLim(n1, a))
+          let f2 = `${ng}e^(${e_mi_str}*${p2_str})`
+          let n2 = trans2MathObj(analysis(f2))
+          output.push('极限转换为: ' + M.mathjaxLim(n2, a))
+
+          result = showEMiC(x_mi, x_c, ng)
         }
 
-        let mi = (x_mi == 0 ? '' : (x_c.length ? '(' : '') + (x_mi == 1 ? 'x*' : 'x^' + x_mi + '*') + x_c.join('*')) + (x_c.length ? ')' : '')
-        result = ng + 'e' + (mi ? '^' + mi : '')
         output.push('极限值为: ' + result)
       }
     }
 
+    return result
+  },
+  有限幂         : (output, f, n, a, ng) => {
+    let mi_value = limitVal(n.p2, a)
+    let result
+    if(!isFinite(mi_value)){
+      // output.push('幂极限值为: ' + M.mathjaxInf(mi_value))
+      if(n.p1 == 'e'){
+        if(mi_value == Infinity){
+          result = mi_value * (ng == '-' ? -1 : 1)
+          output.push('极限值为: ' + M.mathjaxInf(mi_value))
+        }
+        else{
+          result = 0
+          output.push('极限值为: ' + result)
+        }
+      }
+      else{
+        let e_mi          = limitMiAd(n.p1)
+        let [p1_mi, p1_c] = limitMu(e_mi)
+        let [x_mi, x_c]   = limitMu(e_mi, n.p2)
+
+        if(x_mi == 0 && x_c[0] == 1 && x_c.length == 1 && !x_c.fraction){
+          result = Math.E
+          output.push('极限值为: e = ' + result)
+        }
+        else{
+          let f1 = ng + 'e^((' + showMiC(p1_mi, p1_c) + ')*' + obj2str(n.p2) + ')'
+          let n1 = trans2MathObj(analysis(f1))
+          output.push('原式转换为: ' + M.mathjaxLim(n1, a, ng))
+
+          let result_s = showEMiC(x_mi, x_c, ng)
+
+          if(x_mi == 0){
+            result = Math.pow(Math.E, x_c[0]) * (ng == '-' ? -1 : 1)
+            result_s += ' = ' + result
+          }
+          else{
+            result = result_s
+          }
+          output.push('极限值为: ' + result_s)
+        }
+      }
+    }
+
+    return result
+  },
+  无限积         : (output, f, n, a, ng) => {
+    // 分析阶次情况
+    let [p1_mi, p1_c] = infiniteMu(n.p1)
+    let [p2_mi, p2_c] = infiniteMu(n.p2)
+    output.push('第一部分化简为: ' + showMiC(p1_mi, p1_c[0], ng))
+    output.push('第二部分化简为: ' + showMiC(p2_mi, p2_c[0]))
+    output.push('极限值为: ' + showMiC(p1_mi + p2_mi, p1_c[0] * p2_c[0], ng))
+    let result = Math.pow(a, p1_mi + p2_mi) * p1_c[0] * p2_c[0] * (ng == '-' ? -1 : 1)
     return result
   },
   分母有理化       : (output, f, n, a, ng) => {
@@ -495,7 +572,7 @@ let LIMIT = {
     else{
       let arr_p1 = []
       limitDegree(arr_p1, n2.p1.p1)
-      console.log(arr_p1)
+      // console.log(arr_p1)
 
       // let p2 = {
       //   fgroup: ['RD'],
@@ -509,7 +586,7 @@ let LIMIT = {
 
       let arr_p2 = []
       limitDegree(arr_p2, p2)
-      console.log(arr_p2)
+      // console.log(arr_p2)
 
       if(getDegree(arr_p1) >= getDegree(arr_p2)){
         let [q, u, t] = M.deconv(arr_p1, arr_p2)
@@ -557,10 +634,13 @@ let LIMIT = {
       }
     }
 
-    let fac = fraction(limitVal(noBr(n2).p1, a) * (ng == '-' ? -1 : 1), limitVal(noBr(n2).p2, a))
-    if(fac.d > 10000){
-      fac = fac.toNumber()
+    if(n2.group == 'RD'){
+      var fac = fraction(limitVal(noBr(n2).p1, a) * (ng == '-' ? -1 : 1), limitVal(noBr(n2).p2, a))
+      if(fac.d > 10000){
+        fac = fac.toNumber()
+      }
     }
+
     let result = n2.group == 'RD' ? fac : limitVal(n2, a)
 
     output.push('极限值为: ' + result)
@@ -635,34 +715,88 @@ let LIMIT = {
     infiniteDegree(d_d, n2.p2)
     output.push('分母简化为多项式: ' + arr2express(d_d, 'x'))
 
-    let n_d_l = getDegree(n_d)
-    let d_d_l = getDegree(d_d)
-    let result
-    if(n_d_l == d_d_l){
-      let fra = fraction(n_d[0] * (ng == '-' ? -1 : 1), d_d[0])
-      if(n_d.const.length || d_d.const.length){
-        result = polyCombine([fra, ...n_d.const], d_d.const)
-      }
-      else{
-        result = fra
+    return showAdResult(output, n_d, d_d, a, ng)
+
+  },
+  分子有理化3      : (output, f, n, a, ng) => {
+    let p1_d   = [0]
+    p1_d.const = []
+    infiniteDegree(p1_d, n.p1)
+
+    let p3_d   = [0]
+    p3_d.const = []
+    infiniteDegree(p3_d, n.p3)
+
+    let p1_d_num = (p1_d.length - 1) * (p1_d.fraction || 1)
+    let p3_d_num = (p3_d.length - 1) * (p3_d.fraction || 1)
+    if(p1_d_num == p3_d_num && p1_d[0] == p3_d[0]){
+      let n1 = {
+        group: 'RD',
+        p1   : {
+          group: 'AD',
+          p1   : {
+            fgroup: ['RD'],
+            group : 'MI',
+            p1    : addBr(n.p1),
+            p2    : 3
+          },
+          p2   : '-',
+          p3   : {
+            fgroup: ['RD'],
+            group : 'MI',
+            p1    : addBr(n.p3),
+            p2    : 3
+          }
+        },
+        p2   : {
+          group: 'MU',
+          p1   : 3 * p1_d[0] * p1_d[0],
+          p2   : {
+            group: 'MI',
+            p1   : 'x',
+            p2   : (p1_d.length - 1) * 2 * (p1_d.fraction || 1)
+          }
+        }
       }
 
-      output.push('比值级数一致，极限值为: ' + result)
-      if(isFraction(fra) && fra.d > 10){
-        output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+      output.push('分子有理化，分母只留最高阶: ' + M.mathjaxLim(n1, a, ng))
+
+      let n2 = objSimplify(n1.p1)
+
+      let n_d   = [0]
+      n_d.const = []
+      infiniteDegree(n_d, n2)
+
+      let d_d   = [0]
+      d_d.const = []
+      infiniteDegree(d_d, n1.p2)
+
+      let n3 = {
+        group: 'RD',
+        p1   : noBr(n2),
+        p2   : n1.p2
       }
-    }
-    else if(n_d_l > d_d_l){
-      let sign = Math.sign(n_d[0] / d_d[0] * (ng == '-' ? -1 : 1))
-      result = sign * Infinity
-      output.push('分子级数高，极限值为: ' + M.mathjaxInf(result))
+      output.push('简化为多项式: ' + M.mathjaxLim(n3, a, ng))
+
+      return showAdResult(output, n_d, d_d, a, ng)
     }
     else{
-      output.push('分母级数高，极限值为: 0')
-      result = 0
+      console.log('todo')
     }
 
-    return result
+    // return
+    // output.push('简化为: ' + M.mathjax(n2, ng))
+    //
+    // let n_d   = [0]
+    // n_d.const = []
+    // infiniteDegree(n_d, n2.p1)
+    // output.push('分子简化为多项式: ' + ng + arr2express(n_d, 'x'))
+    //
+    // let d_d   = [0]
+    // d_d.const = []
+    // infiniteDegree(d_d, n2.p2)
+    // output.push('分母简化为多项式: ' + arr2express(d_d, 'x'))
+
   },
   分子分母有理化     : (output, f, n, a, ng) => {
     let n_p = {
@@ -747,6 +881,81 @@ let LIMIT = {
 
     return result
   },
+}
+
+function showAdResult(output, n_d, d_d, a, ng){
+  let n_d_l = getDegree(n_d)
+  let d_d_l = getDegree(d_d)
+  let result
+  if(n_d_l == d_d_l){
+    let fra = fraction(n_d[0] * (ng == '-' ? -1 : 1), d_d[0])
+    if(n_d.const.length || d_d.const.length){
+      result = polyCombine([fra, ...n_d.const], d_d.const)
+    }
+    else{
+      result = fra
+    }
+
+    output.push('比值级数一致，极限值为: ' + result)
+    if(isFraction(fra) && fra.d > 10){
+      output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+    }
+  }
+  else if(n_d_l > d_d_l){
+    let sign = Math.sign(n_d[0] / d_d[0] * (ng == '-' ? -1 : 1))
+    result   = sign * Infinity
+    output.push('分子级数高，极限值为: ' + M.mathjaxInf(result))
+  }
+  else{
+    output.push('分母级数高，极限值为: 0')
+    result = 0
+  }
+
+  return result
+}
+
+function showAdResult2(output, n_d, d_d, a, ng){
+  let n_d_l = getDegree(n_d)
+  let d_d_l = getDegree(d_d)
+  let result
+  if(n_d_l == d_d_l){
+    let fra = fraction(n_d[0] * (ng == '-' ? -1 : 1), d_d[0])
+    if(n_d.const.length || d_d.const.length){
+      result = polyCombine([fra, ...n_d.const], d_d.const)
+    }
+    else{
+      result = fra
+    }
+
+    output.push('比值级数一致，极限值为: ' + result)
+    if(isFraction(fra) && fra.d > 10){
+      output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
+    }
+  }
+  else if(n_d_l > d_d_l){
+    let [q, u, t] = M.deconv(n_d, d_d)
+    // console.log({
+    //   q,
+    //   u,
+    //   t
+    // })
+    if(nearZeroVec(u.data)){
+      output.push(`分子因式分解: ${ng}(` + arr2express(d_d, 'x') + ')(' + arr2express(q.data, 'x') + ')')
+      output.push(`约分后: ${ng}` + arr2express(q.data, 'x'))
+      result = M.polyval(q, a) * (ng == '-' ? -1 : 1)
+      output.push('极限值为: ' + result)
+    }
+    else{
+      result = a * (ng == '-' ? -1 : 1)
+      output.push(`分子级数高，极限值为: ` + M.mathjaxInf(result))
+    }
+  }
+  else{
+    result = 1 / a * (ng == '-' ? -1 : 1)
+    output.push('分母级数高，极限值为: ' + M.mathjaxInf(result))
+  }
+
+  return result
 }
 
 function addBr(obj, fg){
@@ -1120,31 +1329,6 @@ function 单级复原(s = 'root', beautify, level){
       switch(group){
         case 'RF':
           return ''
-        // case 'OB':
-        // case 'BL':
-        //   var blank = '                                                        '
-        //   c         = c.replace(/^\s*\{\s*|\s*\}$/g, ' ')
-        //   c         = c.replace(/[\s\n]+/g, '\n' + blank.slice(0, level * 2))
-        //   c         = c.replace(/\n(\s*_\d{5}_(WH|SW|IF|FN)_)/g, '\n\n$1\n') //加入空行
-        //   c         = '{' + c.slice(0, -2) + '}'
-        //   // console.log(c)
-        //   return 单级复原(c, beautify, level + 1)
-        // case 'BR':
-        //   c = c.replace(/^\s*\(\s*/g, '(')
-        //   c = c.replace(/^\s*\)$/g, ')')
-        //   break
-        // case 'AS':
-        //   c = c.replace(/\s*([\+\-\*\/\%]?)=\s*([\+\-]?)\s*/g, ' $1= $2')
-        //   break
-        // case 'CN':
-        //   c = c.replace(/([\+\-]?)\s*(\w+)\s*(\&\&|\|\||\>|\>\=|\<|\<\=|\=\=\=|\=\=|\!\=\=|\!\=)\s*([\+\-]?)\s*/g, '$1$2 $3 $4')
-        //   break
-        // case 'DC':
-        //   c = c.replace(/var\s+/g, 'var ')
-        //   break
-        // case 'RT':
-        //   c = c.replace(/return\s*/g, 'return ')
-        //   break
       }
       return 单级复原(c, beautify, level)
     }
@@ -1344,6 +1528,7 @@ function trans2MathJax(s, fgroup = []){
           c = '\\pi'
           break
         default:
+          console.error('未处理group', group)
       }
 
       return trans2MathJax(c, [group, ...fgroup])
@@ -1510,6 +1695,7 @@ function trans2MathObj(uuid, fgroup = [], j = 0){
       obj.p1 = trans2MathObj(c, fgroup)
       break
     default:
+      console.error('未处理group', group)
   }
 
   return obj
@@ -1541,7 +1727,7 @@ function obj2mathjax(obj, n, sqrt){
       // obj.p2 = trans2MathObj(a[1], fgroup, j = 1)
       break
     case 'BR':
-      if(/DR|DL|RD/.test(obj.fgroup[0])){
+      if(/AD|DR|DL|RD/.test(obj.fgroup[0])){
         str = obj2mathjax(obj.p1, 1)
       }
       else if(/MI/.test(obj.fgroup[0]) && (n == 2 || sqrt)){
@@ -1704,6 +1890,7 @@ function obj2mathjax(obj, n, sqrt){
       // obj.p1 = trans2MathObj(c, fgroup)
       break
     default:
+      console.error('未处理group', obj.group)
   }
 
   return str
@@ -1848,7 +2035,7 @@ function checkXY(s){
 
 function limitVal(obj, a){
   if(obj == 'x'){
-    return a
+    return +a
   }
 
   if(obj == 'e'){
@@ -1856,7 +2043,7 @@ function limitVal(obj, a){
   }
 
   if(!isNaN(obj)){
-    return obj
+    return +obj
   }
 
   // console.log(obj)
@@ -1889,6 +2076,8 @@ function limitVal(obj, a){
       return limitVal(obj.p1, a) / limitVal(obj.p2, a)
     case 'PI':
       return pi
+    default:
+    // console.error('未处理group', obj.group)
   }
 }
 
@@ -1931,13 +2120,19 @@ function limitDegree(a, obj, r = 1){
         case 'cos':
           let cos_a = []
           limitDegree(cos_a, obj.p2, r)
-          cos_a = vecadd(1, vecmulti(cos_a, cos_a, -1 / 2))
-          cos_a = vecadd(a, vecmulti(cos_a, r))
+          cos_a = vecAdd(1, vecMul(cos_a, cos_a, -1 / 2))
+          cos_a = vecAdd(a, vecMul(cos_a, r))
           for(let i = Math.max(a.length, cos_a.length) - 1; i >= 0; i--){
             a[i] = cos_a[i] || 0
           }
           return
         case 'log':
+          let log_val = limitVal(obj.p2, 0)
+          // console.log('log值', log_val)
+          if(!isNaN(log_val) && log_val != 1){
+            console.error('log极限值必须为1')
+          }
+
           let aaa = []
           limitDegree(aaa, obj.p2, r)
           if(aaa.length > 1){
@@ -1963,6 +2158,10 @@ function limitDegree(a, obj, r = 1){
           p1_arr.map((n, i) => {
             arrAdd(a, p1_arr.length - 1 - i, n)
           })
+          if(p1_arr.const){
+            //这里没有考虑复杂情况 todo
+            a.const = p1_arr.const
+          }
           p3_arr.map((n, i) => {
             arrAdd(a, p3_arr.length - 1 - i, n)
           })
@@ -2033,10 +2232,10 @@ function limitDegree(a, obj, r = 1){
       else if(!isNaN(obj.p1)){
         // console.warn('todo')
         let v = limitVal(obj.p2)
-        if(v % 1 ==0){
-          limitDegree(a, Math.pow(Math.abs(obj.p1), v) * Math.sign(obj.p1*r))
+        if(v % 1 == 0){
+          limitDegree(a, Math.pow(Math.abs(obj.p1), v) * Math.sign(obj.p1 * r))
         }
-        else if((1 / v) % 1 ==0){
+        else if((1 / v) % 1 == 0){
           a.fraction = v
           limitDegree(a, obj.p1, r)
         }
@@ -2051,8 +2250,8 @@ function limitDegree(a, obj, r = 1){
       }
       else if(obj.p1.group){
         let e_mi = limitMiAd(obj.p1)
-        console.log(e_mi)
-        console.log('极限转换为: e^' + (e_mi?.source || e_mi) + '*' + 全部复原(obj.p2.uuid))
+        // console.log(e_mi)
+        // console.log('极限转换为: e^' + (e_mi?.source || e_mi) + '*' + 全部复原(obj.p2.uuid))
 
         let [x_mi, x_c] = limitMu(e_mi, obj.p2)
         if(x_c[0] == 1){
@@ -2148,6 +2347,8 @@ function limitDegree(a, obj, r = 1){
     case 'PI':
       a.const.push('pi')
       return pi
+    default:
+      console.error('未处理group', obj.group)
   }
 }
 
@@ -2168,15 +2369,26 @@ function limitMiAd(obj){
         return {
           group: 'MU',
           p1   : -1,
-          p2   : obj.p2
+          p2   : obj.p3
         }
       }
-      else{
-        return obj.p3
-      }
 
+      return obj.p3
     case 'BR':
       return limitMiAd(obj.p1)
+    case 'RD':
+      return {
+        group: 'RD',
+        p1   : objSimplify({
+          group: 'AD',
+          p1   : obj.p1,
+          p2   : '-',
+          p3   : obj.p2
+        }),
+        p2   : obj.p2
+      }
+    default:
+      console.error('未处理group', obj.group)
   }
 }
 
@@ -2266,6 +2478,8 @@ function limitMu(...a){
         case 'PI':
           x_c.push('pi')
           break
+        default:
+          console.error('未处理group', a[i].group)
       }
     }
   }
@@ -2441,7 +2655,7 @@ function constAdd(a, ...arr){
 }
 
 function infiniteDegree(a, obj, r = 1, plus){
-  if(typeof (obj) == 'string'){
+  if(typeof (obj) == 'string' || typeof (obj) == 'number'){
     if(obj == 'x'){
       return arrAdd(a, 1, r)
     }
@@ -2461,13 +2675,33 @@ function infiniteDegree(a, obj, r = 1, plus){
         case 'cos':
           return 0
         case 'log':
+          let log_val = limitVal(obj.p2, Infinity)
+          // console.log('log值', log_val)
+          if(log_val != 1){
+            // console.log('log极限值必须为1')
+          }
+
           let _a = []
           infiniteDegree(_a, obj.p2)
-          if(_a.length){
+          if(_a.length == 1 && _a[0] == 1 && _a.ng){
+            a.ng = _a.ng
+          }
+          if(_a.length > 1){
             a[plus] = {
               log: (_a.length - 1) * r
             }
           }
+
+          // 下面是 limitMu的算法
+          // let aaa = []
+          // limitDegree(aaa, obj.p2, r)
+          // if(aaa.length > 1){
+          //   limitDegree(a, -r)
+          //   limitDegree(a, obj.p2, r)
+          // }
+          // else{
+          //   constAdd(a, `log(${obj.p2.p1})`)
+          // }
           return
       }
       return ''
@@ -2478,21 +2712,64 @@ function infiniteDegree(a, obj, r = 1, plus){
     case 'BR':
       return infiniteDegree(a, obj.p1)
     case 'MI':
+      let p1_arr = []
+      infiniteDegree(p1_arr, obj.p1)
       let [x1_mi, x1_c] = infiniteMu(obj.p1)
       let [x2_mi, x2_c] = infiniteMu(obj.p2)
       let mi            = x1_mi * x2_c[0]
       let c             = Math.pow(x1_c[0], x2_c[0])
-      arrAdd(a, mi, c * r)
+      let fra           = (p1_arr.fraction || 1) * x2_c[0]
 
+      // switch(getArrNumber(p1_arr)){
+      //       //   case 0:
+      //       //     return 0
+      //       //   case 1:
+      //       //     if(fra > 0 && fra % 1 == 0 && (a.fraction || 1) == 1){
+      //       //       arrAdd(a, mi, c * r)
+      //       //     }
+      //       //     else{
+      //       //       console.log('todo')
+      //       //     }
+      //       //     break
+      //       //   default:
+      //       //     a.fraction = (a.fraction || 1) * fra
+      //       //
+      //       //     p1_arr.forEach((v, i) => {
+      //       //       a[i] = v
+      //       //     })
+      //       // }
+      // return
+
+      if(a.length == 0 && !a.fraction){
+        if(fra < 0){
+          a.ng = [-fra, c] //not sure
+        }
+        else if(fra % 1 != 0){
+          // 非整数
+          a.fraction = fra
+        }
+
+        p1_arr.forEach((v, i) => {
+          a[i] = v
+        })
+      }
+      else{
+        arrAdd(a, mi, c * r)
+      }
       return
     case 'MU':
       let [x_mi, x_c] = infiniteMu(obj.p1, obj.p2)
-      if(x_mi < 1 && (1 / x_mi) % 1 == 0){
-        a.fraction = x_mi
-        x_mi       = 1
+      if(x_mi < 0){
+        a.ng = [-x_mi, x_c[0]]
       }
+      else{
+        if(x_mi < 1 && (1 / x_mi) % 1 == 0){
+          a.fraction = x_mi
+          x_mi       = 1
+        }
 
-      arrMul(a, x_mi, x_c[0])
+        arrMul(a, x_mi, x_c[0])
+      }
 
       if(x_c.length > 1){
         constAdd(a, ...x_c.slice(1))
@@ -2504,8 +2781,20 @@ function infiniteDegree(a, obj, r = 1, plus){
 
       // return infiniteDegree(a, obj.p1)
       return
+    case 'RD':
+      let [p1_mi, p1_c] = infiniteMu(obj.p1)
+      let [p2_mi, p2_c] = infiniteMu(obj.p2)
+      if(p1_mi - p2_mi >= 0){
+        arrAdd(a, p1_mi - p2_mi, p1_c[0] / p2_c[0] * r)
+      }
+      else{
+        a.ng = [p2_mi - p1_mi, p1_c[0] / p2_c[0] * r]
+      }
+      return pi
     case 'PI':
       return pi
+    default:
+      console.error('未处理group', obj.group)
   }
 }
 
@@ -2590,15 +2879,32 @@ function infiniteMu(...a){
           }
           x_c.push(...(arr.const || []))
 
+          if(arr.ng){
+            x_mi -= arr.ng[0]
+            x_c[0] /= arr.ng[1]
+          }
+
           if(arr.times){
             x_c.times = arr.times
           }
           break
+        default:
+          console.error('未处理group', a[i].group)
       }
     }
   }
 
   return [x_mi, x_c]
+}
+
+function getArrNumber(arr){
+  let num = 0
+  arr.map(v => {
+    if(v){
+      num++
+    }
+  })
+  return num
 }
 
 function getPow2(obj, fg){
@@ -2701,7 +3007,7 @@ function sameObj(a, b){
 }
 
 function noBr(obj){
-  return obj.group == 'BR' ? noBr(obj.p1) : obj
+  return obj?.group == 'BR' ? noBr(obj.p1) : obj
 }
 
 function arr2Obj(a){
@@ -2709,7 +3015,15 @@ function arr2Obj(a){
 
   let il = a.length
   if(il == 1){
-    return a[0]
+    if(a[0] >= 0){
+      return a[0]
+    }
+    else{
+      return {
+        group: 'BR',
+        p1   : a[0]
+      }
+    }
   }
   let obj = {
     group: 'AD',
@@ -2776,10 +3090,31 @@ function setMi(n, v, fraction = 1){
           }
         }
       }
-
     }
 
     return v
+  }
+
+  if(fraction == 1){
+    let x_mi = 'x'
+    if(n != 1){
+      x_mi = {
+        group: 'MI',
+        p1   : x_mi,
+        p2   : n
+      }
+    }
+
+    if(v == 1){
+      return x_mi
+    }
+    else{
+      return {
+        group: 'MU',
+        p1   : v,
+        p2   : x_mi
+      }
+    }
   }
 
   if(n * fraction == 1){
@@ -2795,6 +3130,14 @@ function setMi(n, v, fraction = 1){
   }
 
   if(v == 1){
+    if(fraction == 1){
+      return {
+        group: 'MI',
+        p1   : 'x',
+        p2   : n
+      }
+    }
+
     return {
       group: 'MI',
       p1   : 'x',
@@ -2898,56 +3241,346 @@ function setMi(n, v, fraction = 1){
 }
 
 function objSimplify(obj){
-  if(obj.group == 'MU' && noBr(obj.p1).group == 'RD' && noBr(obj.p2).group == 'RD'){
-    //两个分数相乘，变成一个分数
-    let obj2 = {
-      group: 'RD',
-      p1   : objSimplify({
-        fgroup: ['RD'],
-        group : 'MU',
-        p1    : noBr(obj.p1).p1,
-        p2    : noBr(obj.p2).p1
-      }),
-      p2   : objSimplify({
-        fgroup: ['RD'],
-        group : 'MU',
-        p1    : noBr(obj.p1).p2,
-        p2    : noBr(obj.p2).p2
-      })
-    }
-    return obj2
-  }
-
-  if(obj.group == 'MU'){
-    if(obj.p1 == 1){
-      return obj.p2
-    }
-
-    if(obj.p2 == 1){
-      return obj.p1
-    }
-
-    return obj
-  }
-
   let arr = []
-  limitDegree(arr, obj)
+  switch(obj.group){
+    case 'MU':
+      if(noBr(obj.p1).group == 'RD' && noBr(obj.p2).group == 'RD'){
+        //两个分数相乘，变成一个分数
+        let obj2 = {
+          group: 'RD',
+          p1   : objSimplify({
+            fgroup: ['RD'],
+            group : 'MU',
+            p1    : noBr(obj.p1).p1,
+            p2    : noBr(obj.p2).p1
+          }),
+          p2   : objSimplify({
+            fgroup: ['RD'],
+            group : 'MU',
+            p1    : noBr(obj.p1).p2,
+            p2    : noBr(obj.p2).p2
+          })
+        }
+        return obj2
+      }
+
+      if(obj.p1 == 1){
+        return obj.p2
+      }
+
+      if(obj.p2 == 1){
+        return obj.p1
+      }
+
+      return obj
+    case 'AD':
+      let ad_p1_arr = objSimplifyArr(obj.p1)
+      let ad_p3_arr = objSimplifyArr(obj.p3)
+
+      if((ad_p1_arr.fraction || 1) == 1 && (ad_p3_arr.fraction || 1) == 1){
+        if(obj.p2 == '-'){
+          ad_p3_arr = vecMul(ad_p3_arr, -1)
+        }
+        obj = arr2Obj(vecAdd(ad_p1_arr, ad_p3_arr))
+        return obj
+      }
+      break
+    case 'BR':
+      return objSimplify(obj.p1)
+    case 'MI':
+      let mi_p1_arr = objSimplifyArr(obj.p1)
+      let mi_p2_arr = objSimplifyArr(obj.p2)
+      let fra       = (mi_p1_arr.fraction || 1) * mi_p2_arr[0]
+
+      switch(getArrNumber(mi_p1_arr)){
+        case 0:
+          return 0
+        case 1:
+          if(fra > 0 && fra % 1 == 0){
+            let arr    = []
+            arr.length = mi_p1_arr.length
+            arr[0]     = Math.pow(mi_p1_arr[0], fra)
+            clearArr(arr)
+          }
+          else{
+            clearArr(mi_a1_arr)
+            mi_a1_arr.fraction = fra
+            arr                = mi_a1_arr
+          }
+
+          break
+        default:
+          clearArr(mi_p1_arr)
+          mi_p1_arr.fraction = fra
+          arr                = mi_p1_arr
+      }
+  }
+
   return arr2Obj(arr)
 }
 
+function objSimplifyArr(obj){
+  if(typeof (obj) == 'string' || typeof (obj) == 'number'){
+    if(obj == 'x'){
+      return [1, 0]
+    }
+    else if(!isNaN(obj)){
+      return [+obj]
+    }
+    else{
+      //todo
+      return [obj]
+    }
+  }
+
+  let arr = []
+  switch(obj.group){
+    case 'MU':
+      let mu_p1 = objSimplifyArr(obj.p1)
+      let mu_p2 = objSimplifyArr(obj.p2)
+      return vecMul(mu_p1, mu_p2)
+    case 'AD':
+      let ad_p1 = objSimplifyArr(obj.p1)
+      let ad_p3 = objSimplifyArr(obj.p3)
+
+      if((ad_p1.fraction || 1) == 1 && (ad_p3.fraction || 1) == 1){
+        if(obj.p2 == '-'){
+          ad_p3 = vecMul(ad_p3, -1)
+        }
+        arr = vecAdd(ad_p1, ad_p3)
+      }
+      break
+    case 'BR':
+      return objSimplifyArr(obj.p1)
+    case 'MI':
+      let mi_p1_arr = objSimplifyArr(obj.p1)
+      let mi_p2_arr = objSimplifyArr(obj.p2)
+      let fra       = (mi_p1_arr.fraction || 1) * mi_p2_arr[0]
+
+      switch(getArrNumber(mi_p1_arr)){
+        case 0:
+          return 0
+        case 1:
+          if(fra > 0 && fra % 1 == 0){
+            arr.length = (mi_p1_arr.length - 1) * fra + 1
+            arr[0]     = Math.pow(mi_p1_arr[0], fra)
+            clearArr(arr)
+          }
+          else{
+            clearArr(mi_a1_arr)
+            mi_a1_arr.fraction = fra
+            arr                = mi_a1_arr
+          }
+          break
+        default:
+          clearArr(mi_p1_arr)
+          mi_p1_arr.fraction = fra
+          arr                = mi_p1_arr
+      }
+      break
+    case 'RD':
+      let rd_p1_arr = objSimplifyArr(obj.p1)
+      let rd_p2_arr = objSimplifyArr(obj.p2)
+      if(rd_p1_arr.length == 1 && rd_p2_arr.length == 1){
+        return [rd_p1_arr[0] / rd_p2_arr[0]]
+      }
+      else{
+        console.log('todo')
+      }
+  }
+
+  return arr
+}
+
 function getDegree(arr){
+  clearArr(arr)
   return arr.length * (arr.fraction || 1)
 }
 
 function isAdMiFac(obj){
   obj = noBr(obj)
   if(obj?.p2 == '-'){
-    if(obj.p1.group == 'MI' && noBr(obj.p1.p2).group == 'RD'){
-      return true
+    if(obj.p1.group == 'MI' && noBr(obj.p1.p2).group == 'RD' && !isNaN(noBr(obj.p1.p2).p2)){
+      return noBr(obj.p1.p2).p2
     }
 
-    if(obj.p3.group == 'MI' && noBr(obj.p3.p2).group == 'RD'){
-      return true
+    if(obj.p3.group == 'MI' && noBr(obj.p3.p2).group == 'RD' && !isNaN(noBr(obj.p3.p2).p2)){
+      return noBr(obj.p3.p2).p2
     }
   }
 }
+
+function obj2str(obj){
+  let str
+
+  if(!obj?.group){
+    return obj
+  }
+
+  switch(obj.group){
+    case 'AC':
+      str = obj2str(obj.p1, 1) + obj2str(obj.p2, 2)
+      break
+    case 'AD':
+      str = obj2str(obj.p1, 1) + obj.p2 + obj2str(obj.p3, 3)
+      break
+    case 'AS':
+      str = obj2str(obj.p1, 1) + '=' + obj2str(obj.p2, 2)
+      break
+    case 'BR':
+      str = '(' + obj2str(obj.p1, 1) + ')'
+      break
+    case 'CN':
+      break
+    case 'CP':
+      let imag = obj2str(obj.p3, 3)
+      let sign = imag[0] == '-' ? '-' : '+'
+      str      = obj2str(obj.p1, 1) + obj.p2 + sign + obj2str(obj.p3, 3) + 'i'
+
+      // c      = c.replace(/\s*/g, '')
+      // let im = c.match(/[\+\-]?\s*\d*(\.\d+)?[ij]/g)
+      // let re = +c.replace(im[0], '')
+      // im     = im[0].slice(0, -1) || 1
+      // im     = im == '-' || im == '+' ? +(im + '1') : +im
+      // obj.p1 = trans2MathObj(re, fgroup)
+      // obj.p2 = trans2MathObj(im, fgroup, j = 1)
+      break
+    case 'DA':
+      str = obj2str(obj.p1, 1) + '&&' + obj2str(obj.p2, 2)
+      break
+    case 'DE':
+      str = obj2str(obj.p1, 1) + '.^' + obj2str(obj.p2, 2)
+      break
+    case 'DG':
+      str = obj2str(obj.p1, 1) + "'"
+      break
+    case 'DL':
+      str = obj2str(obj.p1, 1) + '/' + obj2str(obj.p2, 2)
+      break
+    case 'DM':
+      break
+    case 'DO':
+      break
+    case 'DR':
+      str = obj2str(obj.p1, 1) + './' + obj2str(obj.p2, 1)
+      break
+    case 'DZ':
+      // a = c.match(/\.\'/)
+      break
+    case 'LD':
+      // a = c.match(/\\/)
+      break
+    case 'LG':
+      // c = c.replace(/\|/g, '||')
+      // c = c.replace(/\&/g, '&&')
+      // a = c.split(/\s*(\|\||\&\&)\s*/g)
+      break
+    case 'MA':
+      // c   = c.slice(-1) == ';' ? c.slice(0, -1) : c
+      // a   = c.split(/\s*\=\s*/g)
+      break
+    case 'MI':
+      str = obj2str(obj.p1, 1) + '^' + obj2str(obj.p2, 1)
+      break
+    case 'MN': //被add代替
+      break
+    case 'MU':
+      str = obj2str(obj.p1, 1) + '*' + obj2str(obj.p2, 1)
+      break
+    case 'NE':
+      str = '!=' + obj2str(obj.p1, 1)
+      break
+    case 'NG':
+      str = '-' + obj2str(obj.p1)
+      break
+    case 'NT':
+      str = '~' + obj2str(obj.p1)
+      break
+    case 'OB':
+      break
+    case 'RD':
+      str = obj2str(obj.p1, 1) + '/' + obj2str(obj.p2, 2)
+      break
+    case 'PI':
+      str = 'pi'
+      break
+    default:
+      console.error('未处理group', obj.group)
+  }
+
+  return str
+}
+
+function showEMiC(x_mi, x_c, ng = ''){
+  let c    = x_c.slice()
+  let result
+  let sign = 1
+  if(c[0] < 0){
+    c[0] = -c[0]
+    sign = -1
+  }
+
+  if(c[0] == 1){
+    c.shift()
+  }
+
+  let mi = x_mi == 0 ? '' : (x_mi == 1 ? 'x' : 'x^' + x_mi)
+
+  if(c.length){
+    if(mi){
+      mi = '(' + c.join('x') + '*' + mi + ')'
+    }
+    else{
+      mi = c.join('x')
+      if(c.length > 1){
+        mi = '(' + mi + ')'
+      }
+    }
+  }
+
+  if(sign == 1){
+    result = ng + 'e' + (mi ? '^' + mi : '')
+  }
+  else{
+    result = ng + '1/e' + (mi ? '^' + mi : '')
+  }
+
+  return result
+}
+
+function showMiC(mi, c, ng = ''){
+  let s = c
+  if(mi > 0){
+    if(c == 1){
+      s = 'x'
+    }
+    else if(c == -1){
+      s = '-x'
+    }
+    else{
+      s = c + '*x'
+    }
+
+    if(mi != 1){
+      s += '^' + mi
+    }
+  }
+  else if(mi < 0){
+    if(c == 1){
+      s = '1/x'
+    }
+    else if(c == -1){
+      s = '-1/x'
+    }
+    else{
+      s = c + '/x'
+    }
+
+    if(mi != -1){
+      s += '^' + (-mi)
+    }
+  }
+
+  return s
+}
+

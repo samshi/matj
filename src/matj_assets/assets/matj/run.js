@@ -138,8 +138,9 @@ function clearAll(){
   TIME_AREA.I('')
 
   //加载的库似乎有变量泄漏：length
-  console.log('length before', window['length'])
-  delete window.length
+  // window.length 属性返回在当前窗口中frames的数量（包括IFRAMES）。
+  // console.log('length before', window['length'])
+  // delete window.length
   // console.log('length after', window['length'])
   for(let key in VLIST){
     if(VLIST.hasOwnProperty(key)){

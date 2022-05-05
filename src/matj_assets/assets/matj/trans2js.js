@@ -248,10 +248,13 @@ function trans2js(s, fgroup = []){
             c = '["' + a.join('","') + '"]'
           }
 
-          if(/A\w(factor|limit|solve|mathjax|simplify|expand)$/.test(fgroup[0])){ // && !/_AC_/.test(c)
+          if(/A\w(factor|checkLimit|limit|solve|mathjax|simplify|expand|sym2poly)$/.test(fgroup[0])){ // && !/_AC_/.test(c)
             let s = 全部复原(c)
             let a = s.split(',')
-            a[0] = '"' + a[0] + '"'
+            a[0] = '"' + a[0].trim() + '"'
+            if(a[1]){
+              a[1] = '"' + a[1].trim() + '"'
+            }
             return a.join(',')
           }
 
