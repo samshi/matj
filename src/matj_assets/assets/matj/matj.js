@@ -2235,7 +2235,7 @@ $.E(M, {
     }
 
   },
-  limit2    : (output, f, n, a, ng) => {
+  limit2    : (output, f, n, a, ng='') => {
     let result
     if(typeof (n) != 'object'){
       console.error('limit2 n error')
@@ -2290,22 +2290,73 @@ $.E(M, {
           result = LIMIT.有限幂(output, f, n, a, ng)
         }
         else if(n.group == 'MU'){
-          output.push('乘积类极限，分开计算，其中: ')
-          output.push(M.mathjaxLim(n.p1, a, ng))
-          let v1 = eval(M.limit2(output, obj2str(n.p1), n.p1, a, ng))
-          output.push(M.mathjaxLim(n.p2, a))
-          let v2 = eval(M.limit2(output, obj2str(n.p2), n.p2, a))
+          if(M.limit(obj2str(n.p1), a)){
+            output.push('乘积类极限，分开计算，其中: ')
+            output.push(M.mathjaxLim(n.p1, a, ng))
+            let v1 = eval(M.limit2(output, obj2str(n.p1), n.p1, a, ng))
+            output.push(M.mathjaxLim(n.p2, a))
+            let v2 = eval(M.limit2(output, obj2str(n.p2), n.p2, a))
 
-          result = v1 * v2
+            result = v1 * v2
 
-          output.push('整体极限值为: ' + M.mathjaxInf(result))
+            output.push('整体极限值为: ' + M.mathjaxInf(result))
+          }
+          else if(noBr(n.p1).group == 'RD' || noBr(n.p2).group == 'RD'){
+            output.push('拆分成分数: ')
+            let n2
+            if(noBr(n.p1).group == 'RD' && noBr(n.p2).group != 'RD'){
+              n2 = {
+                group: 'RD',
+                p1: noBr(n.p1).p1 == 1 ? n.p2 : {
+                  group: 'MU',
+                  p1: noBr(n.p1).p1,
+                  p2: n.p2
+                },
+                p2: noBr(n.p1).p2
+              }
+            }
+            else if(noBr(n.p1).group != 'RD' && noBr(n.p2).group == 'RD'){
+              n2 = {
+                group: 'RD',
+                p1: noBr(n.p2).p1 == 1 ? n.p1 : {
+                  group: 'MU',
+                  p1: n.p1,
+                  p2: noBr(n.p2).p1,
+                },
+                p2: noBr(n.p2).p2
+              }
+            }
+            else{
+              console.log('todo')
+            }
+
+            let f2 = obj2str(n2)
+            output.push(M.mathjaxLim(n2, a))
+            result = M.limit2(output, f2, n2, a, ng)
+          }
+          else{
+            console.log('todo')
+          }
         }
       }
+    }
+    else if(a == -Infinity){
+      output.push('将负无穷大极值转换为正无穷大')
+
+      let f1 = M.transferInfinite(f)
+      let n1 = trans2MathObj(analysis(f1))
+      a = Infinity
+      output.push(M.mathjaxLim(n1, a, ng))
+
+      result = M.limit2(output, f1, n1, a, ng)
     }
     else{
       //Infinity
       if(str2reg('log(x+1)-log(x)').test(f)){
         result = LIMIT.特定形式log_log(output, f, n, a, ng)
+      }
+      else if(/cos\(1\/[\(\d\*]*x/.test(f)){
+        result = LIMIT.特定形式cos_1_x(output, f, n, a, ng)
       }
       else if(n.group == 'RD'){
         output.push('比值类极限')
@@ -2350,20 +2401,6 @@ $.E(M, {
     }
 
     return result
-  },
-  checkLimit: (f, a, answer) => {
-    let output = []
-    let result = M.limit(f, a, output)
-
-    if('' + result != answer && answer != 'pass'){
-      console.error({
-        f,
-        result: '' + result,
-        answer
-      })
-    }
-
-    return output.join('<br>')
   },
   limit     : (f, a, output = []) => {
     //Limit of symbolic expression
@@ -2485,7 +2522,34 @@ $.E(M, {
     }
     return result
   },
+  transferInfinite : (f, a) => {
+    let f1 = f.replace(str2reg(`x^d`), s=>{
+      let d = +s.slice(2)
+      if(d%2){
+        return '(-y)^'+d
+      }
+      else{
+        return 'y^'+d
+      }
+    })
 
+    f1 = f1.replace(str2reg(`[\+\-\*\/]x`), s=>{
+      let symbol = s.slice(0,-1)
+      switch(symbol){
+        case '+':
+          return '-y'
+        case '-':
+          return '+y'
+        case '*':
+        case '/':
+          return symbol+'y'
+      }
+    })
+
+    f1 = f1.replace(/y/g, 'x')
+
+    return f1
+  },
   transferLimit : (f, a) => {
     f = f.replace(str2reg(`(${a}-x)`), '(-y)')
     f = f.replace(str2reg(`(x-${a})`), '(y)')
@@ -5334,6 +5398,20 @@ $.E(M, {
     }
     console.log(JSON.stringify(v) == JSON.stringify(u) ? '得到精确解' : dif)
   },
+  checkLimit: (f, a, answer) => {
+    let output = []
+    let result = M.limit(f, a, output)
+
+    if('' + result != answer && answer != 'pass'){
+      console.error({
+        f,
+        result: '' + result,
+        answer
+      })
+    }
+
+    return output.join('<br>')
+  },
 })
 
 //常用
@@ -7173,15 +7251,6 @@ function isRational(n){
   return Math.abs(n) % 1 == 0
 }
 
-function getDegree(a){
-  let n = a.length * (a.fraction || 1)
-  if(a.times){
-    if(a.times.log){
-      n += a.times.log
-    }
-  }
-  return n
-}
 
 function str2reg(s){
   let map = '()^/+-*'
@@ -7190,6 +7259,7 @@ function str2reg(s){
     s       = s.replace(reg, '\\' + map[i])
   }
 
-  s = s.replace(/w/g, '\\w')
+  s = s.replace(/w/g, '\\w+')
+  s = s.replace(/d/g, '\\d+')
   return new RegExp(s, 'g')
 }

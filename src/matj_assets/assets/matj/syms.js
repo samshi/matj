@@ -193,7 +193,8 @@ let LIMIT = {
     output.push('转换为: ' + M.mathjax(n1))
     let n2 = objSimplify(n1)
     output.push('转换为: ' + M.mathjax(n2))
-    return M.limit2(output, '', n2, a)
+    let f2 = obj2str(n2)
+    return M.limit2(output, f2, n2, a)
     // return result
   },
   特定形式tan_sin : (output, f, n, a, ng) => {
@@ -259,7 +260,7 @@ let LIMIT = {
     return M.limit2(output, f, n, a, ng)
     //LIMIT.特定形式sin_tan(output, f, n, a, ng)
   },
-  特定形式tan_pi: (output, f, n, a, ng) => {
+  特定形式tan_pi  : (output, f, n, a, ng) => {
     output.push('将非零极值转换为零极值')
 
     f = M.transferLimit(f, a)
@@ -271,15 +272,15 @@ let LIMIT = {
     output.push('继续简化')
     f = f.replace('tan(-x)', '(-tan(x))')
     f = f.replace('tan(pi*(x+1)/2)', 'tan(pi*x/2+pi/2)')
-    f = f.replace(/\.*tan\([\w\*]+\+pi\/2\)/, str=>{
-      let pre_arr = str.split('tan')
-      let pre_str = pre_arr[0]
+    f = f.replace(/\.*tan\([\w\*]+\+pi\/2\)/, str => {
+      let pre_arr   = str.split('tan')
+      let pre_str   = pre_arr[0]
       let other_str = str.slice(4, -6)
-      if(pre_str.slice(-1)=='*'){
-        return '-'+pre_str.slice(0, -1)+`/tan(${other_str})`
+      if(pre_str.slice(-1) == '*'){
+        return '-' + pre_str.slice(0, -1) + `/tan(${other_str})`
       }
-      else if(pre_str.slice(-1)=='/'){
-        return '-'+pre_str.slice(0, -1)+`*tan(${other_str})`
+      else if(pre_str.slice(-1) == '/'){
+        return '-' + pre_str.slice(0, -1) + `*tan(${other_str})`
       }
       else{
         return `(-1)/tan(${other_str})`
@@ -289,25 +290,25 @@ let LIMIT = {
 
     if(n.group == 'MU' && n.p1.group == 'RD'){
       let p1 = noBr(n.p2)
-      if(noBr(n.p1.p1) ==-1 && p1.group == 'NG'){
+      if(noBr(n.p1.p1) == -1 && p1.group == 'NG'){
         n = {
-          group:'RD',
-          p1: p1.p1,
-          p2: n.p1.p2
+          group: 'RD',
+          p1   : p1.p1,
+          p2   : n.p1.p2
         }
       }
-      else if(n.p1.p1 !=1){
+      else if(n.p1.p1 != 1){
         p1 = {
           group: 'MU',
-          p1: n.p1.p1,
-          p2: p1
+          p1   : n.p1.p1,
+          p2   : p1
         }
       }
       else{
         n = {
-          group:'RD',
-          p1: p1,
-          p2: n.p1.p2
+          group: 'RD',
+          p1   : p1,
+          p2   : n.p1.p2
         }
       }
     }
@@ -342,6 +343,18 @@ let LIMIT = {
     output.push('极限值为: ' + result)
 
     return result
+  },
+  特定形式cos_1_x : (output, f, n, a, ng) => {
+    output.push('将无限极值转换为零极值')
+    let f1 = f.replace(/x/g, '(1/x)')
+    let n1 = trans2MathObj(analysis(f1))
+    a      = 0
+    output.push('原式转换为: ' + M.mathjaxLim(n1, a, ng))
+
+    let n2 = objSimplify(n1)
+    let f2 = obj2str(n2)
+    output.push('原式化简为: ' + M.mathjaxLim(n2, a, ng))
+    return M.limit2(output, f2, n2, a, ng)
   },
   无限比值        : (output, f, n, a, ng) => {
     let n_d   = [0]
@@ -591,7 +604,7 @@ let LIMIT = {
       if(getDegree(arr_p1) >= getDegree(arr_p2)){
         let [q, u, t] = M.deconv(arr_p1, arr_p2)
         if(nearZeroVec(u.data)){
-          let p1 = arr2Obj(q.data)
+          let p1 = arr2obj(q.data)
           if(p1 == 1){
             n2 = noBr(n2.p2)
           }
@@ -617,7 +630,7 @@ let LIMIT = {
       else{
         let [q, u, t] = M.deconv(arr_p2, arr_p1)
         if(nearZeroVec(u.data)){
-          let p1 = arr2Obj(q.data)
+          let p1 = arr2obj(q.data)
           if(p1 == 1){
             n2 = noBr(n2.p1.p2)
           }
@@ -683,18 +696,13 @@ let LIMIT = {
 
     let n2 = {
       group: 'RD',
-      p1   : {
+      p1   : objSimplify({
         fgroup: ['RD'],
         group : 'AD',
-        p1    : n.p1.p1.p1,
+        p1    : getPow2(objCopy(n.p1), 'AD'),
         p2    : '-',
-        p3    : {
-          fgroup: ['AD'],
-          group : 'MI',
-          p1    : n.p1.p1.p1.p3,
-          p2    : 2
-        }
-      },
+        p3    : getPow2(objCopy(n.p3), 'AD')
+      }),
       p2   : {
         fgroup: ['RD'],
         group : 'AD',
@@ -781,7 +789,7 @@ let LIMIT = {
       return showAdResult(output, n_d, d_d, a, ng)
     }
     else{
-      console.log('todo')
+      console.warn('todo')
     }
 
     // return
@@ -900,6 +908,9 @@ function showAdResult(output, n_d, d_d, a, ng){
     if(isFraction(fra) && fra.d > 10){
       output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
     }
+    if(/pi/.test(result)){
+      output.push(result + ' = ' + eval(result))
+    }
   }
   else if(n_d_l > d_d_l){
     let sign = Math.sign(n_d[0] / d_d[0] * (ng == '-' ? -1 : 1))
@@ -931,6 +942,9 @@ function showAdResult2(output, n_d, d_d, a, ng){
     if(isFraction(fra) && fra.d > 10){
       output.push(fraction(n_d[0], d_d[0]) + ' = ' + n_d[0] / d_d[0])
     }
+    if(/pi/.test(result)){
+      output.push(result + ' = ' + eval(result))
+    }
   }
   else if(n_d_l > d_d_l){
     let [q, u, t] = M.deconv(n_d, d_d)
@@ -960,12 +974,16 @@ function showAdResult2(output, n_d, d_d, a, ng){
 
 function addBr(obj, fg){
   if(obj.group == 'BR'){
-    obj.fgroup = [fg]
+    if(fg){
+      obj.fgroup = [fg]
+    }
     return obj
   }
 
+  let fgroup = fg || obj.fgroup
+  obj.fgroup = 'BR'
   return {
-    fgroup: [fg],
+    fgroup: [fgroup],
     group : 'BR',
     p1    : obj
   }
@@ -2728,7 +2746,7 @@ function infiniteDegree(a, obj, r = 1, plus){
       //       //       arrAdd(a, mi, c * r)
       //       //     }
       //       //     else{
-      //       //       console.log('todo')
+      //       //       console.warn('todo')
       //       //     }
       //       //     break
       //       //   default:
@@ -2768,7 +2786,8 @@ function infiniteDegree(a, obj, r = 1, plus){
           x_mi       = 1
         }
 
-        arrMul(a, x_mi, x_c[0])
+        // arrMul(a, x_mi, x_c[0])
+        arrAdd(a, x_mi, x_c[0])
       }
 
       if(x_c.length > 1){
@@ -2943,6 +2962,18 @@ function getPow2(obj, fg){
       }
 
       return obj
+    case 'MU':
+      let mu_p1     = getPow2(obj.p1)
+      let arr_mu_p1 = []
+      limitDegree(arr_mu_p1, mu_p1)
+
+      let mu_p2     = getPow2(obj.p2)
+      let arr_mu_p2 = []
+      limitDegree(arr_mu_p2, mu_p2)
+
+      let arr_mu_p1p2 = vecMul(arr_mu_p1, arr_mu_p2)
+      let mu_obj      = arr2obj(arr_mu_p1p2)
+      return mu_obj
     case 'RD':
       obj.p1 = getPow2(obj.p1)
       obj.p2 = getPow2(obj.p2)
@@ -3010,38 +3041,57 @@ function noBr(obj){
   return obj?.group == 'BR' ? noBr(obj.p1) : obj
 }
 
-function arr2Obj(a){
+function arr2obj(a){
+  if(!Array.isArray(a)){
+    return a
+  }
+
   clearArr(a)
 
+  let obj
   let il = a.length
   if(il == 1){
+    //常数
     if(a[0] >= 0){
-      return a[0]
+      obj = a[0]
     }
     else{
-      return {
+      obj = {
         group: 'BR',
         p1   : a[0]
       }
     }
   }
-  let obj = {
-    group: 'AD',
-    p1   : setMi(il - 1, a[0], a.fraction)
+  else if(getArrNumber(a) == 1){
+    obj = setMi(il - 1, a[0], a.fraction)
   }
-  for(let i = 1; i < il; i++){
-    if(a[i]){
-      obj.p2 = a[i] > 0 ? '+' : '-'
-      obj.p3 = setMi(il - 1 - i, Math.abs(a[i]), a.fraction)
-      if(i != il - 1){
-        obj = {
-          group: 'AD',
-          p1   : obj,
+  else{
+    obj = {
+      group: 'AD',
+      p1   : setMi(il - 1, a[0], a.fraction)
+    }
+    for(let i = 1; i < il; i++){
+      if(a[i]){
+        obj.p2 = a[i] > 0 ? '+' : '-'
+        obj.p3 = setMi(il - 1 - i, Math.abs(a[i]), a.fraction)
+        if(i != il - 1){
+          obj = {
+            group: 'AD',
+            p1   : obj,
+          }
         }
       }
+      else if(i == il - 1){
+        obj = obj.p1
+      }
     }
-    else if(i == il - 1){
-      return obj.p1
+  }
+
+  if(a.ac){
+    obj = {
+      group: 'AC',
+      p1   : a.ac,
+      p2   : addBr(obj)
     }
   }
 
@@ -3049,6 +3099,147 @@ function arr2Obj(a){
 }
 
 function setMi(n, v, fraction = 1){
+  if(n == 0){
+    //可能有问题，待定
+    if(fraction != 1){
+      if(v == 0){
+        return 0
+      }
+      else{
+        let v1 = keepZero(Math.pow(Math.abs(v), fraction))
+        if(v1 % 1 == 0){
+          //开方整数
+          return (v >= 0 ? 1 : -1) * v1
+        }
+        else if(v > 0){
+          return {
+            group: 'MI',
+            p1   : v,
+            p2   : {
+              fgroup: ['MI'],
+              group : 'RD',
+              p1    : 1,
+              p2    : 1 / fraction
+            }
+          }
+        }
+        else if(v < 0){
+          return {
+            group: 'MU',
+            p1   : '-1',
+            p2   : {
+              fgroup: ['MU'],
+              group : 'MI',
+              p1    : -v,
+              p2    : {
+                fgroup: ['MI'],
+                group : 'RD',
+                p1    : 1,
+                p2    : 1 / fraction
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return v
+  }
+
+  let obj = 'x'
+  //解决x的幂
+  if(Math.abs(fraction) == 1){
+    if(n != 1){
+      obj = {
+        group: 'MI',
+        p1   : obj,
+        p2   : n
+      }
+    }
+
+    if(fraction == -1){
+      return {
+        group: 'RD',
+        p1   : v,
+        p2   : obj,
+      }
+    }
+  }
+  else if(1 / fraction % 1 == 0){
+    obj = {
+      group: 'MI',
+      p1   : obj,
+      p2   : addBr({
+        fgroup: 'MI',
+        group: 'RD',
+        p1: n,
+        p2: 1/fraction
+      })
+    }
+  }
+
+
+  //解决幂前的常数
+  if(v == -1){
+    obj = {
+      group: 'NG',
+      p1   : obj
+    }
+  }
+  else if(Math.abs(fraction) >= 1){
+    if(v != 1){
+      if(1 / v % 1 == 0){
+        obj = {
+          group: 'RD',
+          p1   : obj,
+          p2   : 1 / v
+        }
+      }
+      else{
+        obj = {
+          group: 'MU',
+          p1   : v,
+          p2   : obj
+        }
+      }
+    }
+  }
+  else if(Math.abs(fraction) < 1){
+    let p1 = keepZero(Math.pow(Math.abs(v), n * fraction))
+    if(p1 % 1 == 0){
+      //把数字从根号中提出
+      if(p1!=1){
+        obj = {
+          group: 'MU',
+          p1   : Math.sign(v) * p1,
+          p2   : obj
+        }
+      }
+    }
+    else{
+      obj = {
+        // fgroup: ['MU'],
+        group: 'MI',
+        p1   : addBr({
+          fgroup: ['MI'],
+          group : 'MU',
+          p1    : v,
+          p2    : 'x'
+        }),
+        p2   : addBr({
+          fgroup: ['MI'],
+          group : 'RD',
+          p1    : n,
+          p2    : 1 / fraction
+        })
+      }
+    }
+  }
+
+  return obj
+}
+
+function setMi2(n, v, fraction = 1){
   if(n == 0){
     if(fraction != 1){
       if(v == 0){
@@ -3243,36 +3434,6 @@ function setMi(n, v, fraction = 1){
 function objSimplify(obj){
   let arr = []
   switch(obj.group){
-    case 'MU':
-      if(noBr(obj.p1).group == 'RD' && noBr(obj.p2).group == 'RD'){
-        //两个分数相乘，变成一个分数
-        let obj2 = {
-          group: 'RD',
-          p1   : objSimplify({
-            fgroup: ['RD'],
-            group : 'MU',
-            p1    : noBr(obj.p1).p1,
-            p2    : noBr(obj.p2).p1
-          }),
-          p2   : objSimplify({
-            fgroup: ['RD'],
-            group : 'MU',
-            p1    : noBr(obj.p1).p2,
-            p2    : noBr(obj.p2).p2
-          })
-        }
-        return obj2
-      }
-
-      if(obj.p1 == 1){
-        return obj.p2
-      }
-
-      if(obj.p2 == 1){
-        return obj.p1
-      }
-
-      return obj
     case 'AD':
       let ad_p1_arr = objSimplifyArr(obj.p1)
       let ad_p3_arr = objSimplifyArr(obj.p3)
@@ -3281,10 +3442,11 @@ function objSimplify(obj){
         if(obj.p2 == '-'){
           ad_p3_arr = vecMul(ad_p3_arr, -1)
         }
-        obj = arr2Obj(vecAdd(ad_p1_arr, ad_p3_arr))
+        obj = arr2obj(vecAdd(ad_p1_arr, ad_p3_arr))
         return obj
       }
-      break
+
+      return obj
     case 'BR':
       return objSimplify(obj.p1)
     case 'MI':
@@ -3314,9 +3476,49 @@ function objSimplify(obj){
           mi_p1_arr.fraction = fra
           arr                = mi_p1_arr
       }
+      break
+    case 'MU':
+      if(noBr(obj.p1).group == 'RD' && noBr(obj.p2).group == 'RD'){
+        //两个分数相乘，变成一个分数
+        let obj2 = {
+          group: 'RD',
+          p1   : addBr(objSimplify({
+            fgroup: ['RD'],
+            group : 'MU',
+            p1    : noBr(obj.p1).p1,
+            p2    : noBr(obj.p2).p1
+          })),
+          p2   : addBr(objSimplify({
+            fgroup: ['RD'],
+            group : 'MU',
+            p1    : noBr(obj.p1).p2,
+            p2    : noBr(obj.p2).p2
+          }))
+        }
+        return obj2
+      }
+
+      if(obj.p1 == 1){
+        return obj.p2
+      }
+
+      if(obj.p2 == 1){
+        return obj.p1
+      }
+
+      arr = objSimplifyArr(obj)
+
+      if(!Array.isArray(arr)){
+        return arr
+      }
+
+      break
+    case 'RD':
+      arr = objSimplifyArr(obj)
+      break
   }
 
-  return arr2Obj(arr)
+  return arr2obj(arr)
 }
 
 function objSimplifyArr(obj){
@@ -3335,19 +3537,27 @@ function objSimplifyArr(obj){
 
   let arr = []
   switch(obj.group){
-    case 'MU':
-      let mu_p1 = objSimplifyArr(obj.p1)
-      let mu_p2 = objSimplifyArr(obj.p2)
-      return vecMul(mu_p1, mu_p2)
+    case 'AC':
+      arr    = objSimplifyArr(obj.p2)
+      arr.ac = obj.p1
+      break
     case 'AD':
       let ad_p1 = objSimplifyArr(obj.p1)
       let ad_p3 = objSimplifyArr(obj.p3)
 
-      if((ad_p1.fraction || 1) == 1 && (ad_p3.fraction || 1) == 1){
+      if(!ad_p1.ac && !ad_p3.ac && (ad_p1.fraction || 1) == 1 && (ad_p3.fraction || 1) == 1){
         if(obj.p2 == '-'){
           ad_p3 = vecMul(ad_p3, -1)
         }
         arr = vecAdd(ad_p1, ad_p3)
+      }
+      else{
+        return {
+          group: 'AD',
+          p1   : arr2obj(ad_p1),
+          p2   : obj.p2,
+          p3   : arr2obj(ad_p3),
+        }
       }
       break
     case 'BR':
@@ -3366,10 +3576,16 @@ function objSimplifyArr(obj){
             arr[0]     = Math.pow(mi_p1_arr[0], fra)
             clearArr(arr)
           }
+          else if(fra < 0 && fra % 1 == 0){
+            arr.length   = -(mi_p1_arr.length - 1) * fra + 1
+            arr[0]       = Math.pow(mi_p1_arr[0], -fra)
+            arr.fraction = -1
+            clearArr(arr)
+          }
           else{
-            clearArr(mi_a1_arr)
-            mi_a1_arr.fraction = fra
-            arr                = mi_a1_arr
+            clearArr(mi_p1_arr)
+            mi_p1_arr.fraction = fra
+            arr                = mi_p1_arr
           }
           break
         default:
@@ -3378,23 +3594,121 @@ function objSimplifyArr(obj){
           arr                = mi_p1_arr
       }
       break
+    case 'MU':
+      let mu_p1 = objSimplifyArr(obj.p1)
+      let mu_p2 = objSimplifyArr(obj.p2)
+
+      if(mu_p1.ac || mu_p2.ac){
+        return obj
+      }
+
+      if((mu_p1.fraction || 1) == (mu_p2.fraction || 1)){
+        arr = vecMul(mu_p1, mu_p2)
+      }
+      else if(sameVec(mu_p1, mu_p2)){
+        arr     = mu_p1
+        let fra = (mu_p1.fraction || 1) + (mu_p2.fraction || 1)
+        if(fra % 1 == 0){
+          if(fra == 1 || fra == -1){
+            arr.fraction = fra
+          }
+          else{
+            let b = []
+            a.map((v, i) => {
+              b[i * Math.abs(fra)] = v
+            })
+            clearArr(b)
+            arr          = b
+            arr.fraction = Math.sign(fra)
+          }
+        }
+        else{
+          arr.fraction = fra
+        }
+      }
+      else if((mu_p2.fraction || 1) == 1 && mu_p2.length == 1){
+        arr          = vecMul(mu_p1, mu_p1.fraction < 0 ? 1 / mu_p2[0] : mu_p2[0])
+        arr.fraction = mu_p1.fraction || 1
+      }
+      else if((mu_p1.fraction || 1) == 1 && mu_p1.length == 1){
+        // arr          = vecMul(mu_p2, mu_p2.fraction < 0 ? 1 / mu_p1[0] : mu_p1[0])
+        arr          = vecMul(mu_p2, mu_p1[0])
+        arr.fraction = mu_p2.fraction || 1
+      }
+      else{
+        return {
+          group: 'MU',
+          p1   : addBr(arr2obj(mu_p1)),
+          p2   : addBr(arr2obj(mu_p2)),
+        }
+      }
+      break
     case 'RD':
       let rd_p1_arr = objSimplifyArr(obj.p1)
       let rd_p2_arr = objSimplifyArr(obj.p2)
-      if(rd_p1_arr.length == 1 && rd_p2_arr.length == 1){
-        return [rd_p1_arr[0] / rd_p2_arr[0]]
+      let rd_p1_d   = getDegree(rd_p1_arr)
+      let rd_p2_d   = getDegree(rd_p2_arr)
+      let rd_p1_n   = getArrNumber(rd_p1_arr)
+      let rd_p2_n   = getArrNumber(rd_p2_arr)
+      let rd_d_dif  = rd_p1_d - rd_p2_d
+      let c         = rd_p1_arr[0] / rd_p2_arr[0]
+
+      if(rd_p1_n == 1 && rd_p2_n == 1){
+        if(rd_d_dif == 0){
+          //级数一样，约分
+          return [c]
+        }
+        else if(rd_d_dif % 1 == 0){
+          arr.length   = Math.abs(rd_d_dif) + 1
+          arr.fraction = Math.sign(rd_d_dif)
+          arr[0]       = c
+        }
+        else{
+          arr.length   = 2
+          arr.fraction = rd_d_dif
+          arr[0]       = c
+        }
+      }
+      else if(rd_p2_n == 1 && rd_p2_d == 1){
+        arr = vecMul(rd_p1_arr, 1 / rd_p2_arr[0])
       }
       else{
-        console.log('todo')
+        console.warn('todo')
       }
+      break
   }
 
   return arr
 }
 
-function getDegree(arr){
-  clearArr(arr)
-  return arr.length * (arr.fraction || 1)
+function objSimplifyobj(obj){
+  switch(obj?.group){
+    case 'AD':
+    case 'BR':
+    case 'MI':
+    case 'MU':
+    case 'NG':
+    case 'RD':
+    default:
+      return obj
+  }
+}
+
+function sameVec(a, b){
+  if(JSON.stringify(a) == JSON.stringify(b)){
+    return true
+  }
+}
+
+function getDegree(a){
+  clearArr(a)
+  let n = (a.length - 1) * (a.fraction || 1)
+  if(a.times){
+    if(a.times.log){
+      n += a.times.log
+    }
+  }
+  return n
 }
 
 function isAdMiFac(obj){
@@ -3407,6 +3721,11 @@ function isAdMiFac(obj){
     if(obj.p3.group == 'MI' && noBr(obj.p3.p2).group == 'RD' && !isNaN(noBr(obj.p3.p2).p2)){
       return noBr(obj.p3.p2).p2
     }
+
+    let f = obj2str(obj)
+    let m = f.match(/\^\(1\/(\d+)\)/)
+
+    return m && m[1]
   }
 }
 
