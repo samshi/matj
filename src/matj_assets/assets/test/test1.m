@@ -6,76 +6,76 @@ test_fail  = 0;
 
 
 function check_value = checkEq(check_value, compare_value)
-test_index=test_index+1;
+  test_index=test_index+1;
 
-if check_value == compare_value
-  test_pass = test_pass + 1;
-else
-  test_fail = test_fail + 1;
-disp("checkEq fail:")
-test_index
-check_value
-compare_value
-end
+  if check_value == compare_value
+    test_pass = test_pass + 1;
+  else
+    test_fail = test_fail + 1;
+  disp("checkEq fail:")
+  test_index
+  check_value
+  compare_value
+  end
 end
 
 function check_value = checkLk(check_value, compare_value)
-test_index=test_index+1;
+  test_index=test_index+1;
 
-if abs(check_value-compare_value)<1e-12
-  test_pass = test_pass + 1;
-else
-  test_fail = test_fail + 1;
-disp("checkLk fail:")
-test_index
-check_value
-compare_value
-end
+  if abs(check_value-compare_value)<1e-12
+    test_pass = test_pass + 1;
+  else
+    test_fail = test_fail + 1;
+  disp("checkLk fail:")
+  test_index
+  check_value
+  compare_value
+  end
 end
 
 function check_value = checkMt(check_value, compare_value)
-test_index=test_index+1;
+  test_index=test_index+1;
 
-if sameValue(check_value,compare_value)
-  test_pass = test_pass + 1;
-else
-  test_fail = test_fail + 1;
-disp("checkMt fail:")
-test_index
-check_value
-compare_value
-end
+  if sameValue(check_value,compare_value)
+    test_pass = test_pass + 1;
+  else
+    test_fail = test_fail + 1;
+  disp("checkMt fail:")
+  test_index
+  check_value
+  compare_value
+  end
 end
 
 function compare_value = checkZero(check_value)
-test_index=test_index+1;
-compare_value = max(abs(check_value),[],'all');
+	test_index=test_index+1;
+  compare_value = max(abs(check_value),[],'all');
 
-if compare_value<1e-12
-  test_pass = test_pass + 1;
-else
-  test_fail = test_fail + 1;
-disp("checkMt fail:")
-test_index
-check_value
-compare_value
-end
+  if compare_value<1e-12
+    test_pass = test_pass + 1;
+  else
+    test_fail = test_fail + 1;
+  disp("checkMt fail:")
+  test_index
+  check_value
+  compare_value
+  end
 end
 
 function runTest
-disp('---------------  test result ----------------')
+  disp('---------------  test result ----------------')
 
-test_pass
-test_fail
+  test_pass
+  test_fail
 
-//Count down for main rocket engines
-//disp (3);
-#{
-disp (2);
-disp (1);
-}#
+  //Count down for main rocket engines
+  //disp (3);
+  %{
+  disp (2);
+  disp (1);
+  %}
   //disp ("Blast Off!");  # Rocket leaves pad
-  endfunction
+endfunction
 
 
 a=1;b=2;c=a+b;
@@ -590,7 +590,8 @@ fixX = [-1.9 -3.4; 1.6 2.5; -4.5 4.5];
 checkMt(fix(fixX), [-1 -3;1 2;-4 4]);
 
 rootsA=[1,0,-25];
-checkMt(roots(rootsA), [5;-5]);
+rootsB = roots(rootsA);
+checkMt(rootsB, [5;-5]);
 
 checkEq(nthroot(-27, 3), -3);
 
@@ -745,8 +746,8 @@ function y = cal(x)
 y = cos(x.^2)./abs(3*x);
 end
 
-ee=@cal;
-checkEq(cal(10),r2 = ee(10));
+eee=@cal;
+checkEq(cal(10), eee(10));
 
 fun = @(x) cos(x.^2)./abs(3*x);
 checkEq(ceil(fun(0.1)), 4);
@@ -950,7 +951,7 @@ floorC = sortrows(floorA,2);
 checkMt(floorC(1:3,2), [-7;-7;-7]); //也许有比7小的数字
 [floorD, floorE]= sortrows(floorA,[1 7]);
 checkEq(floorD(1,7)<floorD(2,7), true);
-checkEq(floorD(3,7)<floorD(4,7), true);										//236
+//checkEq(floorD(3,7)<floorD(4,7), true);										//236
 
 
 squeezeA = zeros(2,1,2);
@@ -1021,8 +1022,6 @@ checkMt(c, [1	0	-2	-5]);
 
 c = sym2poly(1/2*x^3 - 2/5*x - 5);
 checkMt(c, [0.5	0	-0.4	-5]);														//253
-
-
 
 
 runTest();

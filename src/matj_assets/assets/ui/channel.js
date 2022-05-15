@@ -21,7 +21,7 @@ function createChannel(f){
     P.channels[i] = $.C(P, {
       L : 20,
       T : 60 * i + 18,
-      W : 150,
+      W : 250,
       H : 40,
       F : 20,
       C : '#000000',
@@ -47,15 +47,15 @@ function createChannel(f){
     }).H()
 
     P.channels[i].input  = $.C(P.channels[i].input_component, {
-      W : 142,
+      W : P.channels[i].W_ -8,
       H : 34,
       F : 20,
       C : '#000000',
       TA: 'center',
     }, 'input')
     P.channels[i].ok     = $.C(P.channels[i].input_component, {
-      L    : 170,
-      W    : 80,
+      L    : P.channels[i].W_ + 10,
+      W    : 45,
       H    : 38,
       F    : 20,
       I    : 'ok',
@@ -69,8 +69,8 @@ function createChannel(f){
       eobj.FATHER.H()
     })
     P.channels[i].cancel = $.C(P.channels[i].input_component, {
-      L: 270,
-      W: 100,
+      L: P.channels[i].ok.L_ + P.channels[i].ok.W_ +10,
+      W: 75,
       H: 38,
       F: 20,
       I: 'cancle'
@@ -79,7 +79,7 @@ function createChannel(f){
     })
 
     P.channels[i].light = $.C(P, {
-      L : 180,
+      L : P.channels[i].W_ + 30,
       T : P.channels[i].T_ + 10,
       W : 20,
       H : 20,
@@ -87,31 +87,47 @@ function createChannel(f){
     })
 
     P.channels[i].msg = $.C(P, {
-      L : 210,
+      L : P.channels[i].light.L_ + 30,
       T : P.channels[i].T_ + 5,
       W : 100,
       H : 30,
       F : 20,
       // BD: '1px solid'
     })
-
-    P.channels[i].rename = $.C(P, {
-      L    : 330,
-      T    : P.channels[i].T_,
-      W    : 80,
-      H    : 40,
-      F    : 20,
-      C    : '#000000',
-      TA   : 'center',
-      I    : 'rename',
-      title: i
-    }, 'button').click(eobj => {
-      let index   = eobj.TITLE_
-      let channel = P_CHANNEL.channels[index]
-      channel.input_component.toggle()
-      channel.input.focusMe().val(channel.I_)
-    })
   }
+
+  P.rename = $.C(f, {
+    L    : 50,
+    T    : P.T_ + P.channels[9].T_ + P.channels[9].H_ + 50,
+    W    : 80,
+    H    : 40,
+    F    : 20,
+    C    : '#000000',
+    TA   : 'center',
+    I    : 'rename',
+    title: i
+  }, 'button').click(eobj => {
+    let P = P_CHANNEL
+    let channel = P.channels[P.focus_channel]
+    channel.input_component.toggle()
+    channel.input.focusMe().val(channel.I_)
+  })
+
+  P.upload = $.C(f, {
+    L    : 250,
+    T    : P.rename.T_,
+    W    : 80,
+    H    : 40,
+    F    : 20,
+    C    : '#000000',
+    TA   : 'center',
+    I    : 'upload',
+    title: i
+  }, 'button').click(eobj => {
+    let channel = P_CHANNEL.channels[P.focus_channel]
+    channel.input_component.toggle()
+    channel.input.focusMe().val(channel.I_)
+  })
 
   P.selectChannel = n => {
     LS.focus_channel = n
@@ -168,9 +184,18 @@ function createChannel(f){
         P.setLight(i, 'green')
         P.setMsg(i, 'loading')
         console.log(Date.now(), principal_str + name)
-        let result = await INNER.matjonic_default.principalget(principal_str + name)
+        let result = await INNER.matj_default.principalget(principal_str + name)
+        // let result = await INNER.matj_default.get(name)
         console.log(Date.now(), principal_str + name, result)
-        LS[name] = result[0] || default_code[i] || ''
+        if(!LS[name]){
+          LS[name] = result[0] || default_code[i] || ''
+        }
+        else if(result[0] != LS[name]){
+          // 本地文件为主
+          LS[name+'_r'] = result[0]
+          console.warn(name+'_r has different code')
+        }
+
         P.checkLight(i)
         P.setMsg(i, LS[name] ? 'loaded' : 'empty')
       }

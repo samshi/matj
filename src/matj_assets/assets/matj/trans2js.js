@@ -551,7 +551,7 @@ function trans2js(s, fgroup = []){
 
           break
         case 'SW':
-          c = c.replace(/switch\s+\w+/, str => {
+          c = c.replace(/switch\s*\w+/, str => {
             return 'switch(' + str.slice(6) + '){\ncase "never coming":'
           })
           c = c.replace(/\{\nbreak\n/, '{\n')

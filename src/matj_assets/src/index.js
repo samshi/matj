@@ -1,8 +1,9 @@
-import { Actor, HttpAgent } from '@dfinity/agent'
-import { Principal } from '@dfinity/principal'
-import { AuthClient } from '@dfinity/auth-client'
+import {Actor, HttpAgent} from '@dfinity/agent'
+import {Principal} from '@dfinity/principal'
+import {AuthClient} from '@dfinity/auth-client'
 
 // import "../assets/main.css";
+let canister_ids = {}
 
 function initCanisterIds(){
   let canisters
@@ -18,43 +19,44 @@ function initCanisterIds(){
   }
 
   for(const canister in canisters){
-    process.env[canister.toUpperCase() + '_CANISTER_ID'] = canisters[canister][network]
-
-    // console.log(canister.toUpperCase() + '_CANISTER_ID', process.env[canister.toUpperCase() + '_CANISTER_ID'])
+    process.env[canister.toUpperCase() + '_CANISTER_ID']  = canisters[canister][network]
+    canister_ids[canister.toUpperCase() + '_CANISTER_ID'] = canisters[canister][network]
   }
+
+  console.log(canister_ids)
 }
 
 initCanisterIds()
 
-import { matjonic as matjonic_default} from "../../declarations/matjonic";
+import {matj as matj_default} from "../../declarations/matj";
 
-import { idlFactory as matjonic_idl } from '../../declarations/matjonic/matjonic.did.js'
+import {idlFactory as matj_idl} from '../../declarations/matj/matj.did.js'
 
-const matjonicCreateActor     = async (identity) => {
-  const agent = new HttpAgent({ identity })
+const matjCreateActor     = async (identity) => {
+  const agent = new HttpAgent({identity})
   if(process.env.NODE_ENV !== 'production'){
     await agent.fetchRootKey()
   }
-  return Actor.createActor(matjonic_idl, {
+  return Actor.createActor(matj_idl, {
     agent,
-    canisterId: process.env.MATJONIC_CANISTER_ID
+    canisterId: canister_ids.MATJ_CANISTER_ID
   })
 }
-const matjonicPlugCreateActor = async () => {
+const matjPlugCreateActor = async () => {
   const agent = window.ic.plug.agent
   if(process.env.NODE_ENV !== 'production'){
     await agent.fetchRootKey()
   }
   const actor = await window.ic.plug.createActor({
-    canisterId      : process.env.MATJONIC_CANISTER_ID,
-    interfaceFactory: matjonic_idl,
+    canisterId      : canister_ids.MATJ_CANISTER_ID,
+    interfaceFactory: matj_idl,
   })
 
   return actor
 }
 
 // ledger
-import { ledgerIDL } from '../assets/candid/ledger.did.js'
+import {ledgerIDL} from '../assets/candid/ledger.did.js'
 
 async function ledgerCreateActor(identity){
   const agent = new HttpAgent({
@@ -73,7 +75,7 @@ async function ledgerCreateActor(identity){
 }
 
 //auth
-import { principalToAccountAddress, to32bits } from '../assets/js/utils.js'
+import {principalToAccountAddress, to32bits} from '../assets/js/utils.js'
 
 async function internetIdentity(){
   let authClient = await AuthClient.create()
@@ -83,19 +85,19 @@ async function internetIdentity(){
 
     authClient.login({
       identityProvider: 'https://identity.ic0.app/',
-      onSuccess       : async() => {
+      onSuccess       : async () => {
         console.log('authClient.login onSuccess')
-        var identity           = authClient.getIdentity()
-        var principal          = identity.getPrincipal()
-        var address            = principalToAccountAddress(principal.toString())
-        var authActor_promise  = ledgerCreateActor(identity)
-        var matjonic_promise = matjonicCreateActor(identity)
+        var identity          = authClient.getIdentity()
+        var principal         = identity.getPrincipal()
+        var address           = principalToAccountAddress(principal.toString())
+        var authActor_promise = ledgerCreateActor(identity)
+        var matj_promise      = matjCreateActor(identity)
         $.E(INNER, {
           identity,
           principal,
           address,
-          authActor : await authActor_promise,
-          matjonic: await matjonic_promise,
+          authActor: await authActor_promise,
+          matj     : await matj_promise,
         })
 
         await window.afterLogin()
@@ -109,8 +111,8 @@ async function internetIdentity(){
 
 window.INNER = {
   internetIdentity,
-  matjonicPlugCreateActor,
+  matjPlugCreateActor,
   principalToAccountAddress,
   to32bits,
-  matjonic_default
+  matj_default
 }

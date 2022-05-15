@@ -2097,7 +2097,7 @@ $.E(M, {
 })
 //微积分
 $.E(M, {
-  diff      : (x, n = 1, dim = 1) => { //todo
+  diff            : (x, n = 1, dim = 1) => { //todo
     // 计算沿大小不等于 1 的第一个数组维度的 X 相邻元素之间的差分
     // 如果 X 是长度为 m 的向量，则 Y = diff(X) 返回长度为 m-1 的向量。Y 的元素是 X 相邻元素之间的差分。
     // Y = [X(2)-X(1) X(3)-X(2) ... X(m)-X(m-1)]
@@ -2186,7 +2186,7 @@ $.E(M, {
     }
 
   },
-  polyint   : (p, k = 0) => {
+  polyint         : (p, k = 0) => {
     if(isNda(p)){
       p = p.data
     }
@@ -2200,7 +2200,7 @@ $.E(M, {
 
     return ndarray(out)
   },
-  polyder   : (a, b) => {
+  polyder         : (a, b) => {
     //k = polyder(p) 返回 p 中的系数表示的多项式的导数，
     //k = polyder(a,b) 返回多项式 a 和 b 的乘积的导数，
     //[q,d] = polyder(a,b) 返回多项式 a 和 b 的商的导数，
@@ -2235,7 +2235,7 @@ $.E(M, {
     }
 
   },
-  limit2    : (output, f, n, a, ng='') => {
+  limit2          : (output, f, n, a, ng = '') => {
     let result
     if(typeof (n) != 'object'){
       console.error('limit2 n error')
@@ -2244,7 +2244,7 @@ $.E(M, {
 
     let n0
     if(n.group == 'AC'){
-      output.push('先计算' + n.p1 + '内的极限')
+      output.push('Calculate ' + n.p1 + ' inner limit first')
       n0 = n
       n  = n.p2.p1
     }
@@ -2276,7 +2276,7 @@ $.E(M, {
       }
       else{
         if(n.group == 'RD'){
-          output.push('有限比值类极限')
+          output.push('Finite ratio limit')
 
           if(n.p2?.p1?.p2 == '-' && (n.p2.p1.p1.group == 'MI' || n.p2.p1.p2.group == 'MI')){
             result = LIMIT.分母有理化(output, f, n, a, ng)
@@ -2286,12 +2286,12 @@ $.E(M, {
           }
         }
         else if(n.group == 'MI'){
-          output.push('有限幂类极限')
+          output.push('Finite power limit')
           result = LIMIT.有限幂(output, f, n, a, ng)
         }
         else if(n.group == 'MU'){
           if(M.limit(obj2str(n.p1), a)){
-            output.push('乘积类极限，分开计算，其中: ')
+            output.push('Multi limit，calculate independent: ')
             output.push(M.mathjaxLim(n.p1, a, ng))
             let v1 = eval(M.limit2(output, obj2str(n.p1), n.p1, a, ng))
             output.push(M.mathjaxLim(n.p2, a))
@@ -2299,31 +2299,31 @@ $.E(M, {
 
             result = v1 * v2
 
-            output.push('整体极限值为: ' + M.mathjaxInf(result))
+            output.push('The limit value is: ' + M.mathjaxInf(result))
           }
           else if(noBr(n.p1).group == 'RD' || noBr(n.p2).group == 'RD'){
-            output.push('拆分成分数: ')
+            output.push('Split into fractions: ')
             let n2
             if(noBr(n.p1).group == 'RD' && noBr(n.p2).group != 'RD'){
               n2 = {
                 group: 'RD',
-                p1: noBr(n.p1).p1 == 1 ? n.p2 : {
+                p1   : noBr(n.p1).p1 == 1 ? noBr(n.p2) : {
                   group: 'MU',
-                  p1: noBr(n.p1).p1,
-                  p2: n.p2
+                  p1   : noBr(n.p1).p1,
+                  p2   : n.p2
                 },
-                p2: noBr(n.p1).p2
+                p2   : noBr(n.p1).p2
               }
             }
             else if(noBr(n.p1).group != 'RD' && noBr(n.p2).group == 'RD'){
               n2 = {
                 group: 'RD',
-                p1: noBr(n.p2).p1 == 1 ? n.p1 : {
+                p1   : noBr(n.p2).p1 == 1 ? n.p1 : {
                   group: 'MU',
-                  p1: n.p1,
-                  p2: noBr(n.p2).p1,
+                  p1   : n.p1,
+                  p2   : noBr(n.p2).p1,
                 },
-                p2: noBr(n.p2).p2
+                p2   : noBr(n.p2).p2
               }
             }
             else{
@@ -2341,11 +2341,11 @@ $.E(M, {
       }
     }
     else if(a == -Infinity){
-      output.push('将负无穷大极值转换为正无穷大')
+      output.push('Convert -Infinity to Infinity')
 
       let f1 = M.transferInfinite(f)
-      let n1 = trans2MathObj(analysis(f1))
-      a = Infinity
+      let n1 = str2obj(f1)
+      a      = Infinity
       output.push(M.mathjaxLim(n1, a, ng))
 
       result = M.limit2(output, f1, n1, a, ng)
@@ -2358,8 +2358,11 @@ $.E(M, {
       else if(/cos\(1\/[\(\d\*]*x/.test(f)){
         result = LIMIT.特定形式cos_1_x(output, f, n, a, ng)
       }
+      else if(/\/x/.test(f) && /e/.test(f)){
+        result = LIMIT.特定形式e_x(output, f, n, a, ng)
+      }
       else if(n.group == 'RD'){
-        output.push('比值类极限')
+        output.push('Ratio limit')
 
         if(isAdMiFac(n.p1) == 2 && isAdMiFac(n.p2) == 2){
           result = LIMIT.分子分母有理化(output, f, n, a, ng)
@@ -2372,7 +2375,7 @@ $.E(M, {
         }
       }
       else if(n.group == 'MI'){
-        output.push('无限幂类极限')
+        output.push('Infinity power limit')
         result = LIMIT.无限幂(output, f, n, a, ng)
       }
       else if(isAdMiFac(n) == 2){
@@ -2390,19 +2393,19 @@ $.E(M, {
         let result_s = n0.p1 + `(${result})`
         if(!isNaN(result) || isFraction(result)){
           result = action(n0.p1, result.toNumber())
-          output.push('原极限值为: ' + result_s + ' = ' + result)
+          output.push('The limit value is: ' + result_s + ' = ' + result)
 
         }
         else{
           result = result_s
-          output.push('原极限值为: ' + result)
+          output.push('The limit value is: ' + result)
         }
       }
     }
 
     return result
   },
-  limit     : (f, a, output = []) => {
+  limit           : (f, a, output = []) => {
     //Limit of symbolic expression
 
     /*
@@ -2454,14 +2457,14 @@ $.E(M, {
     // let output = []
     if(typeof (f) == 'string'){
       f = f.replace(/\s/g, '')
-      n = trans2MathObj(analysis(f))
+      n = str2obj(f)
     }
     else if(typeof (f) == 'object' && f.uuid){
       n = f
-      f = 全部复原(f.uuid)
+      f = obj2str(n)
     }
     else{
-      return '参数不对'
+      return 'para error'
     }
 
     if(obj2str(n) != f){
@@ -2472,7 +2475,7 @@ $.E(M, {
     let n0 = limitVal(n, a_num)
     if(isFinite(n0) && n0){
       // console.log('direct calc', n0, f)
-      output.push('极限值为直接带入参数求得: ' + n0)
+      output.push('Calculate directly: ' + n0)
       return n0
     }
 
@@ -2514,27 +2517,27 @@ $.E(M, {
     let result = M.limit2(output, f, n, a, ng)
 
     if(isFinite(a_num)){
-      isNaN(n0) || output.push('参考数值逼近结果: ' + M.mathjaxInf(n0.toFixed(M.FIXNUM * 2)))
+      isNaN(n0) || output.push('Reference numerical approximation results: ' + M.mathjaxInf(n0.toFixed(M.FIXNUM * 2)))
     }
     else{
-      isNaN(n0) || output.push(`参考数值结果1: f(${a0}) -> ` + n0.toFixed(M.FIXNUM * 2))
-      isNaN(n1) || output.push(`参考数值结果2: f(${a1}) -> ` + n1.toFixed(M.FIXNUM * 2))
+      isNaN(n0) || output.push(`Reference calculation results 1: f(${a0}) -> ` + n0.toFixed(M.FIXNUM * 2))
+      isNaN(n1) || output.push(`Reference calculation results 2: f(${a1}) -> ` + n1.toFixed(M.FIXNUM * 2))
     }
     return result
   },
-  transferInfinite : (f, a) => {
-    let f1 = f.replace(str2reg(`x^d`), s=>{
+  transferInfinite: (f, a) => {
+    let f1 = f.replace(str2reg(`x^d`), s => {
       let d = +s.slice(2)
-      if(d%2){
-        return '(-y)^'+d
+      if(d % 2){
+        return '(-y)^' + d
       }
       else{
-        return 'y^'+d
+        return 'y^' + d
       }
     })
 
-    f1 = f1.replace(str2reg(`[\+\-\*\/]x`), s=>{
-      let symbol = s.slice(0,-1)
+    f1 = f1.replace(str2reg(`[\+\-\*\/]x`), s => {
+      let symbol = s.slice(0, -1)
       switch(symbol){
         case '+':
           return '-y'
@@ -2542,7 +2545,7 @@ $.E(M, {
           return '+y'
         case '*':
         case '/':
-          return symbol+'y'
+          return symbol + 'y'
       }
     })
 
@@ -2550,7 +2553,7 @@ $.E(M, {
 
     return f1
   },
-  transferLimit : (f, a) => {
+  transferLimit   : (f, a) => {
     f = f.replace(str2reg(`(${a}-x)`), '(-y)')
     f = f.replace(str2reg(`(x-${a})`), '(y)')
     // f = f.replace(/\(([\+\-]?\d+)?[\+\-]?x([\+\-]\d+)?\)/g, (find_str) => {
@@ -2579,7 +2582,7 @@ $.E(M, {
 
     f = f.replace(/\d+\*x/g, s => {
       let d0 = +s.slice(0, -2)
-      let d = d0
+      let d  = d0
       let c
       if(isNaN(a) && /\//.test(a)){
         // a 是个分数，其中很可能有 pi
@@ -2608,9 +2611,9 @@ $.E(M, {
           console.log('todo')
         }
 
-        let result = d+'*'+'y'
+        let result = d + '*' + 'y'
         if(isFraction(fra)){
-          if(fra.n>0){
+          if(fra.n > 0){
             result += '+'
           }
           else{
@@ -2622,13 +2625,13 @@ $.E(M, {
             result += c
           }
           else{
-            result += fra.n +'*'+c
+            result += fra.n + '*' + c
           }
 
-          result += '/'+fra.d
+          result += '/' + fra.d
         }
         else{
-          if(fra>0){
+          if(fra > 0){
             result += '+'
           }
           else{
@@ -2640,11 +2643,11 @@ $.E(M, {
             result += c
           }
           else{
-            result += fra +'*'+c
+            result += fra + '*' + c
           }
         }
 
-        return  result
+        return result
       }
     })
     f = f.replace(/x/g, '(y' + (isNaN(a) || a > 0 ? '+' + a : a) + ')')
@@ -2653,7 +2656,7 @@ $.E(M, {
 
     return f
   },
-  transferLimit2: (f, a) => {
+  transferLimit2  : (f, a) => {
     // 找到括号内含x的字符串
     f = f.replace(/\([^\(]*[\+\-]?x[^\)]*\)/g, (find_str) => { ///\(([\+\-]?\d+)?[\+\-]?x([\+\-]\d+)?\)/g
       let d
@@ -2892,7 +2895,7 @@ $.E(M, {
 
     }
     else{
-      let s = arr2express(left, x)
+      let s = arr2str(left, x)
 
       output.push(s)
     }
@@ -2901,11 +2904,11 @@ $.E(M, {
   factor    : (n1, space) => {
     let n
     if(typeof (n1) == 'string'){
-      n = trans2MathObj(analysis(n1))
+      n = str2obj(n1)
     }
     else if(typeof (n1) == 'object' && n1.uuid){
       n  = n1
-      n1 = 全部复原(n1.uuid)
+      n1 = obj2str(n1)
     }
     else{
       n = n1
@@ -2947,7 +2950,7 @@ $.E(M, {
         })
 
         console.log(n1, n)
-        n = trans2MathObj(analysis(n))
+        n = str2obj(n)
       }
 
       let obj_arr = []
@@ -3816,7 +3819,7 @@ $.E(M, {
       a = window[f]
     }
     else if(typeof (f) == 'string'){
-      let n = trans2MathObj(analysis(f))
+      let n = str2obj(f)
       a     = []
       limitDegree(a, n)
       clearArr(a)
@@ -5241,7 +5244,7 @@ $.E(M, {
 })
 //测试
 $.E(M, {
-  test     : () => {
+  test      : () => {
     // console.log(M.poly([1, 0.8, 0.7, 0.7]))
     // console.log(M.poly([-1, 2, 2]))
     // console.log(M.poly([0.12549213361, 31.87450787, 4]))
@@ -5385,7 +5388,7 @@ $.E(M, {
     console.log(total_cnt)
 
   },
-  testroots: v => {
+  testroots : v => {
     let f = M.poly(v).data
     let u = M.roots(f)
     console.log('已知1元' + v.length + '次方程', f)
@@ -7250,7 +7253,6 @@ function myNaN(a){
 function isRational(n){
   return Math.abs(n) % 1 == 0
 }
-
 
 function str2reg(s){
   let map = '()^/+-*'

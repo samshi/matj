@@ -99,29 +99,36 @@ function createMatjArea(f){
   $('#id_matj_mirror').S({H: 'calc(100% + 8px'})
 }
 
-async function codeSave(){
+var timers = []
+function codeSave(delay = 60000){
   let source        = P_MATJ.editor.getValue()
   let channel_index = P_CHANNEL.focus_channel || 0
   let name          = 'channel' + channel_index
   LS[name]          = source
 
   if(DATA.accountId){
-    P_CHANNEL.setLight(P_CHANNEL.focus_channel, 'green')
-    P_CHANNEL.setMsg(P_CHANNEL.focus_channel, 'uploading...')
-    P_CHANNEL.freeze = true
-    let result       = await INNER.matjonic.set(name, source)
-    if(result[0] == source){
-      P_CHANNEL.setLight(P_CHANNEL.focus_channel, '#888')
-      P_CHANNEL.setMsg(P_CHANNEL.focus_channel, 'saved')
-    }
-    else{
-      console.log('different')
-    }
-    P_CHANNEL.freeze = false
+    // 静等60秒后再保存，尽量减少上传次数
+    delete timers[channel_index]
+    timers[channel_index] = setTimeout((function(channel_index, name, source){
+      return async function(){
+        P_CHANNEL.setLight(channel_index, 'green')
+        P_CHANNEL.setMsg(channel_index, 'uploading...')
+        P_CHANNEL.freeze = true
+        let result       = await INNER.matj.set(name, source)
+        if(result[0] == source){
+          P_CHANNEL.setLight(channel_index, '#888')
+          P_CHANNEL.setMsg(channel_index, 'saved')
+        }
+        else{
+          console.log('different')
+        }
+        P_CHANNEL.freeze = false
+      }
+    })(channel_index, name, source), delay)
   }
   else{
-    P_CHANNEL.setLight(P_CHANNEL.focus_channel, '#888')
-    P_CHANNEL.setMsg(P_CHANNEL.focus_channel, '')
+    P_CHANNEL.setLight(channel_index, '#888')
+    P_CHANNEL.setMsg(channel_index, '')
   }
 }
 

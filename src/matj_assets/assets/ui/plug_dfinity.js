@@ -45,7 +45,7 @@ async function connectPlug3(){
     return
   }
 
-  INNER.matjonic = await myAwait('matjonicPlugCreateActor', INNER.matjonicPlugCreateActor)
+  INNER.matj = await myAwait('matjPlugCreateActor', INNER.matjPlugCreateActor)
   getBalance()
 }
 
@@ -92,17 +92,17 @@ async function getBalance(){
   P_LOGIN.buymecafe.V()
   P_LOGIN.avatar.V()
 
-  // var abc = await INNER.matjonic.who()
+  // var abc = await INNER.matj.who()
   // console.log(abc+'')
   //
   //
-  // var zzz = await INNER.matjonic.get('aaa')
+  // var zzz = await INNER.matj.get('aaa')
   // console.log(zzz)
   //
-  // var aaa = await INNER.matjonic.set('aaa', new Date().toLocaleTimeString())
+  // var aaa = await INNER.matj.set('aaa', new Date().toLocaleTimeString())
   // console.log(aaa)
   //
-  // var bbb = await INNER.matjonic.get('aaa')
+  // var bbb = await INNER.matj.get('aaa')
   // console.log(bbb)
 }
 

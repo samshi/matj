@@ -11,8 +11,8 @@ var TIDY = {
     '\\\"': ['SL', /\\\"/g],  //slash quotation
 
     '/*'  : ['RB', /\/\*(.|\n)*?\*\//g],
-    '#{'  : ['RB', /#\{(.|\n)*?\}#/g],
-    '%{'  : ['RB', /%\{(.|\n)*?\}%/g],
+    // '#{'  : ['RB', /#\{(.|\n)*?\}#/g],
+    '%{'  : ['RB', /%\{(.|\n)*?%\}/g],
     '%'   : ['RF', /%[^\n]*/g],
     '#'   : ['RF', /#[^\n]*/g],
     '\/\/': ['RF', /\/\/[^\n]*/g], // '/*'  : ['RF', /[ \r]*[^\\]\/\*(.|\n)*?[^\\]\*\//g],
@@ -108,7 +108,7 @@ var TIDY = {
     if    : ['IF', /\bif\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
     for   : ['FR', /\bfor\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g], // elseif    : ['EI', /\belse\s+_\d{5}_IF_/g],
     while : ['WH', /\bwhile\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
-    switch: ['SW', /\bswitch\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
+    switch: ['SW', /\bswitch((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
     try   : ['TY', /\btry\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end/g],
     func  : ['FN', /\bfunction\s+((?!\b(for|if|switch|try|while|arguments)\b)[\s\S])*?end\w*/g],
 
@@ -204,7 +204,6 @@ function tidy(source_code){
   s = 替换(s, '\\\'')
   s = 替换(s, '\\\"')
   s = 替换(s, '/*')           //替换注释
-  s = 替换(s, '#{')           //替换注释
   s = 替换(s, '%{')           //替换注释
   s = 替换(s, '%')            //替换注释
   s = 替换(s, '#')            //替换注释
@@ -516,6 +515,14 @@ function 替换(s, reg_s){
     s1 = s
     s  = s1.replace(TIDY.正则[reg_s][1], s => {
       if(('+' == reg_s[0] || '-' == reg_s[0]) && /end/.test(s)){
+        return s
+      }
+
+      if('action' == reg_s.slice(0, 6) && s.slice(0, 6) == 'switch'){
+        return s
+      }
+
+      if('output' == reg_s && s.slice(0, 6) == 'switch'){
         return s
       }
 

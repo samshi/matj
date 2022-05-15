@@ -1,5 +1,6 @@
 var 等轴   = 0
 var PLOT = {}
+var mychart
 
 function title(s){
   createNodeObj({
@@ -355,9 +356,11 @@ function func_chart(y, setting){
 }
 
 function myechart(option){
-  var node = OUTPUT_PAGES[2].context  //document.getElementById('div_echarts')
+  var node = OUTPUT_PAGES[3].context  //document.getElementById('div_echarts')
   $(node).S({Z: 1})
-  var mychart = echarts.init(node)
+  if(!mychart){
+    mychart= echarts.init(node)
+  }
   mychart.setOption(option)
 }
 

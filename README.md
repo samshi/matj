@@ -10,7 +10,7 @@ base: ones, zeros, eye, linear, linspace, all trigonometric
 matrix: blkdiag, bounds, cat, diag, flip, repmat, reshape, rot90
 linear algebra: chol, cond, det, eig, hess,hilb, inv, lu, magic, norm, orth, pascal, pinv, qr, rref, svd, tril, triu
 polynomial: factor, fzero, polyval, roots
-differential/integral: diff, polyint, polyder, solve, sym
+differential/integral: diff, polyint, polyder, solve, sym, limit
 
 
 

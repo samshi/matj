@@ -2,12 +2,13 @@ let LS = localStorage
 let OUTPUT_PAGES
 $(function(){
   var main       = $.C($.body)
-  var page_names = ['output', 'variables', 'graph']//, 'error'
+  var page_names = ['output', 'variables', 'graph', '3d']//, 'error'
   var pages      = []
 
   for(let index = page_names.length - 1, page_name; index >= 0; index--){
     page_name = page_names[index]
     var btn   = $.C(main, {
+      id: 'btn'+index,
       L : 20 + index * 150,
       T : 20,
       I : page_name,
@@ -28,6 +29,7 @@ $(function(){
     var IH = $.IH()
 
     pages[index] = $.C(main, {
+      id: 'page'+index,
       L : 20,
       T : 120,
       W : IW - 70,
@@ -47,6 +49,7 @@ $(function(){
   OUTPUT_PAGES = pages
 
   let zoomin  = $.C(main, {
+    id:'zoomin',
     I : '+',
     L : 40,
     T : 70,
@@ -71,6 +74,7 @@ $(function(){
   })
   let zoomout = $.C(main, zoomin.CSS_)
     .S({
+      id:'zoomout',
       I: '-',
       L: zoomin.L_ + 50
     }).down(eobj => {
@@ -90,6 +94,7 @@ $(function(){
     })
 
   TIME_AREA = $.C(main, {
+    id:'TIME_AREA',
     L : 20,
     T : IH - 50,
     W : IW - 70,
@@ -102,12 +107,15 @@ $(function(){
     O : 'auto'
   })
 
-  if(LS.page_name){
-    focusPage(localStorage.page_name)
-  }
+  focusPage(LS.page_name)
 })
 
 function focusPage(page_name){
+  console.log('focusPage', LS.page_name)
+  if(!page_name){
+    return
+  }
+
   OUTPUT_PAGES.forEach((page, i) => {
     if(page.name == page_name){
       page.S({
@@ -194,6 +202,8 @@ function showVariable(){
     setTimeout(MathJax.typeset, 1000)
   }
   OUTPUT_PAGES[0].V()
+
+  focusPage(LS.page_name)
 }
 
 window.onerror = function(errorMessage, scriptURI, lineNumber, columNumber, errorObj){
