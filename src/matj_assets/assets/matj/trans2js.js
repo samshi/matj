@@ -251,10 +251,17 @@ function trans2js(s, fgroup = []){
           if(/A\w(factor|checkLimit|limit|solve|mathjax|simplify|expand|sym2poly)$/.test(fgroup[0])){ // && !/_AC_/.test(c)
             let s = 全部复原(c)
             let a = s.split(',')
-            a[0] = '"' + a[0].trim() + '"'
-            if(a[1]){
-              a[1] = '"' + a[1].trim() + '"'
-            }
+            a = a.map(item => {
+              item = item.trim()
+              if(!/^([\'\"]).*\1$/g.test(item)){
+                return '"' + item + '"'
+              }
+              return item
+            })
+            // a[0] = '"' + a[0].trim() + '"'
+            // if(a[1] && ){
+            //   a[1] = '"' + a[1].trim() + '"'
+            // }
             return a.join(',')
           }
 

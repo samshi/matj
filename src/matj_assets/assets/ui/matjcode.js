@@ -1,18 +1,6 @@
 function createMatjArea(f){
-  var P = P_MATJ = $.C(f, {
+  var P = P_MATJ = $.C(f, P_JS.CSS_).S({
     id : 'id_matj_area',
-    L  : 430,
-    T  : 50,
-    W  : 750,
-    H  : f.H_ - 75,
-    M  : 0,
-    PD : 2,
-    B  : 10,
-    PDB: 10,
-    F  : 20,
-    O  : 'auto',
-    Z  : 1,
-    FF : 'monospace',
     BG : '#900',
   })
 
@@ -108,6 +96,8 @@ function codeSave(delay = 60000){
 
   if(DATA.accountId){
     // 静等60秒后再保存，尽量减少上传次数
+    P_CHANNEL.setLight(channel_index, '#f4d71a')
+    P_CHANNEL.setMsg(channel_index, 'pedding')
     delete timers[channel_index]
     timers[channel_index] = setTimeout((function(channel_index, name, source){
       return async function(){

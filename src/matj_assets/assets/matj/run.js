@@ -1,8 +1,8 @@
 let LS = localStorage
 let OUTPUT_PAGES
+var page_names = ['output', 'variables', '2d chart', '3d chart']//, 'error'
 $(function(){
   var main       = $.C($.body)
-  var page_names = ['output', 'variables', 'graph', '3d']//, 'error'
   var pages      = []
 
   for(let index = page_names.length - 1, page_name; index >= 0; index--){
@@ -19,9 +19,7 @@ $(function(){
       BR: 15,
       TA: 'center',
       BD: '1px solid',
-
     }).down(eobj => {
-      LS.page_name = eobj.I_
       focusPage(eobj.I_)
     })
 
@@ -72,6 +70,7 @@ $(function(){
       LS.output1 = OUTPUT_PAGES[1].F_
     }
   })
+
   let zoomout = $.C(main, zoomin.CSS_)
     .S({
       id:'zoomout',
@@ -111,12 +110,16 @@ $(function(){
 })
 
 function focusPage(page_name){
-  console.log('focusPage', LS.page_name)
+  LS.page_name = page_name
+
   if(!page_name){
     return
   }
 
+  // console.log('focusPage', LS.page_name)
+
   OUTPUT_PAGES.forEach((page, i) => {
+    // console.log([page.name, page_name])
     if(page.name == page_name){
       page.S({
         Z: 2
@@ -139,7 +142,8 @@ function focusPage(page_name){
 }
 
 function clearAll(){
-  OUTPUT_PAGES[0].I('').H()
+  focusPage(page_names[0])
+  OUTPUT_PAGES[0].I('')
   OUTPUT_PAGES[1].I('')
   OUTPUT_PAGES[2].I('')
   // OUTPUT_PAGES[3].I('')
@@ -201,9 +205,9 @@ function showVariable(){
   else{
     setTimeout(MathJax.typeset, 1000)
   }
-  OUTPUT_PAGES[0].V()
+  // OUTPUT_PAGES[0].V()
 
-  focusPage(LS.page_name)
+  // focusPage(LS.page_name)
 }
 
 window.onerror = function(errorMessage, scriptURI, lineNumber, columNumber, errorObj){

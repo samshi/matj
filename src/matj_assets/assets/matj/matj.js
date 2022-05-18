@@ -112,7 +112,7 @@ $.E(M, {
       key : a[i],
       name: s
     }
-  },          // 非matlab函数
+  },
   chol                      : a => {
     let l = a.shape[0]
     let b = M.zeros(l)
@@ -154,7 +154,7 @@ $.E(M, {
     }
 
     return ndarray(b, [b_shape_row, b.length / b_shape_row])
-  },  // 非matlab函数
+  },
   concatenateV              : (...arg) => {       // 非matlab函数
     // console.log(arg)
     let b = []
@@ -2479,31 +2479,46 @@ $.E(M, {
       return n0
     }
 
-    let an, a0, a1, n1
+    let an, vn
 
     if(a_num == Infinity){
-      a0 = 10000
-      n0 = limitVal(n, a0)
-      a1 = 100000000
-      n1 = limitVal(n, a1)
+      an = [0, 0.0001, 0.000001, 0.00000001]
+      vn = [
+        limitVal(n, 1 / an[1]), limitVal(n, 1 / an[2]), limitVal(n, 1 / an[3]),
+      ]
     }
     else if(a_num == -Infinity){
-      a0 = -1000
-      n0 = limitVal(n, a0)
-      a1 = -1000000
-      n1 = limitVal(n, a1)
+      an = [0, 0.0001, 0.000001, 0.00000001]
+      vn = [
+        limitVal(n, -1 / an[1]), limitVal(n, -1 / an[2]), limitVal(n, -1 / an[3]),
+      ]
     }
     else{
-      an     = [a_num, a_num + 0.05, a_num + 0.02, a_num + 0.005]
-      let vn = [
+      an = [a_num, a_num + 0.05, a_num + 0.02, a_num + 0.005]
+      vn = [
         limitVal(n, an[1]), limitVal(n, an[2]), limitVal(n, an[3]),
       ]
+    }
 
-      let p = M.polyfit(an.slice(1), vn, 2)
-      n0    = M.polyval(p, an[0]) //* (ng == '-' ? -1 : 1)
+    let p = M.polyfit(an.slice(1), vn, 2)
+    n0    = M.polyval(p, an[0]) //* (ng == '-' ? -1 : 1)
 
-      if(isNaN(n0)){
-        n0 = vn[2]
+    if(isNaN(n0)){
+      if(isNaN(vn[3])){
+        if(isNaN(vn[2])){
+          if(isNaN(vn[1])){
+            n0 = 'something wrong'
+          }
+          else{
+            n0 = vn[1]
+          }
+        }
+        else{
+          n0 = vn[2]
+        }
+      }
+      else{
+        n0 = vn[3]
       }
     }
 
@@ -2516,13 +2531,13 @@ $.E(M, {
 
     let result = M.limit2(output, f, n, a, ng)
 
-    if(isFinite(a_num)){
-      isNaN(n0) || output.push('Reference numerical approximation results: ' + M.mathjaxInf(n0.toFixed(M.FIXNUM * 2)))
-    }
-    else{
-      isNaN(n0) || output.push(`Reference calculation results 1: f(${a0}) -> ` + n0.toFixed(M.FIXNUM * 2))
-      isNaN(n1) || output.push(`Reference calculation results 2: f(${a1}) -> ` + n1.toFixed(M.FIXNUM * 2))
-    }
+    isNaN(n0) || output.push('Reference numerical approximation results: ' + M.mathjaxInf(n0.toFixed(M.FIXNUM * 2)))
+    // if(isFinite(a_num)){
+    // }
+    // else{
+    //   isNaN(n0) || output.push(`Reference calculation results 1: f(${a0}) -> ` + n0.toFixed(M.FIXNUM * 2))
+    //   isNaN(n1) || output.push(`Reference calculation results 2: f(${a1}) -> ` + n1.toFixed(M.FIXNUM * 2))
+    // }
     return result
   },
   transferInfinite: (f, a) => {
@@ -3081,17 +3096,20 @@ $.E(M, {
       let fac
       for(let i = 0; true; i++){
         if(!M.FACTOR[i]){
-          let add_fac = getNextPrime(fac)
-          console.log('新增一个质数', add_fac)
+          result.push('unfactor ' + n)
+          return ndarray(result)
 
-          if(i % 10000 == 0){
-            let yn = comfirm('扩充了质数库至' + add_fac + ', 仍未找到因数，是否继续？(目前分解' + n + ')')
-            if(!yn){
-              result.push('未分解' + n)
-              return ndarray(result)
-            }
-          }
-          M.FACTOR[i] = (add_fac - fac) / 2
+          // let add_fac = getNextPrime(fac)
+          // console.log('新增一个质数', add_fac)
+          //
+          // if(i % 1000 == 0){
+          //   let yn = comfirm('扩充了质数库至' + add_fac + ', 仍未找到因数，是否继续？(目前分解' + n + ')')
+          //   if(!yn){
+          //     result.push('未分解' + n)
+          //     return ndarray(result)
+          //   }
+          // }
+          // M.FACTOR[i] = (add_fac - fac) / 2
         }
 
         fac = i < 2 ? M.FACTOR[i] : fac + (M.FACTOR[i] || 1) * 2
@@ -3844,6 +3862,61 @@ $.E(M, {
 })
 //变换
 $.E(M, {
+  fft    : (a) => {
+    a = a.data || a
+
+    var r    = Math.ceil(Math.log2(a.length))
+    var size = 1 << r
+
+    var re_a = new Float64Array(size)
+    var im_a = new Float64Array(size)
+    for(var i = 0; i < size; i++){
+      re_a[i] = a[i] || 0
+    }
+
+    var omg = getOmg(size)
+
+    var fft_arr = fft_base(re_a.slice(0), im_a, omg)
+
+    var output = []
+    for(var i = 0; i < size; i++){
+      output[i] = complex(fft_arr[0][i], fft_arr[1][i])
+    }
+    return ndarray(output)
+  },
+  ifft   : (a) => {
+    a = a.data || a
+
+    var r    = Math.ceil(Math.log2(a.length))
+    var size = 1 << r
+
+    var re_a = new Float64Array(size)
+    var im_a = new Float64Array(size)
+    for(var i = 0; i < size; i++){
+      if(isComplex(a[i])){
+        re_a[i] = a[i].r
+        im_a[i] = a[i].i
+      }
+      else{
+        re_a[i] = a[i] || 0
+        im_a[i] = 0
+      }
+
+    }
+    console.log(a)
+    console.log(re_a)
+    console.log(im_a)
+
+    var omg = getOmg(size)
+
+    var ifft_arr = fft_base(re_a, im_a, omg, -1)
+    var output   = []
+    for(var i = 0; i < size; i++){
+      output[i] = ifft_arr[i]
+    }
+
+    return ndarray(output)
+  },
   laplace: () => {
     // laplace(f) returns the Laplace Transform of f. By default, the independent variable is t and the transformation variable is s.
     // laplace(f,transVar) uses the transformation variable transVar instead of s.
@@ -5186,6 +5259,7 @@ $.E(M, {
      */
   },
   plot      : (...args) => {
+    focusPage(page_names[2])
     plot.apply(this, args)
     // if(typeof (z) == 'undefined'){
     //   plot(x.data || x, y.data || y)
@@ -5198,6 +5272,7 @@ $.E(M, {
     addToTableOut(b?.name ?? a, b)
   },
   surf      : (x, y, z) => {
+    focusPage(page_names[3])
     plotsurf(x.data || x, y.data || y, z.data || z)
   },
   setFixNum : n => {
@@ -6049,7 +6124,7 @@ function variableValue(a){
   }
 
   if(isComplex(a) || !isNaN(a)){
-    return '<span title="' + a + '" onclick="this.innerText=this.title">' + showNormal(a) + '</span>'
+    return '<span title="' + a + '" onclick="showDetail(this)">' + showNormal(a) + '</span>'
   }
   else if(myNaN(a)){
     return 'NaN'
@@ -6072,7 +6147,7 @@ function nda2table(nda, e){
   // toPrecision
   if(!isNda(nda)){
     let cs = nda < 0 ? 'class="nag"' : ''
-    return '<td ' + cs + ' title="' + nda + '" onclick="this.innerText=this.title">' + showNormal(nda) + '</td>'
+    return '<td ' + cs + ' title="' + nda + '" onclick="showDetail(this)">' + showNormal(nda) + '</td>'
   }
 
   let s = ''
@@ -6092,7 +6167,7 @@ function nda2table(nda, e){
         }
         else{
           let cs = n < 0 ? 'class="nag"' : ''
-          s += '<td ' + cs + ' title="' + n + '" onclick="this.innerText=this.title">' + showNormal(n) + '</td>'
+          s += '<td ' + cs + ' title="' + n + '" onclick="showDetail(this)">' + showNormal(n) + '</td>'
         }
       }
 
@@ -6123,6 +6198,16 @@ function nda2table(nda, e){
   }
 }
 
+function showDetail(node){
+  if(node.innerText == node.title){
+    node.innerText = node.normal_text
+  }
+  else{
+    node.normal_text = node.innerText
+    node.innerText   = node.title
+  }
+}
+
 function showNormal(n){
   let s = n
   if(isComplex(n)){
@@ -6142,7 +6227,7 @@ function showNormal(n){
     }
   }
 
-  if(n > 0){
+  if(n >= 0){
     s = '&nbsp;' + s
   }
 

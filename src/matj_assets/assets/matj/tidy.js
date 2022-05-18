@@ -3,6 +3,7 @@
 // JS 运算符优先级 https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
 // MATLAB 运算符和特殊字符 https://ww2.mathworks.cn/help/matlab/matlab_prog/matlab-operators-and-special-characters.html
 // JS 正则表达式否定匹配，正向前瞻 https://www.cnblogs.com/dong-xu/p/6926064.html 附件文章内容也很多
+// RegExp-4 【正向预查、贪婪与非贪婪模式、replace方法】https://blog.csdn.net/qq_42647547/article/details/118218565
 var TIDY = {
   正则: { //按处理顺序
     command: ['CM', new RegExp('\\n\\s*(' + cmd_arr.join('|') + ')\\b[^\\n]*', 'g')], // /\n\s*[\.\w]+[^\n]*/g],

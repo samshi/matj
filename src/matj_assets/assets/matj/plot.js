@@ -357,7 +357,6 @@ function func_chart(y, setting){
 
 function myechart(option){
   var node = OUTPUT_PAGES[3].context  //document.getElementById('div_echarts')
-  $(node).S({Z: 1})
   if(!mychart){
     mychart= echarts.init(node)
   }

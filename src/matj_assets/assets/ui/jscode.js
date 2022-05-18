@@ -3,7 +3,7 @@ function createJsArea(f){
     id : 'id_js_area',
     L  : 430,
     T  : 50,
-    W  : 750,
+    W  : 800,
     H  : f.H_ - 75,
     M  : 0,
     PD : 2,

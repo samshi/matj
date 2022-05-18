@@ -49,7 +49,25 @@ async function connectPlug3(){
   getBalance()
 }
 
+async function connectIC(){
+  if(window.INNER){
+    INNER.internetIdentity()
+  }
+  else{
+    setTimeout(connectIC, 1000)
+  }
+}
+
+async function afterLogin(){
+  DATA.principal = INNER.principal
+  DATA.accountId = INNER.address
+  DATA.isic      = true
+  await getBalance()
+}
+
 async function getBalance(){
+  P_CHANNEL.upload.V()
+
   P_LOGIN.login_plug_box.H()
   P_LOGIN.login_identity_box.H()
   P_CHANNEL.max()
@@ -79,7 +97,7 @@ async function getBalance(){
 
   var s = DATA.isplug ? 'Plug' : DATA.isic ? 'Dfinity' : 'fail'
   if(s != 'fail'){
-    s += ': ' + balance_str
+    s += ': ' + (balance_str || 'get balance faild')
     s += '<br>' + shortPrincipal(DATA.accountId)
   }
 
@@ -104,22 +122,6 @@ async function getBalance(){
   //
   // var bbb = await INNER.matj.get('aaa')
   // console.log(bbb)
-}
-
-async function connectIC(){
-  if(window.INNER){
-    INNER.internetIdentity()
-  }
-  else{
-    setTimeout(connectIC, 1000)
-  }
-}
-
-async function afterLogin(){
-  DATA.principal = INNER.principal
-  DATA.accountId = INNER.address
-  DATA.isic      = true
-  await getBalance()
 }
 
 function shortPrincipal(s){

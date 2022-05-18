@@ -15,14 +15,17 @@ function createOutputArea(f){
   }, 'iframe')
 
   P.run_btn = $.C(f, {
-    I : 'run js code',
+    I : 'run',
     L : 1050,
     T : 10,
-    W: 80,
-    PD: '5px 10px',
+    W : 50,
+    PD: '2px 10px',
     BR: 5,
-    F : 14,
-    BD: '2px solid #666'
+    F : 19,
+    BD: '2px solid #4aac0c',
+    C: '#fff',
+    BG:'#4aac0c',
+    TA: 'center'
   }).down(function(){
     codeRun()
   })

@@ -47,7 +47,7 @@ function createChannel(f){
     }).H()
 
     P.channels[i].input  = $.C(P.channels[i].input_component, {
-      W : P.channels[i].W_ -8,
+      W : P.channels[i].W_ - 8,
       H : 34,
       F : 20,
       C : '#000000',
@@ -61,15 +61,15 @@ function createChannel(f){
       I    : 'ok',
       title: i
     }, 'button').click(eobj => {
-      let index               = eobj.TITLE_
-      let channel             = P_CHANNEL.channels[index]
-      let new_name            = channel.input.val()
+      let index                   = eobj.TITLE_
+      let channel                 = P_CHANNEL.channels[index]
+      let new_name                = channel.input.val()
       LS['channel_name_' + index] = new_name
       channel.I(new_name)
       eobj.FATHER.H()
     })
     P.channels[i].cancel = $.C(P.channels[i].input_component, {
-      L: P.channels[i].ok.L_ + P.channels[i].ok.W_ +10,
+      L: P.channels[i].ok.L_ + P.channels[i].ok.W_ + 10,
       W: 75,
       H: 38,
       F: 20,
@@ -87,12 +87,11 @@ function createChannel(f){
     })
 
     P.channels[i].msg = $.C(P, {
-      L : P.channels[i].light.L_ + 30,
-      T : P.channels[i].T_ + 5,
-      W : 100,
-      H : 30,
-      F : 20,
-      // BD: '1px solid'
+      L: P.channels[i].light.L_ + 30,
+      T: P.channels[i].T_ + 5,
+      W: 100,
+      H: 30,
+      F: 20, // BD: '1px solid'
     })
   }
 
@@ -107,31 +106,27 @@ function createChannel(f){
     I    : 'rename',
     title: i
   }, 'button').click(eobj => {
-    let P = P_CHANNEL
+    let P       = P_CHANNEL
     let channel = P.channels[P.focus_channel]
     channel.input_component.toggle()
     channel.input.focusMe().val(channel.I_)
   })
 
   P.upload = $.C(f, {
-    L    : 250,
+    L    : 200,
     T    : P.rename.T_,
-    W    : 80,
+    W    : 200,
     H    : 40,
     F    : 20,
     C    : '#000000',
     TA   : 'center',
-    I    : 'upload',
+    I    : 'upload remote now',
     title: i
-  }, 'button').click(eobj => {
-    let channel = P_CHANNEL.channels[P.focus_channel]
-    channel.input_component.toggle()
-    channel.input.focusMe().val(channel.I_)
-  })
+  }, 'button').click(codeSave).H()
 
   P.selectChannel = n => {
     LS.focus_channel = n
-    var code         = LS['channel' + n] || default_code[0] || ''
+    var code         = LS['channel' + n] || ''
     noOnChange       = true
     P_MATJ.editor.setValue(code)
 
@@ -188,12 +183,12 @@ function createChannel(f){
         // let result = await INNER.matj_default.get(name)
         console.log(Date.now(), principal_str + name, result)
         if(!LS[name]){
-          LS[name] = result[0] || default_code[i] || ''
+          LS[name] = result[0] || ''
         }
         else if(result[0] != LS[name]){
           // 本地文件为主
-          LS[name+'_r'] = result[0]
-          console.warn(name+'_r has different code')
+          LS[name + '_r'] = result[0]
+          console.warn(name + '_r has different code')
         }
 
         P.checkLight(i)
@@ -206,50 +201,27 @@ function createChannel(f){
   P.max()
 }
 
-let default_code = {
-  0: `x=[1:10]
-y(0)=1;
-for i=2:10
-  y(i-1)=y(i-2)*3;
-end
-plot(x, y)
-y`,
-  1: `a=[1,2,3]
-b=[2,4,6]
-c=a+1
-d=b-2
-e=c+d
-f=[2 3 4;4 5 6]
-g = [ 11 12 13 14 ...
-  21 22 23 24 ...
-  31 32 33 34 ]
-h=[0:9]
-m=[1:2:10;2:6]
-n = m(null,2:end-2)
-n(1:) = 3
-n
-m
-n(0, 0:1)
-[j k] = n(0, 0:1)
-j
-k`,
-  2: '\n// example 1\ns=0;\nfor i=1:10\n  s=s+i/(2*i+1);\nend\ns\n\nsum((1:10)./(3:2:21))\n',
-  3: '\ns=0;\nfor i=1:100\n  if mod(i,3)==0 && mod(i,7)==0\n    s=s+i;\n  end\nend\ns\n',
-  4: '\nx=[1:10]\ny(0)=1;\nfor i=2:10\n  y(i-1)=y(i-2)*2;\nend\nplot(x, y)\ny',
-  5: `// find the number which is equal to sum of factor
-p=[];
-for n=2:5000
-  s=0;
-  for r=1:n-1
-    if mod(n,r)==0
-      s=s+r;
-    end
-  end
-  if s==n
-    p=[p n];
-  end
-end
-p`,
-  6: "a = [2 3 4;4 5 6]\nb=a'\nc=b'",
-}
+var CODEBASE = []
+for(let i = 0; i < 10; i++){
+  (function(i){
+    $.get(`/test/test${i}.m`, '', res => {
+      if(res){
+        CODEBASE[i] = res
+        let name    = 'channel' + i
+        if(!LS[name]){
+          LS[name] = CODEBASE[i]
+          let m    = CODEBASE[i].match(/^\%\s*title\s*\=([\w\s]+?)\n/)
+          console.log(m)
+          if(m && m[1].trim()){
+            LS['channel_name_' + i] = m[1].trim()
+            if(window.P_CHANNEL){
+              let channel             = P_CHANNEL.channels[i]
+              channel.I(LS['channel_name_' + i])
+            }
 
+          }
+        }
+      }
+    })
+  })(i)
+}

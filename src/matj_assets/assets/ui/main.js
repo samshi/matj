@@ -1,8 +1,7 @@
 let VERSION = 1.0
 let W       = window
-let LS = localStorage
-let DATA = {
-}
+let LS      = localStorage
+let DATA    = {}
 
 W.onresize = function(){
   clearTimeout(W.resize_timer)
@@ -17,9 +16,9 @@ function delayResize(){
 }
 
 $(function(){
-  W.main = $.c($.body,{
-    W:$.IW()*1,
-    H:$.IH()*1,
+  W.main = $.c($.body, {
+    W : $.IW() * 1,
+    H : $.IH() * 1,
     BG: '#f8f8f8'
   }, 'main')
   login(main)
@@ -44,11 +43,9 @@ $(function(){
   onresize()
 
   // 切换上次的channel
-  if(LS.focus_channel){
-    setTimeout(function(){
-      P_CHANNEL.selectChannel(LS.focus_channel)
-    }, 100)
-  }
+  setTimeout(function(){
+    P_CHANNEL.selectChannel(LS.focus_channel || 0)
+  }, 100)
 })
 
 function RESIZE(eobj){
