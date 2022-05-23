@@ -37,7 +37,7 @@ let total_cnt = 0
 // const W = window
 const M = {
   FIXNUM: 4,
-  SYMS  : {}
+  SYMS  : {},
 }
 //矩阵处理
 $.E(M, {
@@ -162,12 +162,30 @@ $.E(M, {
     for(let i = 0; i < arg.length; i++){
       let a = arg[i]
       if(!isNda(a)){ // || a.dimension != 2
-        if(Array.isArray(a)){
-          b = b.concate(...a)
+        if(Array.isArray(b)){
+          if(Array.isArray(a)){
+            b = b.concate(...a)
+          }
+          else{
+            b.push(a)
+            // return ndarray(arg, [arg.length, 1])
+          }
+        }
+        else if(isNda(b)){
+          if(b.shape[1] == 1 && !Array.isArray(a)){
+            b.data.push(a)
+            b.shape[0]++
+          }
+          else if(Array.isArray(a) && a.length == b.shape[1]){
+            b.data.push(a)
+            b.shape[0]++
+          }
+          else{
+            console.log('todo')
+          }
         }
         else{
-          b.push(a)
-          // return ndarray(arg, [arg.length, 1])
+          console.log('todo')
         }
       }
       else{
@@ -2451,6 +2469,8 @@ $.E(M, {
     https://baijiahao.baidu.com/s?id=1615042947782687596&wfr=spider&for=pc
     */
 
+    f = window[f] || f
+
     let n, f0 = f
     let a_num = isNaN(a) ? eval(a) : +a
 
@@ -2473,6 +2493,10 @@ $.E(M, {
 
     output.push(M.mathjaxLim(n, a))
     let n0 = limitVal(n, a_num)
+    if(n0 == undefined){
+      return 'undefined'
+    }
+
     if(isFinite(n0) && n0){
       // console.log('direct calc', n0, f)
       output.push('Calculate directly: ' + n0)
@@ -2702,7 +2726,64 @@ $.E(M, {
     // console.log(f, a)
 
     return f
-  }
+  },
+  newtonCotes     : (f, a, b, n, m = 1) => {
+    // fun，积分函数的句柄，必须能够接受矢量输入
+    // a，积分下限
+    // b，积分上限
+    // m，将区间[a,b]等分的子区间数量
+    // n，采用的Newton-Cotes公式的阶数，必须满足n<8，否则积分没法保证稳定性
+
+    f = window[f] ?? f
+    a = window[a] ?? +a
+    b = window[b] ?? +b
+    n = window[n] ?? +n
+    m = window[m] ?? +m
+    console.log(a,b,n,m)
+    f       = f.replace(/\s/g, '')
+    let obj = str2obj(f)
+    let xk  = M.linspace(a, b, m + 1).data
+
+    let sum = 0
+    for(let i = 0; i < m; i++){
+      sum += M.newtonCotes2(obj, xk[i], xk[i+1], n)
+    }
+
+    return sum;//limitVal(n, b)
+  },
+  newtonCotes2    : (obj, a, b, n) => {
+    if(n < 2 || n > 7){
+      return 'newton cotes accept 2-7, but ' + n
+    }
+
+    let x = M.linspace(a, b, +n + 1).data
+    console.log(x)
+
+    if(!M.COTESCOEFF){
+      M.COTESCOEFF = {
+        1: d([1, 1], 2),
+        2: d([1, 4, 1], 6),
+        3: d([1, 3, 3, 1], 8),
+        4: d([7, 32, 12, 32, 7], 90),
+        5: d([19, 75, 50, 50, 75, 19], 288),
+        6: d([41, 216, 27, 272, 27, 216, 41], 840),
+        7: d([751, 3577, 1323, 2989, 2989, 1323, 3577, 751], 17280),
+      }
+
+      function d(arr, n){
+        return arr.map(v => v / n)
+      }
+    }
+
+    let sum = 0
+    for(let i = 0; i <= n; i++){
+      sum += M.COTESCOEFF[n][i] * limitVal(obj, x[i])
+    }
+
+    sum *= b - a
+
+    return sum
+  },
 
   /*
     limit
@@ -4205,11 +4286,13 @@ $.E(M, {
   },
   factorial : a => {
     function factorial(n){
+      if(n % 1 != 0 || n < 0){
+        return NaN
+      }
       if(n <= 1){
-        return n
+        return 1
       }
       else{
-        n = n | 0
         return n * factorial(n - 1);
       }
     }
@@ -4866,6 +4949,7 @@ $.E(M, {
     return ndarray(linear(a, b, c))
   },
   linspace: (a, b, c = 100) => {
+    a        = +a
     let arr  = []
     let step = (b - a) / (c - 1)
     for(let i = 0; i < c; i++){
@@ -5671,6 +5755,7 @@ function actionshow(f, ...arg){
 }
 
 function assign(b, a){
+  b = b.single || b
   // console.log('assign', a, b)
   if(M[a] || resident_command.includes(a)){
     console.error(a, 'can not be assign', b)
@@ -6134,6 +6219,9 @@ function variableValue(a){
     return '[ <br>&nbsp; ' + a.join(', <br>&nbsp; ') + ' <br>]'
   }
   else{
+    if(/[\w\+\-\*\/\^\.]+/.test(a)){
+      return M.mathjax(a)
+    }
     return a
   }
 }
@@ -6222,8 +6310,8 @@ function showNormal(n){
     else if(Math.abs(n) < 0.0001 || Math.abs(n) > 1e8){
       s = n.toExponential(M.FIXNUM)
     }
-    else if(n.toFixed(M.FIXNUM) != n){
-      s = n.toFixed(M.FIXNUM)
+    else if((+n).toFixed(M.FIXNUM) != n){
+      s = (+n).toFixed(M.FIXNUM)
     }
   }
 
@@ -7234,11 +7322,11 @@ function sameSize(a, b){
 
 function sameValue(a, b){
   if(!isNda(a)){
-    throw new Error(a, 'is not matrix')
+    console.warn(a, 'is not matrix')
     return
   }
   if(!isNda(b)){
-    throw new Error(b, 'is not matrix')
+    console.warn(b, 'is not matrix')
     return
   }
   a = a.simple()
@@ -7300,18 +7388,25 @@ function INDEX2(n){
     return a.join(':')
   }
   else if(/:/.test(n)){
-    return n.replace(/[\+\-]?\d+/g, n => {
-      if(+n > 0){
-        return n - 1
-      }
-      return n
-    })
+    let a = n.split(':')
+    a[0]  = INDEX2(a[0])
+    a[1]  = INDEX2(a[1])
+    return a.join(':')
   }
   else if(!isNaN(n)){
     return n > 0 ? n - 1 : n
   }
+  else if(/[\+\-]?\d+/.test(n)){
+    //只替换一个数字
+    return n.replace(/[\+\-]?\d+/, n => {
+      return n - 1
+    })
+  }
+  else if(/[\+\-]?\w+/.test(n)){
+    return n + '-1'
+  }
   else{
-    return n
+    console.log('todo', n)
   }
 }
 

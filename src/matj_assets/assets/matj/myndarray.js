@@ -501,7 +501,11 @@ ndarray.create.prototype = {
         out.forEach(n=>{
           arr.push(b.data[n])
         })
-        return ndarray(arr, [1, arr.length])
+        if(b.shape[0]==1){
+          return ndarray(arr, [1,arr.length])
+        }else{
+          return ndarray(arr, [arr.length, 1])
+        }
       }
     }
 
@@ -1624,7 +1628,9 @@ function nearZero(n, m = -12){
 function createIndex(s, arr){
   // console.log('createIndex b', s, arr)
   let len = arr.length
-  s       = s.replace(/end/g, len - 1) //因为结果需要包含end对应的位置
+  s       = s.replace(/end/g, len)
+  // 因为结果需要包含end对应的位置
+  // 这一步在INDEX过程就已经处理
 
   let result = []
 

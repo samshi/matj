@@ -67,7 +67,7 @@ function trans2js(s, fgroup = []){
           a = c.split(/\s*\+\s*/g)
           if(a.length == 2){
             if(pre == '-'){
-              c = ['M.plus(M.mtimes(', a[1], ', -1),', a[0], ')'].join('')
+              c = ['M.plus(M.mtimes(', a[0], ', -1),', a[1], ')'].join('')
             }
             else{
               c = ['M.plus(', a[0], ',', a[1], ')'].join('')
@@ -248,7 +248,7 @@ function trans2js(s, fgroup = []){
             c = '["' + a.join('","') + '"]'
           }
 
-          if(/A\w(factor|checkLimit|limit|solve|mathjax|simplify|expand|sym2poly)$/.test(fgroup[0])){ // && !/_AC_/.test(c)
+          if(/A\w(factor|checkLimit|limit|solve|mathjax|simplify|expand|sym2poly|newtonCotes)$/.test(fgroup[0])){ // && !/_AC_/.test(c)
             let s = 全部复原(c)
             let a = s.split(',')
             a = a.map(item => {
@@ -273,7 +273,7 @@ function trans2js(s, fgroup = []){
             a = c.split(/\s*\:\s*/)
             c = 'M.linear(' + a[0] + ',' + a[1] + ',' + a[2] + ')' // A=[1:3:7;2:3:8;3:3:9]
           }
-          else if(/AS|MS/g.test(fgroup[0])){
+          else if(fgroup[0] == 'AR' || fgroup[0] == 'AS' && fgroup[1] !== 'FR='){
             a = c.split(/\s*\:\s*/)
             c = 'M.linear(' + a[0] + ',' + a[1] + ',' + a[2] + ')'
           }
