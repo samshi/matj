@@ -10,7 +10,7 @@ actor Registry {
 
   let map = Map.fromIter<Text,Text>(entries.vals(), 10, Text.equal, Text.hash);
 
-  public query(msg) func who() : async Principal{
+  public query(msg) func who() : async Principal {
     msg.caller
   };
 
