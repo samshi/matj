@@ -96,7 +96,7 @@ function createChannel(f){
   }
 
   P.rename = $.C(f, {
-    L    : 50,
+    L    : 20,
     T    : P.T_ + P.channels[9].T_ + P.channels[9].H_ + 50,
     W    : 80,
     H    : 40,
@@ -112,15 +112,25 @@ function createChannel(f){
     channel.input.focusMe().val(channel.I_)
   })
 
+  P.share = $.C(f, P.rename.CSS_, 'button').S({
+    L    : 143,
+    I    : 'share',
+  }).H().click(eobj => {
+    let P       = P_CHANNEL
+    let channel = P.channels[P.focus_channel]
+    channel.input_component.toggle()
+    channel.input.focusMe().val(channel.I_)
+  })
+
   P.upload = $.C(f, {
-    L    : 200,
+    L    : 260,
     T    : P.rename.T_,
-    W    : 200,
+    W    : 140,
     H    : 40,
     F    : 20,
     C    : '#000000',
     TA   : 'center',
-    I    : 'upload remote now',
+    I    : 'upload now',
     title: i
   }, 'button').click(codeSave).H()
 

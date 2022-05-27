@@ -2739,14 +2739,14 @@ $.E(M, {
     b = window[b] ?? +b
     n = window[n] ?? +n
     m = window[m] ?? +m
-    console.log(a,b,n,m)
+    console.log(a, b, n, m)
     f       = f.replace(/\s/g, '')
     let obj = str2obj(f)
     let xk  = M.linspace(a, b, m + 1).data
 
     let sum = 0
     for(let i = 0; i < m; i++){
-      sum += M.newtonCotes2(obj, xk[i], xk[i+1], n)
+      sum += M.newtonCotes2(obj, xk[i], xk[i + 1], n)
     }
 
     return sum;//limitVal(n, b)
@@ -6183,7 +6183,6 @@ function variableValue(a){
     else if(a.size && max < 0.0001){
       let p       = Math.log10(max) | 0
       let enlarge = Math.pow(10, -p)
-      // let d = M.mtimes(a, Math.pow(10, -p))
       let d       = mixfun(n => {
         if(isComplex(n)){
           return complex(n.r * enlarge, n.i * enlarge)
@@ -6194,7 +6193,6 @@ function variableValue(a){
         return n * enlarge
       }, a)
       s           = '<p>' + Math.pow(10, p).toExponential(1) + ' *</p>'
-      // console.log(s, a, d)
       s += '<table>' + nda2table(d) + '</table>'
     }
     else if(max % 1 == min % 1){
@@ -6202,7 +6200,6 @@ function variableValue(a){
     }
     else{
       s = '<table>' + nda2table(a) + '</table>'
-      // s = '<table>' + nda2table(a, 'e') + '</table>'
     }
 
     return s
@@ -6215,11 +6212,19 @@ function variableValue(a){
     return 'NaN'
   }
   else if(Array.isArray(a)){
-    a = a.map(s => typeof (s) != 'string' ? s : s.replace(/\s*\+\s*/g, ' + ').replace(/\s*\-\s*/g, ' - '))
+    a = a.map(s => {
+      if(/\di/i.test(s)){
+        s = s.replace(/\di/gi, str => str[0] + '*i')
+      }
+      else{
+        // return typeof (s) != 'string' ? s : s.replace(/\s*\+\s*/g, ' + ').replace(/\s*\-\s*/g, ' - ')
+      }
+      return variableValue(s)
+    })
     return '[ <br>&nbsp; ' + a.join(', <br>&nbsp; ') + ' <br>]'
   }
   else{
-    if(/[\w\+\-\*\/\^\.]+/.test(a)){
+    if(/^[\w\+\-\*\/\^\.]+$/.test(a)){
       return M.mathjax(a)
     }
     return a

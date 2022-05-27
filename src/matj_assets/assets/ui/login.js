@@ -48,7 +48,7 @@ function login(f){
     }
   })
 
-  P.login_plug_img = $.c(P.login_plug_box, {
+  P.plug_img = $.c(P.login_plug_box, {
     src: 'img/plug.svg',
     H  : 100
   }, 'img')
@@ -65,21 +65,77 @@ function login(f){
     })
   }).down(connectIC)
 
-  P.login_identity_img = $.c(P.login_identity_box, {
+  P.identity_img = $.c(P.login_identity_box, {
     src: 'img/dfinity.png',
     H  : 134,
     MT : -15,
     ML : -5
   }, 'img')
 
+  P.login_plug_img = $.C(P, {
+    // F:16,
+    L  : 50,
+    T  : 75,
+    H  : 40,
+    src: 'img/plug.svg'
+  }, 'img').H()
+
+  P.login_identity_img = $.C(P, {
+    // F:16,
+    L  : 50,
+    T  : 82,
+    H  : 20,
+    src: 'img/dfinity.svg'
+  }, 'img').H()
+
   P.account_balance = $.C(P, {
-    L: 50,
+    F: 24,
+    L: 100,
     T: 75,
+  }).H()
+
+  P.logout_btn = $.C(P, {
+    L : 330,
+    T : P.account_balance.T_ + 3,
+    PD: '5px 10px',
+    I : 'logout'
+  }, 'button').H().down(_ => {
+    if(DATA.login == 'plug'){
+      window.ic.plug.disconnect()
+    }
+    DATA = {}
+    P_CHANNEL.share.H()
+    P_CHANNEL.upload.H()
+    var P = P_LOGIN
+
+    P.login_plug_img.H()
+    P.login_identity_img.H()
+    P.account_balance.H()
+    P.account.H()
+    P.logout_btn.H()
+    P.account_copy.H()
+    P.buymecafe.H()
+    P.avatar.H()
+
+    P.login_plug_box.V()
+    P.login_identity_box.V()
+
+    for(let channel_index in timers){
+      delete timers[channel_index]
+      P_CHANNEL.setLight(channel_index, '#888')
+      P_CHANNEL.setMsg(channel_index, '')
+    }
+  })
+
+  P.account = $.C(P, {
+    F: 20,
+    L: 50,
+    T: P.account_balance.T_ + 40
   }).H()
 
   P.account_copy = $.C(P, {
     L : 220,
-    T : P.account_balance.T_ + 36,
+    T : P.account_balance.T_ + 40,
     PD: '5px 10px',
     I : 'Copy'
   }, 'button').H().down(eobj => {
