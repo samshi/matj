@@ -41,6 +41,7 @@ $(function(){
   // page_states()
 
   onresize()
+  onhashchange()
 
   // 切换上次的channel
   setTimeout(function(){
