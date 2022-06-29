@@ -338,7 +338,7 @@ let LIMIT = {
     output.push('Convert to: ' + M.mathjaxLim(n4, a, ng))
 
     let [x_mi, x_c] = infiniteMu(n4)
-    result          = showMiC(x_mi, x_c, ng)
+    result          = showMiC(x_mi, x_c[0], ng)
 
     output.push('The limit value is: ' + result)
 
@@ -441,6 +441,7 @@ let LIMIT = {
 
         if(x_mi == 0 && x_c[0] == 1 && x_c.length == 1 && !x_c.fraction){
           result = 'e'
+          output.push('The limit value is: e = ' + Math.E)
         }
         else{
           let e_mi_mi_str = obj2str(e_mi_mi)
@@ -454,9 +455,16 @@ let LIMIT = {
           output.push('Convert to: ' + M.mathjaxLim(n2, a))
 
           result = showEMiC(x_mi, x_c, ng)
-        }
 
-        output.push('The limit value is: ' + result)
+          if(x_mi == 0){
+            let v = Math.pow(Math.E, x_c[0]) * (ng == '-' ? -1 : 1)
+            result_s = result + ' = ' + v
+          }
+          else{
+            result_s = result
+          }
+          output.push('The limit value is: ' + result_s)
+        }
       }
     }
 
@@ -482,22 +490,22 @@ let LIMIT = {
         let [x_mi, x_c]   = limitMu(e_mi, n.p2)
 
         if(x_mi == 0 && x_c[0] == 1 && x_c.length == 1 && !x_c.fraction){
-          result = Math.E
-          output.push('The limit value is: e = ' + result)
+          result = 'e'
+          output.push('The limit value is: e = ' + Math.E)
         }
         else{
-          let f1 = ng + 'e^((' + showMiC(p1_mi, p1_c) + ')*' + obj2str(n.p2) + ')'
+          let f1 = ng + 'e^((' + showMiC(p1_mi, p1_c[0]) + ')*' + obj2str(n.p2) + ')'
           let n1 = str2obj(f1)
           output.push('Convert to: ' + M.mathjaxLim(n1, a, ng))
 
-          let result_s = showEMiC(x_mi, x_c, ng)
+          result = showEMiC(x_mi, x_c, ng)
 
           if(x_mi == 0){
-            result = Math.pow(Math.E, x_c[0]) * (ng == '-' ? -1 : 1)
-            result_s += ' = ' + result
+            let v = Math.pow(Math.E, x_c[0]) * (ng == '-' ? -1 : 1)
+            result_s = result + ' = ' + v
           }
           else{
-            result = result_s
+            result_s = result
           }
           output.push('The limit value is: ' + result_s)
         }

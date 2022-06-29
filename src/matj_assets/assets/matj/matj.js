@@ -1,6 +1,18 @@
 /*欠缺
 randn 正态分布
 求复数根 完成
+
+finished
+abs, acosd, acot, acotd, acoth, acsc, acscd, acsch, all, angle, any, asec, asecd, asech, asind, atan2d, atand, blkdiag, bounds, cat, checkLimit, checkObj, chol, circshift, cn, concatenate, cond, conj, conv, cosd, cot, cotd, coth, cross, csc, cscd, csch, ctranspose, cumprod, cumsum, deconv, det, detvec, diag, disp, dot, dx, eig, eigvec, eye, eyenum, factor, factorial, fft, fix, flip, flipdim, fliplr, flipud, fzero, gauss, gaussf, hess, hessHalf, hilb, hilbf, ifft, imag, inv, invf, ipermute, isequaln, islogical, ismatrix, isreal, isrow, isscalar, issorted, isvector, kron, ldivide, length, linear, linspace, logical, logspace, lu, mag, magic, mathjax, max, maxmin, meshgrid, min, minus, mldivide, mod, mpower, mrdivide, mtimes, multif, ndims, newtonCotes, norm, nthroot, numel, ones, orth, pascal, permute, pinv, plot, plus, poly, polyder, polyfit, polyint, polyval, polyvalNum, polyvalm, pow, power, printline, prod, project, qr, rand, randi, rank, rcond, rdivide, real, rem, repmat, reshape, roots, rot90, rref, sec, secd, sech, shiftdim, sign, sind, size, sort, sortrows, sqrt, squeeze, strlength, sum, surf, svd, sym, sym2poly, syms, tand, test, testroots, times, title, trace, transpose, tril, triu, uminus, union, uplus, xlabel, ylabel, zeros
+
+2022 onprogress
+collect, colspace, datestr, diff, expand, expm, intersect, ismember, limit, numden, null, randn, setdiff, setxor, simplify, solve, unique, and, not, or, xor, false, find, isequal, true, eq, ge, gt, le, lt, ne, iscolumn, isempty, bitand, bitcmp, bitget, bitor, bitset, bitshift, bitxor, swapbytes,
+
+2023
+laplace, ilaplace, fourier, ifourier
+
+sam shi
+
 */
 
 /*
@@ -2443,7 +2455,7 @@ $.E(M, {
     limit((2*x^3+x)/(3*x^3+1), 0)  -> 2/3
     limit(sin(a*x)/sin(b*x), 0)    -> a/b
 
-    f=(x*(exp(sin(x))+1)-2*(exp(tan(x))-1))/(x+a) -> (1/2*a*exp(sin(a))+1/2*a-exp(tan(a))+1)/a
+    f=(x*(exp(sin(x))+1)-2*(exp(tan(x))-1))/(x+a) -> (1/2*a*exp(sin(a))+1/2*a-exp(tan(a))+1)/a                                 ,,,,,,,,,,,,,,,,,,
     limit((1+2*t/x)^(3*x),x,inf)   -> exp(6*t)
     f=x*(sqrt(x^2+1)-x);
     limit(f,x,inf,’left’)          -> 1/2

@@ -1,7 +1,9 @@
 import type { Principal } from '@dfinity/principal';
+import type { ActorMethod } from '@dfinity/agent';
+
 export interface _SERVICE {
-  'get' : (arg_0: string) => Promise<[] | [string]>,
-  'principalget' : (arg_0: string) => Promise<[] | [string]>,
-  'set' : (arg_0: string, arg_1: string) => Promise<[] | [string]>,
-  'who' : () => Promise<string>,
+  'get' : ActorMethod<[string], [] | [string]>,
+  'principalget' : ActorMethod<[string], [] | [string]>,
+  'set' : ActorMethod<[string, string], [] | [string]>,
+  'who' : ActorMethod<[], string>,
 }

@@ -152,11 +152,11 @@ function createChannel(f){
   }, 'button').click(codeSave).H()
 
   P.qrimg = $.C(f, {
-    L: 100,
-    T: P.buttons.T_ + 50,
-    W: 200,
-    H: 200,
-    BD:'1px solid'
+    L : 100,
+    T : P.buttons.T_ + 50,
+    W : 200,
+    H : 200,
+    BD: '1px solid'
   }, 'img').H()
 
   //=================================================
@@ -298,12 +298,17 @@ function decodeShare(s){
 }
 
 window.onhashchange = async function(){
-  let hash      = document.location.hash.slice(1);
-  let share_url = decodeShare(hash)
+  if(!window.INNER){
+    setTimeout(onhashchange, 200)
+    return
+  }
 
-  let i                   = P_CHANNEL.channels.length - 1
-  LS['channel_name_' + i] = await INNER.matj_default.principalget(share_url)
+  let hash          = document.location.hash.slice(1);
+  let share_url     = decodeShare(hash)
+  let i             = P_CHANNEL.LEN - 1
+  LS['channel' + i] = await INNER.matj_default.principalget(share_url)
 
-  P_CHANNEL.channels[i].V()
+  if(LS.focus_channel == i){
+    P.selectChannel(i)
+  }
 }
-
