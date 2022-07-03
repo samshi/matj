@@ -262,16 +262,16 @@ $(function(){
             if(m && m[1].trim()){
               LS['channel_name_' + i] = m[1].trim()
               if(window.P_CHANNEL){
-                let channel             = P_CHANNEL.channels[i]
+                let channel = P_CHANNEL.channels[i]
                 channel.I(LS['channel_name_' + i])
               }
             }
           }
         }
-      }
-    })
-  })(i)
-}
+      })
+    })(i)
+  }
+})
 
 function encodeShare(s){
   let out = ''
