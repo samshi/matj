@@ -1,6 +1,18 @@
 /*欠缺
 randn 正态分布
 求复数根 完成
+
+finished
+abs, acosd, acot, acotd, acoth, acsc, acscd, acsch, all, angle, any, asec, asecd, asech, asind, atan2d, atand, blkdiag, bounds, cat, checkLimit, checkObj, chol, circshift, cn, concatenate, cond, conj, conv, cosd, cot, cotd, coth, cross, csc, cscd, csch, ctranspose, cumprod, cumsum, deconv, det, detvec, diag, disp, dot, dx, eig, eigvec, eye, eyenum, factor, factorial, fft, fix, flip, flipdim, fliplr, flipud, fzero, gauss, gaussf, hess, hessHalf, hilb, hilbf, ifft, imag, inv, invf, ipermute, isequaln, islogical, ismatrix, isreal, isrow, isscalar, issorted, isvector, kron, ldivide, length, linear, linspace, logical, logspace, lu, mag, magic, mathjax, max, maxmin, meshgrid, min, minus, mldivide, mod, mpower, mrdivide, mtimes, multif, ndims, newtonCotes, norm, nthroot, numel, ones, orth, pascal, permute, pinv, plot, plus, poly, polyder, polyfit, polyint, polyval, polyvalNum, polyvalm, pow, power, printline, prod, project, qr, rand, randi, rank, rcond, rdivide, real, rem, repmat, reshape, roots, rot90, rref, sec, secd, sech, shiftdim, sign, sind, size, sort, sortrows, sqrt, squeeze, strlength, sum, surf, svd, sym, sym2poly, syms, tand, test, testroots, times, title, trace, transpose, tril, triu, uminus, union, uplus, xlabel, ylabel, zeros
+
+2022 onprogress
+collect, colspace, datestr, diff, expand, expm, intersect, ismember, limit, numden, null, randn, setdiff, setxor, simplify, solve, unique, and, not, or, xor, false, find, isequal, true, eq, ge, gt, le, lt, ne, iscolumn, isempty, bitand, bitcmp, bitget, bitor, bitset, bitshift, bitxor, swapbytes,
+
+2023
+laplace, ilaplace, fourier, ifourier
+
+sam shi
+
 */
 
 /*
@@ -37,7 +49,7 @@ let total_cnt = 0
 // const W = window
 const M = {
   FIXNUM: 4,
-  SYMS  : {}
+  SYMS  : {},
 }
 //矩阵处理
 $.E(M, {
@@ -162,12 +174,30 @@ $.E(M, {
     for(let i = 0; i < arg.length; i++){
       let a = arg[i]
       if(!isNda(a)){ // || a.dimension != 2
-        if(Array.isArray(a)){
-          b = b.concate(...a)
+        if(Array.isArray(b)){
+          if(Array.isArray(a)){
+            b = b.concate(...a)
+          }
+          else{
+            b.push(a)
+            // return ndarray(arg, [arg.length, 1])
+          }
+        }
+        else if(isNda(b)){
+          if(b.shape[1] == 1 && !Array.isArray(a)){
+            b.data.push(a)
+            b.shape[0]++
+          }
+          else if(Array.isArray(a) && a.length == b.shape[1]){
+            b.data.push(a)
+            b.shape[0]++
+          }
+          else{
+            console.log('todo')
+          }
         }
         else{
-          b.push(a)
-          // return ndarray(arg, [arg.length, 1])
+          console.log('todo')
         }
       }
       else{
@@ -893,9 +923,7 @@ $.E(M, {
           if(row != col + 1){
             //需要做行变换
             let row_change = ndarray([], [l, l])
-            row_change.fill((i, j) => i == row && j == col + 1 || i == col + 1 && j == row || (i != row && i != col + 1 && i == j)
-                                      ? 1
-                                      : 0)
+            row_change.fill((i, j) => i == row && j == col + 1 || i == col + 1 && j == row || (i != row && i != col + 1 && i == j) ? 1 : 0)
             b = M.mtimes(M.mtimes(row_change, b), row_change)
             console.log('行变换', row_change, b)
           }
@@ -1022,7 +1050,7 @@ $.E(M, {
   lu                        : a_source => {
     a_source = format(a_source)
     if(!M.isSquare(a_source)){
-      return { error: 'LU分解尺寸不对, 矩阵必须是方阵' }
+      return {error: 'LU分解尺寸不对, 矩阵必须是方阵'}
     }
 
     let a   = a_source.clone()
@@ -1127,9 +1155,7 @@ $.E(M, {
     else if(n % 4 == 0){
       let m = num => num % 4
       let l = n * n
-      a.fill((i, j) => m(i) == m(j) || m(i + j + 1) == 0
-                       ? l - a.index(i, j)
-                       : a.index(i, j) + 1)
+      a.fill((i, j) => m(i) == m(j) || m(i + j + 1) == 0 ? l - a.index(i, j) : a.index(i, j) + 1)
     }
     else{
       let r = n
@@ -1419,9 +1445,7 @@ $.E(M, {
       Aeigvec = Aeigvec.pick(':', ':' + (p - 1))
     }
 
-    let sigma = ndarray([], [p, q]).fill((i, j) => i == j
-                                                   ? Math.sqrt(Aeig.get(i, 0))
-                                                   : 0)
+    let sigma = ndarray([], [p, q]).fill((i, j) => i == j ? Math.sqrt(Aeig.get(i, 0)) : 0)
     // let sigma2 = M.diag(M.sqrt(Aeig))
     // console.log('svd', sigma, sigma2)
     let V = M.orth(Aeigvec)
@@ -1832,9 +1856,7 @@ $.E(M, {
 
     let f = function(arr){
       let b = arr.slice()
-      arr.sort((a, b) => direction == 'descend' ? (b > a ? 1 : -1) : (b < a
-                                                                      ? 1
-                                                                      : -1))
+      arr.sort((a, b) => direction == 'descend' ? (b > a ? 1 : -1) : (b < a ? 1 : -1))
       let index_arr = []
       arr.forEach(n => {
         let i = b.indexOf(n)
@@ -2433,7 +2455,7 @@ $.E(M, {
     limit((2*x^3+x)/(3*x^3+1), 0)  -> 2/3
     limit(sin(a*x)/sin(b*x), 0)    -> a/b
 
-    f=(x*(exp(sin(x))+1)-2*(exp(tan(x))-1))/(x+a) -> (1/2*a*exp(sin(a))+1/2*a-exp(tan(a))+1)/a
+    f=(x*(exp(sin(x))+1)-2*(exp(tan(x))-1))/(x+a) -> (1/2*a*exp(sin(a))+1/2*a-exp(tan(a))+1)/a                                 ,,,,,,,,,,,,,,,,,,
     limit((1+2*t/x)^(3*x),x,inf)   -> exp(6*t)
     f=x*(sqrt(x^2+1)-x);
     limit(f,x,inf,’left’)          -> 1/2
@@ -2459,6 +2481,8 @@ $.E(M, {
     https://baijiahao.baidu.com/s?id=1615042947782687596&wfr=spider&for=pc
     */
 
+    f = window[f] || f
+
     let n, f0 = f
     let a_num = isNaN(a) ? eval(a) : +a
 
@@ -2481,6 +2505,10 @@ $.E(M, {
 
     output.push(M.mathjaxLim(n, a))
     let n0 = limitVal(n, a_num)
+    if(n0 == undefined){
+      return 'undefined'
+    }
+
     if(isFinite(n0) && n0){
       // console.log('direct calc', n0, f)
       output.push('Calculate directly: ' + n0)
@@ -2498,9 +2526,7 @@ $.E(M, {
     else if(a_num == -Infinity){
       an = [0, 0.0001, 0.000001, 0.00000001]
       vn = [
-        limitVal(n, -1 / an[1]),
-        limitVal(n, -1 / an[2]),
-        limitVal(n, -1 / an[3]),
+        limitVal(n, -1 / an[1]), limitVal(n, -1 / an[2]), limitVal(n, -1 / an[3]),
       ]
     }
     else{
@@ -2712,7 +2738,64 @@ $.E(M, {
     // console.log(f, a)
 
     return f
-  }
+  },
+  newtonCotes     : (f, a, b, n, m = 1) => {
+    // fun，积分函数的句柄，必须能够接受矢量输入
+    // a，积分下限
+    // b，积分上限
+    // m，将区间[a,b]等分的子区间数量
+    // n，采用的Newton-Cotes公式的阶数，必须满足n<8，否则积分没法保证稳定性
+
+    f = window[f] ?? f
+    a = window[a] ?? +a
+    b = window[b] ?? +b
+    n = window[n] ?? +n
+    m = window[m] ?? +m
+    console.log(a, b, n, m)
+    f       = f.replace(/\s/g, '')
+    let obj = str2obj(f)
+    let xk  = M.linspace(a, b, m + 1).data
+
+    let sum = 0
+    for(let i = 0; i < m; i++){
+      sum += M.newtonCotes2(obj, xk[i], xk[i + 1], n)
+    }
+
+    return sum;//limitVal(n, b)
+  },
+  newtonCotes2    : (obj, a, b, n) => {
+    if(n < 2 || n > 7){
+      return 'newton cotes accept 2-7, but ' + n
+    }
+
+    let x = M.linspace(a, b, +n + 1).data
+    console.log(x)
+
+    if(!M.COTESCOEFF){
+      M.COTESCOEFF = {
+        1: d([1, 1], 2),
+        2: d([1, 4, 1], 6),
+        3: d([1, 3, 3, 1], 8),
+        4: d([7, 32, 12, 32, 7], 90),
+        5: d([19, 75, 50, 50, 75, 19], 288),
+        6: d([41, 216, 27, 272, 27, 216, 41], 840),
+        7: d([751, 3577, 1323, 2989, 2989, 1323, 3577, 751], 17280),
+      }
+
+      function d(arr, n){
+        return arr.map(v => v / n)
+      }
+    }
+
+    let sum = 0
+    for(let i = 0; i <= n; i++){
+      sum += M.COTESCOEFF[n][i] * limitVal(obj, x[i])
+    }
+
+    sum *= b - a
+
+    return sum
+  },
 
   /*
     limit
@@ -3174,12 +3257,12 @@ $.E(M, {
     let n = v.length //阶数加1，如：三次方n=4
     if(n < 2){
       console.error('方程阶数太小', n, fuzhu)
-      return { real: [] }
+      return {real: []}
     }
     else if(n == 2){
       console.log(n, fuzhu, -v[1])
 
-      return { real: [-v[1]] }
+      return {real: [-v[1]]}
     }
 
     //0根首先选出
@@ -3204,11 +3287,11 @@ $.E(M, {
       if(delta > 0){
         let val = Math.sqrt(delta)
         console.log(n, fuzhu, [keepZero(-d + val), keepZero(-d - val)])
-        return { real: [keepZero(-d + val), keepZero(-d - val)].sort(mysort) }
+        return {real: [keepZero(-d + val), keepZero(-d - val)].sort(mysort)}
       }
       if(nearZero(delta)){
         console.log(n, fuzhu, [-d, -d])
-        return { real: [-d, -d] }
+        return {real: [-d, -d]}
       }
 
       if(fuzhu == '主线'){
@@ -3235,7 +3318,7 @@ $.E(M, {
 
       if(!p && !q){
         console.log(n, fuzhu, '有一个三重零根', -b_3)
-        return { real: [-b_3, -b_3, -b_3] }
+        return {real: [-b_3, -b_3, -b_3]}
       }
       if(delta <= 0){
         let r     = Math.sqrt(-p * p * p / 27)
@@ -3256,7 +3339,7 @@ $.E(M, {
 
         console.log(n, fuzhu, '找到了3个实根', x1, func(x1), x2, func(x2), x3, func(x3))
         console.log(n, 'func count', func('cnt'))
-        return { real: [x1, x2, x3].sort(mysort) }
+        return {real: [x1, x2, x3].sort(mysort)}
       }
       else{
         // console.log('有一个实根和两个复根')
@@ -3601,7 +3684,7 @@ $.E(M, {
 
       if(to == '无效解'){
         console.log(n, fuzhu, '五根')
-        return { real: [] }
+        return {real: []}
       }
 
       let u = M.lowerDimension(to, v) //降维之后，误差放大
@@ -4215,11 +4298,13 @@ $.E(M, {
   },
   factorial : a => {
     function factorial(n){
+      if(n % 1 != 0 || n < 0){
+        return NaN
+      }
       if(n <= 1){
-        return n
+        return 1
       }
       else{
-        n = n | 0
         return n * factorial(n - 1);
       }
     }
@@ -4235,9 +4320,7 @@ $.E(M, {
   max       : (a, a1 = [], ...argu) => {
     let dim           = argu.indexOf(2) > -1 ? 2 : 1
     let all           = argu.indexOf('all') > -1 ? 'all' : 0
-    let nanflag       = argu.indexOf('includenan') > -1
-                        ? 'includenan'
-                        : 'omitnan'
+    let nanflag       = argu.indexOf('includenan') > -1 ? 'includenan' : 'omitnan'
     let linear        = argu.indexOf('linear') > -1 ? 'linear' : 0
     let f             = arr => {
       let item, v
@@ -4354,9 +4437,7 @@ $.E(M, {
   min       : (a, a1 = [], ...argu) => {
     let dim           = argu.indexOf(2) > -1 ? 2 : 1
     let all           = argu.indexOf('all') > -1 ? 'all' : 0
-    let nanflag       = argu.indexOf('includenan') > -1
-                        ? 'includenan'
-                        : 'omitnan'
+    let nanflag       = argu.indexOf('includenan') > -1 ? 'includenan' : 'omitnan'
     let linear        = argu.indexOf('linear') > -1 ? 'linear' : 0
     let f             = arr => {
       let item, v
@@ -4880,6 +4961,7 @@ $.E(M, {
     return ndarray(linear(a, b, c))
   },
   linspace: (a, b, c = 100) => {
+    a        = +a
     let arr  = []
     let step = (b - a) / (c - 1)
     for(let i = 0; i < c; i++){
@@ -5018,9 +5100,7 @@ $.E(M, {
 
     return {
       single : ndarray(un),
-      multias: [
-        ndarray(un), ndarray(ia, [ia.length, 1]), ndarray(ib, [ib.length, 1])
-      ]
+      multias: [ndarray(un), ndarray(ia, [ia.length, 1]), ndarray(ib, [ib.length, 1])]
     }
   },
   unique      : _ => {
@@ -5314,25 +5394,6 @@ $.E(M, {
     // a的补码
   },
   bitget   : (a, pos) => {
-    let b = dec2bin(a)
-    switch(a.type){
-      case 'uint8':
-      case 'uint16':
-      case 'uint32':
-      case 'uint64':
-      case 'int8':
-      case 'int16':
-      case 'int32':
-      case 'int64':
-    }
-    console.log(a, b, a.type, pos)
-    return pos
-    function dec2bin(dec){  //把十进制转换为二进制
-      return (dec >>> 0).toString(2);
-    }
-    function bin2dec(bin){  //把二进制转换为十进制
-      return parseInt(bin, 2).toString(10);
-    }
     // 在指定位置pos中获取位，在整数数组a中
   },
   bitor    : (a, b) => {
@@ -5347,37 +5408,9 @@ $.E(M, {
   bitxor   : (a, b) => {
     // 对数a和b按位异或
   },
-  intmax   : (type = 'int32') => {
-    // intmax('like', p) todo
-    let typelist = {
-      int8  : new Int8Array([127]),                  //2n ** 7n  - 1n,
-      int16 : new Int16Array([32767]),                //2n ** 15n - 1n,
-      int32 : new Int32Array([2147483647]),           //2n ** 31n - 1n,
-      int64 : new BigInt64Array([9223372036854775807n]), //2n ** 63n - 1n,
-      uint8 : new Uint8Array([255]),                  //2n ** 8n  - 1n,
-      uint16: new Uint16Array([65535]),                //2n ** 16n - 1n,
-      uint32: new Uint32Array([4294967295]),           //2n ** 32n - 1n,
-      uint64: new BigUint64Array([18446744073709551615n]) //2n ** 64n - 1n
-    }
-
-    let v = typelist[type]
-    if(!v){
-      console.error('type not exist', type)
-      return
-    }
-
-    return v
-    //
-    // let intv   = parseInt(v)
-    // let output = '' + intv == '' + v ? intv : v
-    //
-    // console.log(output)
-    //
-    // return output
-  },
   swapbytes: _ => {
     // 交换字节顺序
-  },
+  }
 
 })
 //测试
@@ -5708,9 +5741,7 @@ function actionshow(f, ...arg){
   }
   else{
     g = {
-      name: typeof (f) == 'function'
-            ? f.toLocaleString().match(/\b\w+(?=\()/)[0]
-            : f.name ?? f,
+      name: typeof (f) == 'function' ? f.toLocaleString().match(/\b\w+(?=\()/)[0] : f.name ?? f,
       arg : isNda(arg[0]) ? (arg[0].arg || arg[0].name) : arg //numel(A)
     }
   }
@@ -5736,6 +5767,7 @@ function actionshow(f, ...arg){
 }
 
 function assign(b, a){
+  b = b.single || b
   // console.log('assign', a, b)
   if(M[a] || resident_command.includes(a)){
     console.error(a, 'can not be assign', b)
@@ -6022,10 +6054,6 @@ function isComplex(a){
   return a instanceof Complex
 }
 
-function isBigint(n){
-  return typeof(n) == 'bigint'
-}
-
 function isFraction(a){
   return a instanceof Fraction
 }
@@ -6123,9 +6151,7 @@ function addToTable(a, v, str = '='){ //assign
       if(Array.isArray(arg)){
         arg = arg.map(item => Array.isArray(item) ? JSON.stringify(item) : item)
       }
-      v_arg = '(' + (Array.isArray(arg)
-                     ? arg.join(/\>|\<|\=/g.test(arg.join('')) ? '' : ',')
-                     : arg) + ')'
+      v_arg = '(' + (Array.isArray(arg) ? arg.join(/\>|\<|\=/g.test(arg.join('')) ? '' : ',') : arg) + ')'
     }
     else{
       v_arg = ''
@@ -6169,7 +6195,6 @@ function variableValue(a){
     else if(a.size && max < 0.0001){
       let p       = Math.log10(max) | 0
       let enlarge = Math.pow(10, -p)
-      // let d = M.mtimes(a, Math.pow(10, -p))
       let d       = mixfun(n => {
         if(isComplex(n)){
           return complex(n.r * enlarge, n.i * enlarge)
@@ -6180,7 +6205,6 @@ function variableValue(a){
         return n * enlarge
       }, a)
       s           = '<p>' + Math.pow(10, p).toExponential(1) + ' *</p>'
-      // console.log(s, a, d)
       s += '<table>' + nda2table(d) + '</table>'
     }
     else if(max % 1 == min % 1){
@@ -6188,25 +6212,33 @@ function variableValue(a){
     }
     else{
       s = '<table>' + nda2table(a) + '</table>'
-      // s = '<table>' + nda2table(a, 'e') + '</table>'
     }
 
     return s
   }
 
-  if(isComplex(a) || isBigint(a) || !isNaN(a)){
+  if(isComplex(a) || !isNaN(a)){
     return '<span title="' + a + '" onclick="showDetail(this)">' + showNormal(a) + '</span>'
   }
   else if(myNaN(a)){
     return 'NaN'
   }
   else if(Array.isArray(a)){
-    a = a.map(s => typeof (s) != 'string'
-                   ? s
-                   : s.replace(/\s*\+\s*/g, ' + ').replace(/\s*\-\s*/g, ' - '))
+    a = a.map(s => {
+      if(/\di/i.test(s)){
+        s = s.replace(/\di/gi, str => str[0] + '*i')
+      }
+      else{
+        // return typeof (s) != 'string' ? s : s.replace(/\s*\+\s*/g, ' + ').replace(/\s*\-\s*/g, ' - ')
+      }
+      return variableValue(s)
+    })
     return '[ <br>&nbsp; ' + a.join(', <br>&nbsp; ') + ' <br>]'
   }
   else{
+    if(/^[\w\+\-\*\/\^\.]+$/.test(a)){
+      return M.mathjax(a)
+    }
     return a
   }
 }
@@ -6284,15 +6316,7 @@ function showDetail(node){
 function showNormal(n){
   let s = n
   if(isComplex(n)){
-    s = showNormal(n.r) + (n.i > 0
-                           ? ' +'
-                           : ' -') + showNormal(Math.abs(n.i)) + 'i'
-  }
-  else if(isBigint(n)){
-    s = ''+n
-  }
-  else if(/int/.test(n.type)){
-    s = ''+n
+    s = showNormal(n.r) + (n.i > 0 ? ' +' : ' -') + showNormal(Math.abs(n.i)) + 'i'
   }
   else if(!isNaN(n) && /^[\+\-\d\.e]+$/g.test('' + n)){
     if(n % 1 == 0){
@@ -6303,8 +6327,8 @@ function showNormal(n){
     else if(Math.abs(n) < 0.0001 || Math.abs(n) > 1e8){
       s = n.toExponential(M.FIXNUM)
     }
-    else if(n.toFixed(M.FIXNUM) != n){
-      s = n.toFixed(M.FIXNUM)
+    else if((+n).toFixed(M.FIXNUM) != n){
+      s = (+n).toFixed(M.FIXNUM)
     }
   }
 
@@ -6606,7 +6630,7 @@ function guessRootComplex(func, fr, fr_v, to, to_v){
 
   let find
   while(k--){
-    let { mids, vs, mags } = myMid(func, fr, to)
+    let {mids, vs, mags} = myMid(func, fr, to)
     console.log({
       k,
       mids,
@@ -7210,17 +7234,11 @@ function mix2fun(a, b, f){
   else if(_ta === 'ndarray' && _tb === 'ndarray'){
     let c
     if(a.dimension == 2 && b.dimension == 2){
-      c = ndarray([], [
-        Math.max(a.shape[0], b.shape[0]), Math.max(a.shape[1], b.shape[1])
-      ])
+      c = ndarray([], [Math.max(a.shape[0], b.shape[0]), Math.max(a.shape[1], b.shape[1])])
       c.fill((i, j) => f(a.get(i % a.shape[0], j % a.shape[1]), b.get(i % b.shape[0], j % b.shape[1])))
     }
     else if(a.dimension == 3 && b.dimension == 3){
-      c = ndarray([], [
-        Math.max(a.shape[0], b.shape[0]),
-        Math.max(a.shape[1], b.shape[1]),
-        Math.max(a.shape[2], b.shape[2])
-      ])
+      c = ndarray([], [Math.max(a.shape[0], b.shape[0]), Math.max(a.shape[1], b.shape[1]), Math.max(a.shape[2], b.shape[2])])
       c.fill((i, j, k) => f(a.get(i % a.shape[0], j % a.shape[1], k % a.shape[2]), b.get(i % b.shape[0], j % b.shape[1], k % b.shape[2])))
     }
 
@@ -7321,11 +7339,11 @@ function sameSize(a, b){
 
 function sameValue(a, b){
   if(!isNda(a)){
-    throw new Error(a, 'is not matrix')
+    console.warn(a, 'is not matrix')
     return
   }
   if(!isNda(b)){
-    throw new Error(b, 'is not matrix')
+    console.warn(b, 'is not matrix')
     return
   }
   a = a.simple()
@@ -7387,18 +7405,25 @@ function INDEX2(n){
     return a.join(':')
   }
   else if(/:/.test(n)){
-    return n.replace(/[\+\-]?\d+/g, n => {
-      if(+n > 0){
-        return n - 1
-      }
-      return n
-    })
+    let a = n.split(':')
+    a[0]  = INDEX2(a[0])
+    a[1]  = INDEX2(a[1])
+    return a.join(':')
   }
   else if(!isNaN(n)){
     return n > 0 ? n - 1 : n
   }
+  else if(/[\+\-]?\d+/.test(n)){
+    //只替换一个数字
+    return n.replace(/[\+\-]?\d+/, n => {
+      return n - 1
+    })
+  }
+  else if(/[\+\-]?\w+/.test(n)){
+    return n + '-1'
+  }
   else{
-    return n
+    console.log('todo', n)
   }
 }
 

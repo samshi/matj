@@ -1046,7 +1046,7 @@ function 绘制折线图(index, x_suit, y_suit, x, y, setting = {}){
     x_pos = x轴数值转坐标(x[i], x_suit)
     y_pos = y轴数值转坐标(y[i], y_suit)
 
-    if(l >= 10){
+    if(l >= 9){
       vertex(x_pos, y_pos)
     }
 

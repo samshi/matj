@@ -27,20 +27,9 @@ $(function(){
   createJsArea(main)
   createMatjArea(main)
   createOutputArea(main)
-  // part_copy()
-  // part_pop()
-  // part_msg()
-  // part_banner()
-  //
-  // page_collection()
-  // page_create()
-  // page_detail()
-  // page_market()
-  // page_profile()
-  // page_settings()
-  // page_states()
 
   onresize()
+  onhashchange()
 
   // 切换上次的channel
   setTimeout(function(){

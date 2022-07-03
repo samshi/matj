@@ -14,10 +14,15 @@ function createChannel(f){
   //   eobj.H_ == 38 ? P.max() : P.min()
   // })
 
+  P.LEN      = 11
   P.channels = []
-  for(var i = 0; i < 10; i++){
+  for(var i = 0; i < P.LEN; i++){
     // var html      = {0: 'local'}[i] || 'remote ' + i
-    var html      = LS['channel_name_' + i] ?? 'file' + (i + 1)
+    var html = LS['channel_name_' + i] ?? 'file' + (i + 1)
+    if(i == P.LEN - 1){
+      html = 'share file, read only'
+    }
+
     P.channels[i] = $.C(P, {
       L : 20,
       T : 60 * i + 18,
@@ -95,9 +100,12 @@ function createChannel(f){
     })
   }
 
-  P.rename = $.C(f, {
-    L    : 50,
-    T    : P.T_ + P.channels[9].T_ + P.channels[9].H_ + 50,
+  P.buttons = $.C(f, {
+    L: 20,
+    T: P.T_ + P.channels[P.LEN - 1].T_ + P.channels[P.LEN - 1].H_ + 30,
+  })
+
+  P.rename = $.C(P.buttons, {
     W    : 80,
     H    : 40,
     F    : 20,
@@ -112,17 +120,46 @@ function createChannel(f){
     channel.input.focusMe().val(channel.I_)
   })
 
-  P.upload = $.C(f, {
-    L    : 200,
-    T    : P.rename.T_,
-    W    : 200,
+  P.share = $.C(P.buttons, P.rename.CSS_, 'button').S({
+    L: 123,
+    I: 'share',
+  }).H().click(eobj => {
+    let principal_str = DATA.principal + ''
+    let channel_index = P_CHANNEL.focus_channel || 0
+    let name          = 'channel' + channel_index
+    let share_hash    = encodeShare(principal_str + name)
+    let share_url     = document.location.host + '#' + share_hash
+
+    copyContent(share_url)
+    eobj.I('Copied')
+
+    P.qrimg.V().S({src: showQRCode(share_url)})
+
+    setTimeout(_ => {
+      eobj.I('share')
+    }, 3000)
+  })
+
+  P.upload = $.C(P.buttons, {
+    L    : 240,
+    W    : 140,
     H    : 40,
     F    : 20,
     C    : '#000000',
     TA   : 'center',
-    I    : 'upload remote now',
+    I    : 'upload now',
     title: i
   }, 'button').click(codeSave).H()
+
+  P.qrimg = $.C(f, {
+    L : 100,
+    T : P.buttons.T_ + 50,
+    W : 200,
+    H : 200,
+    BD: '1px solid'
+  }, 'img').H()
+
+  //=================================================
 
   P.selectChannel = n => {
     LS.focus_channel = n
@@ -140,6 +177,15 @@ function createChannel(f){
         BG: LS['channel' + eobj.index] ? '#888' : ''
       })
     })
+
+    if(n == P.LEN - 1){
+      P.buttons.H()
+    }
+    else{
+      P.buttons.V()
+    }
+
+    P.qrimg.H()
   }
 
   P.setLight = (n, c) => {
@@ -161,7 +207,7 @@ function createChannel(f){
 
   P.max = () => {
     P_CHANNEL.S({
-      H: 580
+      H: main.H_ - P_CHANNEL.T_ - P_CHANNEL.PD_ * 2
     })
   }
   P.min = () => {
@@ -174,7 +220,7 @@ function createChannel(f){
     (async () => {
       let P             = P_CHANNEL
       let principal_str = DATA.principal + ''
-      for(let i = 1; i < 10; i++){
+      for(let i = 1, l = P.channels.length; i < 10; i++){
         let name = 'channel' + i
         P.setLight(i, 'green')
         P.setMsg(i, 'loading')
@@ -202,29 +248,67 @@ function createChannel(f){
 }
 
 var CODEBASE = []
-$(function(){
-  for(let i = 0; i < 10; i++){
-    (function(i){
-      $.get(`/test/test${i}.m`, '', res => {
-        if(res){
-          CODEBASE[i] = res
-          let name    = 'channel' + i
-          if(!LS[name]){
-            LS[name] = CODEBASE[i]
-            let m    = CODEBASE[i].match(/^\%\s*title\s*\=([\w\s]+?)\n/)
-            console.log(m)
-            if(m && m[1].trim()){
-              LS['channel_name_' + i] = m[1].trim()
-              if(window.P_CHANNEL){
-                let channel             = P_CHANNEL.channels[i]
-                channel.I(LS['channel_name_' + i])
-              }
-
+for(let i = 0; i < 10; i++){
+  (function(i){
+    $.get(`/test/test${i}.m`, '', res => {
+      if(res){
+        CODEBASE[i] = res
+        let name    = 'channel' + i
+        if(!LS[name]){
+          LS[name] = CODEBASE[i]
+          let m    = CODEBASE[i].match(/^\%\s*title\s*\=([\w\s]+?)\n/)
+          console.log(m)
+          if(m && m[1].trim()){
+            LS['channel_name_' + i] = m[1].trim()
+            if(window.P_CHANNEL){
+              let channel = P_CHANNEL.channels[i]
+              channel.I(LS['channel_name_' + i])
             }
+
           }
         }
-      })
-    })(i)
-  }
-})
+      }
+    })
+  })(i)
+}
 
+function encodeShare(s){
+  let out = ''
+  for(let i = 0, l = s.length; i < l; i++){
+    let code = s.charCodeAt(i)
+    //40-122
+    code += i - 40
+    code     = code % 83 + 40
+    out += String.fromCharCode(code)
+  }
+  return encodeURI(out)
+}
+
+function decodeShare(s){
+  s       = decodeURI(s)
+  let out = ''
+  for(let i = 0, l = s.length; i < l; i++){
+    let code = s.charCodeAt(i)
+    //40-122
+    code += -40 - i
+    code     = (code + 83) % 83 + 40
+    out += String.fromCharCode(code)
+  }
+  return out
+}
+
+window.onhashchange = async function(){
+  if(!window.INNER){
+    setTimeout(onhashchange, 200)
+    return
+  }
+
+  let hash          = document.location.hash.slice(1);
+  let share_url     = decodeShare(hash)
+  let i             = P_CHANNEL.LEN - 1
+  LS['channel' + i] = await INNER.matj_default.principalget(share_url)
+
+  if(LS.focus_channel == i){
+    P.selectChannel(i)
+  }
+}

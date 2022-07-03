@@ -28,14 +28,12 @@ async function connectPlug2(){
     return
   }
   INNER.identity = ic.plug.agent
-  DATA.isplug    = true
 
+  DATA.login     = 'plug'
   DATA.principal = await myAwait('plug.getPrincipal', window.ic.plug.agent.getPrincipal, undefined, window.ic.plug.agent)
-
   DATA.accountId = INNER.principalToAccountAddress(DATA.principal + '')
 
   connectPlug3()
-
 }
 
 async function connectPlug3(){
@@ -49,6 +47,8 @@ async function connectPlug3(){
   getBalance()
 }
 
+//============================================ IC
+
 async function connectIC(){
   if(window.INNER){
     INNER.internetIdentity()
@@ -61,67 +61,54 @@ async function connectIC(){
 async function afterLogin(){
   DATA.principal = INNER.principal
   DATA.accountId = INNER.address
-  DATA.isic      = true
+  DATA.login     = 'ic'
   await getBalance()
 }
 
 async function getBalance(){
+  P_CHANNEL.getChannelsCode()
+  P_CHANNEL.share.V()
   P_CHANNEL.upload.V()
 
-  P_LOGIN.login_plug_box.H()
-  P_LOGIN.login_identity_box.H()
-  P_CHANNEL.max()
+  var P = P_LOGIN
+  P.login_plug_box.H()
+  P.login_identity_box.H()
+  if(DATA.login == 'plug'){
+    P.login_plug_img.V()
+  }
+  else if(DATA.login == 'ic'){
+    P.login_identity_img.V()
+  }
+  P.account_balance.V().I('get balance ...')
+  P.account.V().I(shortPrincipal(DATA.accountId))
+  P.logout_btn.V()
+  P.account_copy.V()
 
-  P_CHANNEL.getChannelsCode()
-
-  var balance_str
-
-  if(DATA.isplug){
+  if(DATA.login == 'plug'){
     DATA.plug_balance = await myAwait('plug.requestBalance', window.ic.plug.requestBalance, undefined, window.ic.plug)
     DATA.plug_balance?.forEach(item => {
       if(item.symbol == 'ICP'){
-        balance_str      = item.amount + ' ICP'
+        P.account_balance.I(item.amount + ' ICP')
         DATA.icp_balance = item.amount
       }
     })
   }
   else{
-    var balance         = await myAwait('IC balance', INNER.authActor.account_balance_dfx, {account: INNER.address})
-    var num_icp_balance = parseInt(balance.e8s) / 1e8
+    var balance = await myAwait('IC balance', INNER.authActor.account_balance_dfx, {account: INNER.address})
+    if(balance){
+      var num_icp_balance = parseInt(balance.e8s) / 1e8
 
-    DATA.icp_balance = num_icp_balance
-    balance_str      = num_icp_balance + ' ICP'
+      DATA.icp_balance = num_icp_balance
+      P.account_balance.I(num_icp_balance + ' ICP')
+    }
+    else{
+      P.account_balance.I('get balance failed')
+      return
+    }
   }
 
-  console.log(balance_str)
-
-  var s = DATA.isplug ? 'Plug' : DATA.isic ? 'Dfinity' : 'fail'
-  if(s != 'fail'){
-    s += ': ' + (balance_str || 'get balance faild')
-    s += '<br>' + shortPrincipal(DATA.accountId)
-  }
-
-  P_LOGIN.account_balance.V().S({
-    I    : s,
-    title: DATA.accountId,
-  })
-  P_LOGIN.account_copy.V()
-
-  P_LOGIN.buymecafe.V()
-  P_LOGIN.avatar.V()
-
-  // var abc = await INNER.matj.who()
-  // console.log(abc+'')
-  //
-  //
-  // var zzz = await INNER.matj.get('aaa')
-  // console.log(zzz)
-  //
-  // var aaa = await INNER.matj.set('aaa', new Date().toLocaleTimeString())
-  // console.log(aaa)
-  //
-  // var bbb = await INNER.matj.get('aaa')
-  // console.log(bbb)
+  P.buymecafe.V()
+  P.avatar.V()
 }
 
 function shortPrincipal(s){
@@ -130,9 +117,9 @@ function shortPrincipal(s){
 
 async function payOwner(to_address, price){
   // let to_address = INNER.principalToAccountAddress(owner_principal)
-  let amount     = 100000000 * price
+  let amount = 100000000 * price
 
-  if(DATA.isplug){
+  if(DATA.login == 'plug'){
     const params = {
       to    : to_address,
       amount: amount,
