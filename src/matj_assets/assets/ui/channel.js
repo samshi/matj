@@ -248,23 +248,6 @@ function createChannel(f){
 }
 
 var CODEBASE = []
-<<<<<<< HEAD
-for(let i = 0; i < 10; i++){
-  (function(i){
-    $.get(`/test/test${i}.m`, '', res => {
-      if(res){
-        CODEBASE[i] = res
-        let name    = 'channel' + i
-        if(!LS[name]){
-          LS[name] = CODEBASE[i]
-          let m    = CODEBASE[i].match(/^\%\s*title\s*\=([\w\s]+?)\n/)
-          console.log(m)
-          if(m && m[1].trim()){
-            LS['channel_name_' + i] = m[1].trim()
-            if(window.P_CHANNEL){
-              let channel = P_CHANNEL.channels[i]
-              channel.I(LS['channel_name_' + i])
-=======
 $(function(){
   for(let i = 0; i < 10; i++){
     (function(i){
@@ -282,9 +265,7 @@ $(function(){
                 let channel             = P_CHANNEL.channels[i]
                 channel.I(LS['channel_name_' + i])
               }
->>>>>>> air
             }
-
           }
         }
       }
