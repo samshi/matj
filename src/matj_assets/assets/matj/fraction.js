@@ -39,8 +39,8 @@ Fraction.prototype.reduction = function(){
 
 //最大公约数 greatest common divisor
 Fraction.prototype.gcd = function(a, b){
-  a = Math.abs(a)
-  b = Math.abs(b)
+  a       = Math.abs(a)
+  b       = Math.abs(b)
   let max = Math.max(a, b)
   let min = Math.min(a, b)
   while(1){
@@ -169,6 +169,29 @@ Number.prototype.toNumber = function(){
 String.prototype.toNumber = function(){
   return +this
 }
+
+Uint8Array.prototype.type    = 'uint8'
+Uint16Array.prototype.type   = 'uint16'
+Uint32Array.prototype.type   = 'uint32'
+BigUint64Array.prototype.type = 'uint64'
+Int8Array.prototype.type     = 'int8'
+Int16Array.prototype.type    = 'int16'
+Int32Array.prototype.type    = 'int32'
+BigInt64Array.prototype.type = 'int64'
+Number.prototype.type        = 'int32'
+
+// console.log([
+//           Uint8Array.prototype.type   ,
+//           Uint16Array.prototype.type  ,
+//           Uint32Array.prototype.type  ,
+//           Int8Array.prototype.type    ,
+//           Int16Array.prototype.type   ,
+//           Int32Array.prototype.type   ,
+//           BigInt64Array.prototype.type,
+//           Number.prototype.type       ,
+//
+//
+// ])
 
 // Array.prototype.unique = function(){
 //   for(let i = this.length - 1; i >= 0; i--){
