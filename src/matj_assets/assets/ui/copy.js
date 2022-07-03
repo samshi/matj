@@ -1,5 +1,5 @@
 function createCopyPage (f) {
-  var P = W.P_COPY = $.C(f, {
+  var P = window.P_COPY = $.C(f, {
     L: -1000
   })
 

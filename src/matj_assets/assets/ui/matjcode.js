@@ -77,8 +77,13 @@ function createMatjArea(f){
       return
     }
 
-    P_CHANNEL.setLight(P_CHANNEL.focus_channel, 'red')
-    P_CHANNEL.setMsg(P_CHANNEL.focus_channel, 'update')
+    let channel_index = P_CHANNEL.focus_channel || 0
+    if(channel_index == 10){
+      return
+    }
+
+    P_CHANNEL.setLight(channel_index, 'red')
+    P_CHANNEL.setMsg(channel_index, 'update')
 
     clearTimeout(P.timer)
     P.timer = setTimeout(codeSave, 1000)
@@ -89,9 +94,11 @@ function createMatjArea(f){
 
 var timers = []
 function codeSave(delay = 60000){
-  let source        = P_MATJ.editor.getValue()
   let channel_index = P_CHANNEL.focus_channel || 0
+
   let name          = 'channel' + channel_index
+
+  let source        = P_MATJ.editor.getValue()
   LS[name]          = source
 
   if(DATA.accountId){

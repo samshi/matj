@@ -2,6 +2,9 @@
 
 =====================
 2022 TODO LIST:
+multiwallet
+  me
+  stoicwallet
 social
   coding share
   coding cooperation
@@ -11,18 +14,20 @@ ide
   help
 function
   symbolic math
-  limit
-  collect
-  numden
-  simplify
-  expand
-  solve
-  subs
-  rcon
-  laplace
-  ilaplace
-  fourier
-  ifourier
+  limit     求极限
+  collect   合并同类项
+  numden    通分
+  simplify  表达式简化
+  expand    多项式展开
+  solve     解方程
+  subs      符号替换
+  diff      求微分
+  polyder   求积分
+rcon
+laplace
+ilaplace
+fourier
+ifourier
 
 =====================
 FINISHED:
@@ -36,15 +41,13 @@ hess
 inv
 kron
 lu
-magi
+magic
 norm
 orth
 pascal
 pinv
 poly
 qr
-rand
-rank
 roots
 rref
 schur
