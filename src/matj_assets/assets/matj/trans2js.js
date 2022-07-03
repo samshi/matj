@@ -277,7 +277,7 @@ function trans2js(s, fgroup = []){
             a = c.split(/\s*\:\s*/)
             c = 'M.linear(' + a[0] + ',' + a[1] + ',' + a[2] + ')'
           }
-          else if(fgroup[0] == 'BR' && /^[\d\.\:]+$/g.test(c)){
+          else if(fgroup[0] == 'BR' && /^[\+\-\d\.\:]+$/g.test(c)){
             // str2(4:2:8)
             // c = '"' + c + '"'
             // console.log(source)

@@ -49,7 +49,7 @@ let total_cnt = 0
 // const W = window
 const M = {
   FIXNUM: 4,
-  SYMS  : {},
+  SYMS  : {}
 }
 //矩阵处理
 $.E(M, {
@@ -5387,26 +5387,139 @@ $.E(M, {
 })
 //位运算
 $.E(M, {
-  bitand   : (a, b) => {
+  bitand   : (a, b, type = 'int32') => {
     //当a、b是一个或数个无符号整数或无符号整数数组，返回参数a和b位和，
+    let f = (a, b) => {
+      return a & b
+    }
+    if(isNda(a) && isNda(b) && sameSize(a, b)){
+      let c = a.simple()
+      c.fill((i, j) => f(a.get(i, j), b.get(i, j)))
+      return c
+    }
+    else if(!isNaN(a) && !isNaN(b)){
+      return f(a, b)
+    }
+    return 'type not match'
   },
   bitcmp   : (a) => {
     // a的补码
+    let f = (a) => {
+      return ~a
+    }
+    if(isNda(a)){
+      let c = a.simple()
+      c.fill((i, j) => f(a.get(i, j)))
+      return c
+    }
+    else if(!isNaN(a)){
+      return f(a)
+    }
+    return 'type not match'
   },
-  bitget   : (a, pos) => {
+  bitget   : (a, pos, type) => {
+    let b = (new Array(64).join('0')) + dec2bin(a)
+    let n
+    type  = type ?? a.type
+    switch(type){
+      case 'uint8':
+      case 'uint16':
+      case 'uint32':
+      case 'uint64':
+      case 'int8':
+      case 'int16':
+      case 'int32':
+      case 'int64':
+        n = type.match(/\d+/)
+    }
+    //console.log(a, b, n[0], a.type, pos, type)
+    if(n && !isNaN(n[0])){
+      let bitarray     = ndarray(b.slice(-n[0]).split('').reverse())
+      bitarray.view[1] = INDEX(pos.data)
+      console.log(bitarray)
+      return bitarray
+    }
+
+    return ''
+
+    function dec2bin(dec){  //把十进制转换为二进制
+      return (dec >>> 0).toString(2);
+    }
+
     // 在指定位置pos中获取位，在整数数组a中
   },
   bitor    : (a, b) => {
     // 对数a和b按位或
+    let f = (a, b) => {
+      return a | b
+    }
+    if(isNda(a) && isNda(b) && sameSize(a, b)){
+      let c = a.simple()
+      c.fill((i, j) => f(a.get(i, j), b.get(i, j)))
+      return c
+    }
+    else if(!isNaN(a) && !isNaN(b)){
+      return f(a, b)
+    }
+    return 'type not match'
   },
-  bitset   : (a, pos) => {
+  bitset   : (a, pos, v, type) => {
     // a的集合点在一个特定的位置pos
+    let bitarr= M.bitget(a, M.linear(8,-1,1), type)
+    bitarr.set(INDEX(pos), v)
+    let result = parseInt(bitarr.data.join(''), 2).toString(10)
+    //没有考虑Int的情形, 得到复数
+    return result
+
+    function bin2dec(bin){  //把二进制转换为十进制
+      return parseInt(bin, 2).toString(10);
+    }
   },
   bitshift : (a, k) => {
     // 返回一个移到左K位，相当于乘以2K。K负值对应的位权转移或除以2|K|向负无穷舍入到最近的整数。任何溢出位都被截断。
   },
   bitxor   : (a, b) => {
     // 对数a和b按位异或
+    let f = (a, b) => {
+      return a ^ b
+    }
+    if(isNda(a) && isNda(b) && sameSize(a, b)){
+      let c = a.simple()
+      c.fill((i, j) => f(a.get(i, j), b.get(i, j)))
+      return c
+    }
+    else if(!isNaN(a) && !isNaN(b)){
+      return f(a, b)
+    }
+    return 'type not match'
+  },
+  intmax   : (type = 'int32') => {
+    // intmax('like', p) todo
+    let typelist = {
+      int8  : new Int8Array([127]),                  //2n ** 7n  - 1n,
+      int16 : new Int16Array([32767]),                //2n ** 15n - 1n,
+      int32 : new Int32Array([2147483647]),           //2n ** 31n - 1n,
+      int64 : new BigInt64Array([9223372036854775807n]), //2n ** 63n - 1n,
+      uint8 : new Uint8Array([255]),                  //2n ** 8n  - 1n,
+      uint16: new Uint16Array([65535]),                //2n ** 16n - 1n,
+      uint32: new Uint32Array([4294967295]),           //2n ** 32n - 1n,
+      uint64: new BigUint64Array([18446744073709551615n]) //2n ** 64n - 1n
+    }
+
+    let v = typelist[type]
+    if(!v){
+      console.error('type not exist', type)
+      return
+    }
+
+    return v
+    //
+    // let intv   = parseInt(v)
+    // let output = '' + intv == '' + v ? intv : v
+    //
+    // console.log(output)
+    //
+    // return output
   },
   swapbytes: _ => {
     // 交换字节顺序
@@ -6054,6 +6167,10 @@ function isComplex(a){
   return a instanceof Complex
 }
 
+function isBigint(n){
+  return typeof (n) == 'bigint'
+}
+
 function isFraction(a){
   return a instanceof Fraction
 }
@@ -6217,13 +6334,19 @@ function variableValue(a){
     return s
   }
 
+  if($.isString(a)){
+    return a
+  }
+
   if(isComplex(a) || !isNaN(a)){
     return '<span title="' + a + '" onclick="showDetail(this)">' + showNormal(a) + '</span>'
   }
-  else if(myNaN(a)){
+
+  if(myNaN(a)){
     return 'NaN'
   }
-  else if(Array.isArray(a)){
+
+  if(Array.isArray(a)){
     a = a.map(s => {
       if(/\di/i.test(s)){
         s = s.replace(/\di/gi, str => str[0] + '*i')
@@ -6235,12 +6358,11 @@ function variableValue(a){
     })
     return '[ <br>&nbsp; ' + a.join(', <br>&nbsp; ') + ' <br>]'
   }
-  else{
-    if(/^[\w\+\-\*\/\^\.]+$/.test(a)){
-      return M.mathjax(a)
-    }
-    return a
+
+  if(/^[\w\+\-\*\/\^\.]+$/.test(a)){
+    return M.mathjax(a)
   }
+  return a
 }
 
 function nda2table(nda, e){
