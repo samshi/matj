@@ -289,7 +289,7 @@ var now = (Date.now() - (new Date('0000-01-01')))/87600000 //日期序列值表�
         return 'function'
       }
       else if(/int/i.test(Object.prototype.toString.call(obj))){
-        // uint8/16/32/64, int8/16/32/64
+        // uint8/16/32/64, int8/16/32/64, single/double
         return Object.prototype.toString.call(obj).slice(8,-6).toLowerCase().replace('big', '')
       }
       else{

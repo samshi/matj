@@ -2,7 +2,7 @@ function ndarray(arr, shape, order, view){
   if(isNda(arr)){
     return arr
   }
-  if(!Array.isArray(arr)){
+  if(!isArray(arr)){
     return arr
   }
 
@@ -99,7 +99,7 @@ ndarray.create = function(arr, shape, order, view){
 }
 
 function arrConcat(a, d, shape){
-  if(Array.isArray(a)){
+  if(isArray(a)){
     let result = []
     let l      = a.length
     if(typeof (shape[d]) === 'undefined'){
@@ -109,12 +109,12 @@ function arrConcat(a, d, shape){
       console.log('error', l, d, shape[d])
       return
     }
-    if(Array.isArray(a[0])){
+    if(isArray(a[0])){
       shape[1] = a[0].length
     }
 
     for(let i = 0; i < l; i++){
-      if(Array.isArray(a[0])){
+      if(isArray(a[0])){
         for(let j = 0, jl = a[0].length; j < jl; j++){
           result[i + j * l] = a[i][j]
           //result.push() //= result.concat(arrConcat(a[i], d + 1, shape))
@@ -137,6 +137,7 @@ function arrConcat(a, d, shape){
 }
 
 ndarray.create.prototype = {
+  type     : 'ndarray',
   fromArray: function(arr){
     let shape = []
     let _arr  = arrConcat(arr, 0, shape)
@@ -158,7 +159,7 @@ ndarray.create.prototype = {
       let l = 1
       let n = argu[0]
       //for(let d = this.shape.length - 1; d >= 0; d--){ //行主序
-      for(let d = 0, dl=this.shape.length; d <= dl; d++){ //列主序
+      for(let d = 0, dl = this.shape.length; d <= dl; d++){ //列主序
         l *= this.shape[d]
         a[d] = n % l
         n    = (n - a[d]) / l
@@ -408,7 +409,7 @@ ndarray.create.prototype = {
           _view.push(this.view[i][n])
         }
       }
-      else if(Array.isArray(n)){
+      else if(isArray(n)){
         if(n.length == 1 && n[0] in this.view[i]){
           offset += this.view[i][n[0]]
           continue
@@ -489,21 +490,22 @@ ndarray.create.prototype = {
 
         return a
       }
-      else if(':'==argu[0]){
-        let b       = a.simple()
+      else if(':' == argu[0]){
+        let b = a.simple()
         return ndarray(b.data, [b.length, 1])
       }
       else if(/:/.test(argu[0])){
-        let b       = a.simple()
+        let b   = a.simple()
         //这里不是keepSet，只要取值，输出行向量
         let out = createIndex(argu[0], linear(0, b.data.length - 1))
         let arr = []
-        out.forEach(n=>{
+        out.forEach(n => {
           arr.push(b.data[n])
         })
-        if(b.shape[0]==1){
-          return ndarray(arr, [1,arr.length])
-        }else{
+        if(b.shape[0] == 1){
+          return ndarray(arr, [1, arr.length])
+        }
+        else{
           return ndarray(arr, [arr.length, 1])
         }
       }
@@ -532,7 +534,7 @@ ndarray.create.prototype = {
           _view.push(this.view[i][n])
         }
       }
-      else if(Array.isArray(n)){
+      else if(isArray(n)){
         //这一段会降维，跳过
         if(0 && n.length == 1 && n[0] in this.view[i]){
           offset += this.view[i][n[0]]
@@ -718,7 +720,7 @@ ndarray.create.prototype = {
           expented = true
         }
       }
-      else if(Array.isArray(n)){
+      else if(isArray(n)){
         //这一段会降维，跳过
         if(0 && n.length == 1 && n[0] in this.view[i]){
           offset += this.view[i][n[0]]
@@ -1322,7 +1324,7 @@ function setPick(arr, p, fr, to){
 
 function pack(arr, result){ // ndarray-pack
   var shape = [], c = arr, sz = 1
-  while(Array.isArray(c)){
+  while(isArray(c)){
     shape.push(c.length)
     sz *= c.length
     c = c[0]
@@ -1339,7 +1341,7 @@ function pack(arr, result){ // ndarray-pack
 
 function flatten(arr, result = []){
   for(let item of arr){
-    if(Array.isArray(item)){
+    if(isArray(item)){
       result = flatten(item, result)
     }
     else{

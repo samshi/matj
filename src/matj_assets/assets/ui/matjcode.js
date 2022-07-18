@@ -77,6 +77,7 @@ function createMatjArea(f){
       return
     }
 
+    window.code_changed = true
     let channel_index = P_CHANNEL.focus_channel || 0
     if(channel_index == 10){
       return
@@ -130,6 +131,7 @@ function codeSave(delay = 60000){
 }
 
 function codeRun(){
+  window.code_changed = false
   var matj_code = P_MATJ.editor.getValue()
   var analy_str = tidy(matj_code)
   setRoot(analy_str)

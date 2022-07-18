@@ -2828,7 +2828,7 @@ function objSimplify(obj, a){
 
       arr = objSimplifyArr(obj)
 
-      if(!Array.isArray(arr)){
+      if(!isArray(arr)){
         return arr
       }
 
@@ -3216,7 +3216,7 @@ function objFactor(obj){
       break
     // case 'RD':
     default:
-      if(Array.isArray(obj)){
+      if(isArray(obj)){
         let b = obj.slice()
         for(let i in obj){
           if(/\d+/.test(i) || i == 'times'){
@@ -4005,7 +4005,7 @@ function obj2str(obj){
 }
 
 function arr2obj(a){
-  if(!Array.isArray(a)){
+  if(!isArray(a)){
     return a
   }
 
@@ -4062,7 +4062,7 @@ function arr2obj(a){
 }
 
 function arr2str(arr, x = 'x'){
-  if(!Array.isArray(arr)){
+  if(!isArray(arr)){
     return arr
   }
 
@@ -4148,7 +4148,7 @@ function arr2str(arr, x = 'x'){
 }
 
 function mularr2str(a){
-  if(!Array.isArray(a)){
+  if(!isArray(a)){
     return a
   }
   let s = ''

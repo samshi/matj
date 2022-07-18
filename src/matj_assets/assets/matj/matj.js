@@ -157,7 +157,7 @@ $.E(M, {
         a           = a.simple().data
       }
 
-      if(Array.isArray(a)){
+      if(isArray(a)){
         b = b.concat(...a)
       }
       else{
@@ -174,8 +174,8 @@ $.E(M, {
     for(let i = 0; i < arg.length; i++){
       let a = arg[i]
       if(!isNda(a)){ // || a.dimension != 2
-        if(Array.isArray(b)){
-          if(Array.isArray(a)){
+        if(isArray(b)){
+          if(isArray(a)){
             b = b.concate(...a)
           }
           else{
@@ -184,11 +184,11 @@ $.E(M, {
           }
         }
         else if(isNda(b)){
-          if(b.shape[1] == 1 && !Array.isArray(a)){
+          if(b.shape[1] == 1 && !isArray(a)){
             b.data.push(a)
             b.shape[0]++
           }
-          else if(Array.isArray(a) && a.length == b.shape[1]){
+          else if(isArray(a) && a.length == b.shape[1]){
             b.data.push(a)
             b.shape[0]++
           }
@@ -205,7 +205,7 @@ $.E(M, {
         if(!i){
           b = a
         }
-        else if(Array.isArray(b)){
+        else if(isArray(b)){
           b = b.concat(...a.data)
         }
         else if(a.shape[1] != arg[0].shape[1]){
@@ -221,7 +221,7 @@ $.E(M, {
       }
     }
 
-    if(Array.isArray(b)){
+    if(isArray(b)){
       return ndarray(b, [b.length, 1])
     }
 
@@ -360,7 +360,7 @@ $.E(M, {
       var sum = 0
       for(var n = 0; n < l; n++){
         let v  = a.get(0, n)
-        let tp = $.myTypeof(v)
+        let tp = myType(v)
         if(tp == 'number' && !nearZero(v) || tp == 'array' && !nearZeroVec(v)){
           if(n % 2){
             v = vecMul(v, -1)
@@ -1561,7 +1561,7 @@ $.E(M, {
   },
   ctranspose: a => {
     //复数共轭转置
-    let _ta = type(a)
+    let _ta = myType(a)
     if(_ta === 'ndarray'){
       let ct = a.transpose().simple()
       ct.data.map(item => isComplex(item) ? item.conj() : item)
@@ -1574,7 +1574,7 @@ $.E(M, {
     }
 
     let b
-    if(Array.isArray(a)){
+    if(isArray(a)){
       let abs_k = Math.abs(k)
       let l     = a.length + abs_k
       b         = ndarray([], [l, l])
@@ -1701,7 +1701,7 @@ $.E(M, {
       else if(isNda(arg[0])){
         vec_rep = arg[0].data
       }
-      else if(Array.isArray(arg[0])){
+      else if(isArray(arg[0])){
         vec_rep = arg[0]
       }
     }
@@ -1737,7 +1737,7 @@ $.E(M, {
 
     let vec
     if(arg.length == 1){
-      if(Array.isArray(arg[0])){
+      if(isArray(arg[0])){
         vec = arg[0]
       }
       else if(isNda(arg[0])){
@@ -1915,7 +1915,7 @@ $.E(M, {
       }
 
     }
-    else if(Array.isArray(a)){
+    else if(isArray(a)){
       [b, i] = f(a)
     }
 
@@ -1934,7 +1934,7 @@ $.E(M, {
       d = d.filter(item => item != direction)
     }
 
-    let column_vec = Array.isArray(d[0]) || isNda(d[0]) ? d[0] : null
+    let column_vec = isArray(d[0]) || isNda(d[0]) ? d[0] : null
 
     let order = []
 
@@ -2025,7 +2025,7 @@ $.E(M, {
   },
   transpose : a => {
     a       = format(a)
-    let _ta = type(a)
+    let _ta = myType(a)
     if(_ta === 'ndarray'){
       return a.transpose()
       // let b=a.transpose()
@@ -2859,7 +2859,7 @@ $.E(M, {
     return dv
   },
   factorRoot: (n, k, space = 'rational') => {
-    if(!Array.isArray(n)){
+    if(!isArray(n)){
       return 'factorRoot: only array '
     }
     // 多项式因式分解
@@ -3724,7 +3724,7 @@ $.E(M, {
     }
 
     let fr
-    if(Array.isArray(x0)){
+    if(isArray(x0)){
       let fr_v = f(x0[0])
       let to_v = f(x0[1])
       if(fr_v * to_v < 0){
@@ -3780,7 +3780,7 @@ $.E(M, {
 
     let x1 = guessRoot(f, fr, fr_v, to, to_v)
 
-    if(Array.isArray(x0) && (x1 > x[1] || x1 < [0])){
+    if(isArray(x0) && (x1 > x[1] || x1 < [0])){
       // return null
     }
 
@@ -3812,7 +3812,7 @@ $.E(M, {
     }
 
     if(typeof (a) == 'number'){
-      if(Array.isArray(b)){
+      if(isArray(b)){
         let c = b.map(v => fun(a, v))
 
         return ndarray(c)
@@ -3823,13 +3823,13 @@ $.E(M, {
 
       return NaN
     }
-    else if(Array.isArray(a)){
+    else if(isArray(a)){
       if(typeof (b) == 'number'){
         let c = b.map(v => fun(v, b))
         return ndarray(c)
       }
 
-      if(Array.isArray(b)){
+      if(isArray(b)){
         let c = a.map((v, index) => fun(v, b[index]))
 
         return ndarray(c, a_shape)
@@ -4274,7 +4274,7 @@ $.E(M, {
   },
   dot       : (a, b, c) => {
     let total = 0
-    if(Array.isArray(a) && Array.isArray(b) && a.length == b.length){
+    if(isArray(a) && isArray(b) && a.length == b.length){
       a.forEach((n, index) => total += n * b[index])
       return total
     }
@@ -4344,7 +4344,7 @@ $.E(M, {
     }
     let self          = M.max
     let maxmin_result = M.maxmin(f, self, a, a1, dim, all, nanflag, linear)
-    if(Array.isArray(maxmin_result)){
+    if(isArray(maxmin_result)){
       return {
         single : maxmin_result[0],
         multias: maxmin_result
@@ -4426,7 +4426,7 @@ $.E(M, {
       }
 
     }
-    else if(Array.isArray(a)){
+    else if(isArray(a)){
       b = f(a)
     }
     else{
@@ -4461,7 +4461,7 @@ $.E(M, {
     }
     let self          = M.min
     let maxmin_result = M.maxmin(f, self, a, a1, dim, all, nanflag, linear)
-    if(Array.isArray(maxmin_result)){
+    if(isArray(maxmin_result)){
       return {
         single : maxmin_result[0],
         multias: maxmin_result
@@ -4473,8 +4473,8 @@ $.E(M, {
   },
   minus     : (a, b) => {
     return mix2fun(a, b, (a, b) => {
-      let _ta = type(a)
-      let _tb = type(b)
+      let _ta = myType(a)
+      let _tb = myType(b)
       if(_ta === 'complex' && _tb === 'normal'){
         a.r -= b
         return a
@@ -4504,8 +4504,8 @@ $.E(M, {
     //求解关于 x 的线性方程组 ax = b,  x = a\b
     a       = format(a)
     b       = format(b)
-    let _ta = type(a)
-    let _tb = type(b)
+    let _ta = myType(a)
+    let _tb = myType(b)
     if(_ta == 'ndarray' && _tb == 'normal'){
       return a.div(b)
     }
@@ -4568,8 +4568,8 @@ $.E(M, {
     // x = mrdivide(a,b)
     a       = format(a)
     b       = format(b)
-    let _ta = type(a)
-    let _tb = type(b)
+    let _ta = myType(a)
+    let _tb = myType(b)
     if(_ta == 'ndarray' && _tb == 'ndarray'){
       return M.mtimes(a, M.inv(b))
       // return M.mldivide(b, a)
@@ -4580,13 +4580,13 @@ $.E(M, {
   mtimes    : (a, ...arg) => {
     a       = format(a)
     let b   = format(arg[0])
-    let _ta = type(a)
-    let _tb = type(b)
+    let _ta = myType(a)
+    let _tb = myType(b)
     let result
-    if(_ta == 'ndarray' && _tb == 'normal'){
+    if(_ta == 'ndarray' && (_tb == 'normal' || _tb === 'complex')){
       result = a.mul(b)
     }
-    else if(_ta == 'normal' && _tb == 'ndarray'){
+    else if((_ta == 'normal' || _ta === 'complex') && _tb == 'ndarray'){
       result = b.mul(a)
     }
     else if(_ta == 'normal' && _tb == 'normal'){
@@ -4645,8 +4645,8 @@ $.E(M, {
   multif    : (a, b) => {
     a       = format(a)
     b       = format(b)
-    let _ta = type(a)
-    let _tb = type(b)
+    let _ta = myType(a)
+    let _tb = myType(b)
     if(_ta == 'ndarray' && _tb == 'normal'){
       return a.mul(b)
     }
@@ -4690,8 +4690,8 @@ $.E(M, {
   },
   plus      : (a, b) => {
     return mix2fun(a, b, (a, b) => {
-      let _ta = type(a)
-      let _tb = type(b)
+      let _ta = myType(a)
+      let _tb = myType(b)
       if(_ta === 'complex' && _tb === 'normal'){
         return complex(a.r + b, a.i)
       }
@@ -4707,7 +4707,7 @@ $.E(M, {
         }
         return vecAdd(a, b)
       }
-      return a + b
+      return +a + b
     })
   },
   pow       : (a, p) => {
@@ -4723,7 +4723,7 @@ $.E(M, {
         b.push(a.pick(':', i).simple().data.map(f))
       }
     }
-    else if(Array.isArray(a)){
+    else if(isArray(a)){
       b = a.map(f)
     }
     else{
@@ -4756,7 +4756,7 @@ $.E(M, {
         var a = ndarray([], arg[0].data)
         return a.fill(_ => Math.random())
       }
-      else if(Array.isArray(arg[0])){
+      else if(isArray(arg[0])){
         var a = ndarray([], arg[0])
         return a.fill(_ => Math.random())
       }
@@ -4775,7 +4775,7 @@ $.E(M, {
     //正态分布
     console.log(imax, arg)
     let min = 1, max
-    if(Array.isArray(imax)){
+    if(isArray(imax)){
       [min, max] = imax
     }
     else{
@@ -4788,7 +4788,7 @@ $.E(M, {
 
     let shape
     if(arg.length == 1){
-      if(Array.isArray(arg[0])){
+      if(isArray(arg[0])){
         shape = arg[0]
       }
       else if(!isNaN(arg[0]) && !isNaN(arg[0] | 0)){
@@ -4812,7 +4812,7 @@ $.E(M, {
     if(isNda(imax)){
       imax = imax.data
     }
-    if(Array.isArray(imax)){
+    if(isArray(imax)){
       [min, max] = imax
     }
     else{
@@ -4825,7 +4825,7 @@ $.E(M, {
 
     let shape
     if(arg.length == 1){
-      if(Array.isArray(arg[0])){
+      if(isArray(arg[0])){
         shape = arg[0]
       }
       else if(!isNaN(arg[0]) && !isNaN(arg[0] | 0)){
@@ -4843,8 +4843,8 @@ $.E(M, {
   },
   rdivide   : (a, b) => {
     return mix2fun(a, b, (a, b) => {
-      let _ta = type(a)
-      let _tb = type(b)
+      let _ta = myType(a)
+      let _tb = myType(b)
       if(_ta === 'complex' && _tb === 'normal'){
         a.r /= b
         a.i /= b
@@ -4902,8 +4902,8 @@ $.E(M, {
   },
   times     : (a, b) => {
     return mix2fun(a, b, (a, b) => {
-      let _ta = type(a)
-      let _tb = type(b)
+      let _ta = myType(a)
+      let _tb = myType(b)
       if(_ta === 'complex' && _tb === 'normal'){
         return complex(a.r * b, a.i * b)
       }
@@ -4938,7 +4938,7 @@ $.E(M, {
 $.E(M, {
   eye     : (n, m) => {
     m = m || n
-    if(Array.isArray(n)){
+    if(isArray(n)){
       [n, m] = n
     }
     var a = ndarray([], [n, m])
@@ -4947,7 +4947,7 @@ $.E(M, {
   },
   eyenum  : (n, m, num = 1) => {
     m = m || n
-    if(Array.isArray(n)){
+    if(isArray(n)){
       [n, m] = n
     }
     var a = ndarray([], [n, m])
@@ -4986,21 +4986,21 @@ $.E(M, {
     if(isNda(x)){
       x = x.simple().data
     }
-    if(!Array.isArray(x)){
+    if(!isArray(x)){
       console.error('meshgrid x must be matrix or array')
     }
 
     if(isNda(y)){
       y = y.simple().data
     }
-    if(!Array.isArray(y)){
+    if(!isArray(y)){
       console.error('meshgrid y must be matrix or array')
     }
 
     if(isNda(z)){
       z = z.simple().data
     }
-    if(!Array.isArray(z)){
+    if(!isArray(z)){
       console.error('meshgrid z must be matrix or array')
     }
 
@@ -5198,7 +5198,8 @@ $.E(M, {
   },
   find     : _ => {
   },
-  islogical: _ => {
+  islogical: a => {
+    return typeof (a) == 'boolean'
   },
   logical  : _ => {
   },
@@ -5213,6 +5214,10 @@ $.E(M, { //todo
         case '==':
           if(isComplex(a) && isComplex(c)){
             return a.i == c.i && a.r == c.r
+          }
+
+          if(n.type == c.type){
+            return n[0] == c[0]
           }
           return n == c || myNaN(a) && myNaN(c) ? 1 : 0
         case '>':
@@ -5247,6 +5252,11 @@ $.E(M, { //todo
   ne      : (a, b) => {//	测试a是否不等于b
   },
   isequal : (a, b) => {//		测试数组以获得相等性
+    if(a.type != b.type){
+      return false
+    }
+
+    return false
   },
   isequaln: (a, b) => {//		测试数组相等，将NaN值视为相等
   },
@@ -5387,6 +5397,38 @@ $.E(M, {
 })
 //位运算
 $.E(M, {
+  cast     : (A, newclass, p) => {
+    /*
+    B = cast(A,newclass)
+    B = cast(A,'like',p)
+    说明
+    B = cast(A,newclass) 将 A 转换为数据类型（类）newclass，其中 newclass 是与 A 兼容的内置数据类型的名称。
+    cast 函数将 A 中 newclass 范围以外的所有值截断到最近的端点。
+    将浮点数转换为整数时，cast 函数会将该数舍入为最接近的整数。如果浮点数的小数部分恰好为 0.5，则它朝偏离零的方向舍入到模更大的整数。
+    B = cast(A,'like',p) 将 A 转换为与变量 p 相同的数据类型、稀疏性和复/实性（实数或复数）。
+    如果 A 和 p 都为实数，则 B 也为实数。否则，B 为复数。
+    */
+
+    if(newclass != 'like'){
+      if(/^u?int(8|16|32|64)$/i.test(newclass)){
+        return mixfun(n => M[newclass](n), A)
+      }
+      else{
+        console.error('cast newclass not valid', newclass)
+      }
+    }
+    else if(isComplex(A) && isComplex(p)){
+      console.log('todo cast complex')
+    }
+    else{
+      if(p.type){
+        return M.cast(A, p.type)
+      }
+
+      console.error('cast like p notype')
+    }
+
+  },
   bitand   : (a, b, type = 'int32') => {
     //当a、b是一个或数个无符号整数或无符号整数数组，返回参数a和b位和，
     let f = (a, b) => {
@@ -5418,35 +5460,34 @@ $.E(M, {
     return 'type not match'
   },
   bitget   : (a, pos, type) => {
-    let b = (new Array(64).join('0')) + dec2bin(a)
+    let b = (new Array(64).join('0')) + M.dec2bin(a)
     let n
     type  = type ?? a.type
     switch(type){
-      case 'uint8':
-      case 'uint16':
-      case 'uint32':
-      case 'uint64':
       case 'int8':
       case 'int16':
       case 'int32':
       case 'int64':
-        n = type.match(/\d+/)
+      case 'uint8':
+      case 'uint16':
+      case 'uint32':
+      case 'uint64':
+        let match = type.match(/\d+/)
+        n         = match && !isNaN(match[0]) ? match[0] : ''
+        break
+      case 'double':
+        n = 32
     }
     //console.log(a, b, n[0], a.type, pos, type)
-    if(n && !isNaN(n[0])){
-      let bitarray     = ndarray(b.slice(-n[0]).split('').reverse())
-      bitarray.view[1] = INDEX(pos.data)
-      console.log(bitarray)
+    if(n){
+      let bitarray     = ndarray(b.slice(-n).split('').reverse())
+      let order        = pos && pos.data ? pos.data : M.linear(n, -1, 1).data
+      bitarray.view[1] = INDEX(order)
+      // console.log(bitarray)
       return bitarray
     }
 
     return ''
-
-    function dec2bin(dec){  //把十进制转换为二进制
-      return (dec >>> 0).toString(2);
-    }
-
-    // 在指定位置pos中获取位，在整数数组a中
   },
   bitor    : (a, b) => {
     // 对数a和b按位或
@@ -5465,10 +5506,18 @@ $.E(M, {
   },
   bitset   : (a, pos, v, type) => {
     // a的集合点在一个特定的位置pos
-    let bitarr= M.bitget(a, M.linear(8,-1,1), type)
+    let bitarr = M.bitget(a, 0, type)
     bitarr.set(INDEX(pos), v)
-    let result = parseInt(bitarr.data.join(''), 2).toString(10)
-    //没有考虑Int的情形, 得到复数
+    let result = bin2dec(bitarr.data.join(''))
+
+    type = type ?? a.type
+    if(type[0] == 'u'){
+      let max = M.intmax(type)
+      if(result > max){
+        result -= max * 2
+      }
+    }
+
     return result
 
     function bin2dec(bin){  //把二进制转换为十进制
@@ -5476,7 +5525,37 @@ $.E(M, {
     }
   },
   bitshift : (a, k) => {
+    /*
+    intout = bitshift(A,k)
+    intout = bitshift(A,k,assumedtype)  假定 A 的类型为 assumedtype。
+    说明
+
+    intout = bitshift(A,k) 返回向左偏移 k 位的 A，这等效于乘以 2k。
+    k 的负值与向右移位或除以 2|k| 并向负无穷舍入到最接近的整数相对应。将截断任何溢出位。
+    如果 A 是有符号的整数数组，则 bitshift 返回算数偏移结果，并在 k 为负时保留有符号的位，k 为正时不保留有符号的位。
+    如果 k 为正，MATLAB® 将位左移，并在右侧插入 k 0 位。
+    如果 k 为负，并且 A 为非负，MATLAB 将位右移，并在左侧插入 |k| 0 位。
+    如果 k 为负，并且 A 为负，MATLAB 将位右移，并在左侧插入 |k| 1 位。
+     */
+
     // 返回一个移到左K位，相当于乘以2K。K负值对应的位权转移或除以2|K|向负无穷舍入到最近的整数。任何溢出位都被截断。
+
+    //todo
+    // uintout = bitshift(6,5:7,'uint8')
+    // uintout = 1×3
+    // 192   128     0
+    // intout = bitshift(6,5:7,'int8')
+    // intout = 1×3
+    // -64  -128     0
+
+    return mixfun(n => {
+      if(k >= 0){
+        return a << k
+      }
+      else{
+        return a >> -k
+      }
+    }, a)
   },
   bitxor   : (a, b) => {
     // 对数a和b按位异或
@@ -5493,20 +5572,23 @@ $.E(M, {
     }
     return 'type not match'
   },
+  dec2bin  : (dec) => {  //把十进制转换为二进制
+    return (dec >>> 0).toString(2);
+  },
   intmax   : (type = 'int32') => {
     // intmax('like', p) todo
-    let typelist = {
-      int8  : new Int8Array([127]),                  //2n ** 7n  - 1n,
-      int16 : new Int16Array([32767]),                //2n ** 15n - 1n,
-      int32 : new Int32Array([2147483647]),           //2n ** 31n - 1n,
-      int64 : new BigInt64Array([9223372036854775807n]), //2n ** 63n - 1n,
-      uint8 : new Uint8Array([255]),                  //2n ** 8n  - 1n,
-      uint16: new Uint16Array([65535]),                //2n ** 16n - 1n,
-      uint32: new Uint32Array([4294967295]),           //2n ** 32n - 1n,
-      uint64: new BigUint64Array([18446744073709551615n]) //2n ** 64n - 1n
+    let typemax = {
+      int8  : 127,                  //2n ** 7n  - 1n,
+      int16 : 32767,                //2n ** 15n - 1n,
+      int32 : 2147483647,           //2n ** 31n - 1n,
+      int64 : 9223372036854775807n, //2n ** 63n - 1n,
+      uint8 : 255,                  //2n ** 8n  - 1n,
+      uint16: 65535,                //2n ** 16n - 1n,
+      uint32: 4294967295,           //2n ** 32n - 1n,
+      uint64: 18446744073709551615n //2n ** 64n - 1n
     }
 
-    let v = typelist[type]
+    let v = doubleToInt(numTypeMap(type), typemax[type])
     if(!v){
       console.error('type not exist', type)
       return
@@ -5521,10 +5603,114 @@ $.E(M, {
     //
     // return output
   },
+  intmin   : (type = 'int32') => {
+    // intmax('like', p) todo
+    let typemax = {
+      int8  : -128,                  //-2n ** 7n,
+      int16 : -32768,                //-2n ** 15n,
+      int32 : -2147483648,           //-2n ** 31n,
+      int64 : -9223372036854775808n, //-2n ** 63n,
+      uint8 : 0,
+      uint16: 0,
+      uint32: 0,
+      uint64: 0n
+    }
+
+    let v = doubleToInt(numTypeMap(type), typemax[type])
+    if(!v){
+      console.error('type not exist', type)
+      return
+    }
+
+    return v
+    //
+    // let intv   = parseInt(v)
+    // let output = '' + intv == '' + v ? intv : v
+    //
+    // console.log(output)
+    //
+    // return output
+  },
+  realmin  : _ => {
+    return 2 ** (-1022)
+  },
+  realmax  : _ => {
+    return (2 - 2 ** (-52)) * 2 ** 1023
+  },
   swapbytes: _ => {
     // 交换字节顺序
+  },
+  'class'  : n => {
+    // todo
+    //'single' | 'double' | 'int8' | 'int16' | 'int32' | 'int64' | 'uint8' | 'uint16' | 'uint32' | 'uint64' | 'logical' | 'char' | 'fi' | 'sym'
+    /*
+        下表显示许多常用 MATLAB 数据类型的名称。
+        'half'	半精度数
+        'single'	单精度数
+        'double'	双精度数
+        'int8'	有符号 8 位整数
+        'int16'	有符号 16 位整数
+        'int32'	有符号 32 位整数
+        'int64'	有符号 64 位整数
+        'uint8'	无符号 8 位整数
+        'uint16'	无符号 16 位整数
+        'uint32'	无符号 32 位整数
+        'uint64'	无符号 64 位整数
+        'logical'	逻辑值 1 (true) 或 0 (false)
+        'char'	字符
+        'string'	字符串数组
+        'struct'	结构体数组
+        'cell'	元胞数组
+        'table'	表
+        'function_handle'	函数句柄
+     */
+    return n.type ?? (isNaN(n) ? 'nan' : n % 1 == 0 ? 'int32' : 'float32')
+  },
+  int8     : a => {
+    return new window[numTypeMap('int8')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  int16    : a => {
+    return new window[numTypeMap('int16')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  int32    : a => {
+    return new window[numTypeMap('int32')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  int64    : a => {
+    return new window[numTypeMap('int64')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  uint8    : a => {
+    return new window[numTypeMap('uint8')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  uint16   : a => {
+    return new window[numTypeMap('uint16')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  uint32   : a => {
+    return new window[numTypeMap('uint32')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  uint64   : a => {
+    return new window[numTypeMap('uint64')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  single   : a => {
+    return new window[numTypeMap('single')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  double   : a => {
+    return new window[numTypeMap('double')](isNda(a) ? a.data : isArray(a) ? a : [a])
+  },
+  typecast : (X, type) => { //todo
+    let jstype = numTypeMap(type)
+    let result = new window[jstype](X.buffer)//
+    return result
+    let connet_arr = (result.data || result).join(',').split(',')
+    let a          = new window[jstype](connet_arr)
+    console.log(a)
+    return a
+    /*
+    X = uint32([1 255 256])
+    Y = typecast(X,'uint8')
+    Y(9:12)//支持不好
+    X2 = typecast(Y,'uint32')
+    */
   }
-
 })
 //测试
 $.E(M, {
@@ -5701,6 +5887,54 @@ $.E(M, {
   },
 })
 
+function numTypeMap(type){
+  return {
+    int8  : 'Int8Array',
+    int16 : 'Int16Array',
+    int32 : 'Int32Array',
+    int64 : 'BigInt64Array',
+    uint8 : 'Uint8Array',
+    uint16: 'Uint16Array',
+    uint32: 'Uint32Array',
+    uint64: 'BigUint64Array',
+    single: 'Float32Array',
+    double: 'Float64Array',
+
+  }[type] || type
+}
+
+function doubleToInt(jstype, n){
+  if(!/big/i.test(jstype) || !isBigint(n)){
+    n = +n
+    if(n % 1 == -0.5){
+      n = Math.round(n) - 1
+    }
+    else{
+      n = Math.round(n)
+    }
+  }
+
+  if(/big/i.test(jstype)){
+    n = BigInt(n)
+  }
+
+  return new window[jstype]([n])
+}
+
+function castToInt(type, n){
+  let jstype = numTypeMap(type)
+  if(!jstype){
+    console.error('cast type error', type)
+  }
+
+  if(jstype == 'double'){
+    return mixfun(n => +n, a)
+  }
+
+  n = $.B(+M.intmin(type), +M.intmax(type), +n)
+  return doubleToInt(jstype, n)
+}
+
 //常用
 function action(f, ...arg){
   // if(typeof (f) == 'object' && f.obj && f.key){
@@ -5712,12 +5946,12 @@ function action(f, ...arg){
   }
   else if(Math[f]){
     if(f == 'exp'){
-      if(type(arg[0]) == 'complex'){
+      if(myType(arg[0]) == 'complex'){
         return M.mtimes(Math.exp(arg[0].r), complex(Math.cos(arg[0].i), Math.sin(arg[0].i)))
       }
     }
     else if(f == 'sqrt'){
-      if(type(arg[0]) == 'normal'){
+      if(myType(arg[0]) == 'normal'){
         if(arg[0] < 0){
           return complex(0, Math.sqrt(-arg[0]))
         }
@@ -5888,7 +6122,7 @@ function assign(b, a){
   }
   else if(isNda(a)){
     if(isNda(b)){
-      if(b.size == 0 && Array.isArray(a.arg) && a.name){
+      if(b.size == 0 && isArray(a.arg) && a.name){
         let c = window[a.name]
         if(/\d/.test(a.arg[0])){
           // 删除某行
@@ -5935,7 +6169,7 @@ function assign(b, a){
         }
       }
     }
-    else if(Array.isArray(b)){
+    else if(isArray(b)){
       //window[a] = b[0] //todo
     }
     else if(a.viewindex){
@@ -6159,22 +6393,6 @@ function format(a){
   return a
 }
 
-function isNda(a){
-  return a instanceof ndarray.create
-}
-
-function isComplex(a){
-  return a instanceof Complex
-}
-
-function isBigint(n){
-  return typeof (n) == 'bigint'
-}
-
-function isFraction(a){
-  return a instanceof Fraction
-}
-
 function linear(a, b, c){
   let arr = []
   let to, step
@@ -6194,7 +6412,7 @@ function linear(a, b, c){
     }
   }
   else if(step < 0){
-    for(let i = a; i > to + step / 10000; i += step){
+    for(let i = +a; i > to + step / 10000; i += step){
       arr.push(i)
     }
   }
@@ -6204,25 +6422,6 @@ function linear(a, b, c){
 
 function nameShort(n){
   return n.replace ? n.replace(/@.+/g, '') : 'null'
-}
-
-function type(z){
-  if(isNda(z)){
-    return 'ndarray'
-  }
-  if(isComplex(z)){
-    return 'complex'
-  }
-  if(isFraction(z)){
-    return 'fraction'
-  }
-  if(Array.isArray(z)){
-    return 'array'
-  }
-  // if(typeof (z) == 'string'){
-  //   return 'string'
-  // }
-  return 'normal'
 }
 
 function log(...arg){
@@ -6265,10 +6464,10 @@ function addToTable(a, v, str = '='){ //assign
   else{
     var v_arg
     if(arg){
-      if(Array.isArray(arg)){
-        arg = arg.map(item => Array.isArray(item) ? JSON.stringify(item) : item)
+      if(isArray(arg)){
+        arg = arg.map(item => isArray(item) ? JSON.stringify(item) : item)
       }
-      v_arg = '(' + (Array.isArray(arg) ? arg.join(/\>|\<|\=/g.test(arg.join('')) ? '' : ',') : arg) + ')'
+      v_arg = '(' + (isArray(arg) ? arg.join(/\>|\<|\=/g.test(arg.join('')) ? '' : ',') : arg) + ')'
     }
     else{
       v_arg = ''
@@ -6286,16 +6485,18 @@ function addToTableOut(a, v){ //show
 }
 
 function variableType(a){
+  let type
   if(isNda(a)){
-    return a.shape.join('x')
-    // return 'ndarray (' + a.shape.join(' x ') + ')'
+    type = a.shape.join('x')
   }
-  if(isComplex(a)){
-    return 'complex'
+  else if(isComplex(a)){
+    type = 'complex'
   }
   else{
-    return $.myTypeof(a)
+    type = myType(a)
   }
+
+  return '<i>' + type + '</i>'
 }
 
 function variableValue(a){
@@ -6335,7 +6536,7 @@ function variableValue(a){
   }
 
   if($.isString(a)){
-    return a
+    return "'" + a + "'"
   }
 
   if(isComplex(a) || !isNaN(a)){
@@ -6346,17 +6547,18 @@ function variableValue(a){
     return 'NaN'
   }
 
-  if(Array.isArray(a)){
-    a = a.map(s => {
+  if(isArray(a)){
+    let b = []
+    a.map(s => {
       if(/\di/i.test(s)){
         s = s.replace(/\di/gi, str => str[0] + '*i')
       }
       else{
         // return typeof (s) != 'string' ? s : s.replace(/\s*\+\s*/g, ' + ').replace(/\s*\-\s*/g, ' - ')
       }
-      return variableValue(s)
+      b.push(variableValue(s))
     })
-    return '[ <br>&nbsp; ' + a.join(', <br>&nbsp; ') + ' <br>]'
+    return '[ <br>&nbsp; ' + b.join(', <br>&nbsp; ') + ' <br>]'
   }
 
   if(/^[\w\+\-\*\/\^\.]+$/.test(a)){
@@ -6440,8 +6642,16 @@ function showNormal(n){
   if(isComplex(n)){
     s = showNormal(n.r) + (n.i > 0 ? ' +' : ' -') + showNormal(Math.abs(n.i)) + 'i'
   }
+  else if(isBigint(n)){
+    n = +n
+    if(('' + n).length > 8){
+      s = n.toExponential(M.FIXNUM)
+    }
+  }
   else if(!isNaN(n) && /^[\+\-\d\.e]+$/g.test('' + n)){
+    n = +n
     if(n % 1 == 0){
+      // n 是BigInt怎么办?
       if(('' + n).length > 8){
         s = n.toExponential(M.FIXNUM)
       }
@@ -6462,7 +6672,7 @@ function showNormal(n){
 }
 
 function nearZeroVec(v){
-  if(!Array.isArray(v)){
+  if(!isArray(v)){
     // console.error('nearZeroVec只查看数组', v)
     return false
   }
@@ -6997,7 +7207,7 @@ function newtonComplex(func, func1, p, cp){
     u = -2 * M.real(cp)
     v = M.real(cp) ** 2 + M.imag(cp) ** 2
   }
-  else if(Array.isArray(cp)){
+  else if(isArray(cp)){
     [u, v] = cp
   }
 
@@ -7289,7 +7499,7 @@ function degree2angle(a){
   if(typeof (a) == 'number'){
     a *= pi / 180
   }
-  else if(Array.isArray(a)){
+  else if(isArray(a)){
     a = a.map(n => n * pi / 180)
   }
   else if(isNda(a)){
@@ -7303,7 +7513,7 @@ function angle2degree(a){
   if(typeof (a) == 'number'){
     a *= 180 / pi
   }
-  else if(Array.isArray(a)){
+  else if(isArray(a)){
     a = a.map(n => n * 180 / pi)
   }
   else if(isNda(a)){
@@ -7318,7 +7528,7 @@ function mixfun(f, a, b){
     a = a.single
   }
 
-  if(Array.isArray(a)){
+  if(isArray(a)){
     return a.map(n => f(n, b))
   }
   else if(isNda(a)){
@@ -7326,9 +7536,9 @@ function mixfun(f, a, b){
     c.fill((...arg) => f(c.get(...arg), b))
     return c
   }
-  else if(isComplex(a)){
-    return f(a, b)
-  }
+    // else if(isComplex(a)){
+    //   return f(a, b)
+  // }
   else{
     return f(a, b)
   }
@@ -7343,8 +7553,8 @@ function mix2fun(a, b, f){
   }
   a       = format(a)
   b       = format(b)
-  let _ta = type(a)
-  let _tb = type(b)
+  let _ta = myType(a)
+  let _tb = myType(b)
   if(_ta === 'ndarray' && _tb === 'normal'){
     a.data = a.data.map(n => f(n, b))
     return a
@@ -7391,9 +7601,9 @@ function mix3func(fun, a, b){
 
   let dim    = /^\d+$/.test(b) ? b : -1
   let all    = b == 'all'
-  let vecdim = Array.isArray(b) && b.every(i => /^\d+$/.test(i)) ? b : false
+  let vecdim = isArray(b) && b.every(i => /^\d+$/.test(i)) ? b : false
 
-  if(Array.isArray(a)){
+  if(isArray(a)){
     return fun(a)
   }
 
@@ -7461,11 +7671,11 @@ function sameSize(a, b){
 
 function sameValue(a, b){
   if(!isNda(a)){
-    console.warn(a, 'is not matrix')
+    console.error(a, 'is not matrix')
     return
   }
   if(!isNda(b)){
-    console.warn(b, 'is not matrix')
+    console.error(b, 'is not matrix')
     return
   }
   a = a.simple()
@@ -7583,4 +7793,47 @@ function str2reg(s){
   s = s.replace(/w/g, '\\w+')
   s = s.replace(/d/g, '\\d+')
   return new RegExp(s, 'g')
+}
+
+function isNda(a){
+  return a instanceof ndarray.create
+}
+
+function isComplex(a){
+  return a instanceof Complex
+}
+
+function isBigint(n){
+  return typeof (n) == 'bigint'
+}
+
+function isTypeArray(n){
+  return n && /int/i.test(n.type)
+}
+
+function isArray(a){
+  return Array.isArray && Array.isArray(a) || /Array/.test(Object.prototype.toString.call(a)) || isTypeArray(a)
+}
+
+function isFraction(a){
+  return a instanceof Fraction
+}
+
+function myType(z){
+  if(isNda(z)){
+    return 'ndarray'
+  }
+  if(isComplex(z)){
+    return 'complex'
+  }
+  if(isFraction(z)){
+    return 'fraction'
+  }
+  if(isArray(z)){
+    return 'array'
+  }
+  // if(typeof (z) == 'string'){
+  //   return 'string'
+  // }
+  return 'normal'
 }
