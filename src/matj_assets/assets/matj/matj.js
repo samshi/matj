@@ -360,8 +360,9 @@ $.E(M, {
       var sum = 0
       for(var n = 0; n < l; n++){
         let v  = a.get(0, n)
+        // let tp = $.myTypeof(v)
         let tp = myType(v)
-        if(tp == 'number' && !nearZero(v) || tp == 'array' && !nearZeroVec(v)){
+        if(tp == 'normal' && !nearZero(v) || tp == 'array' && !nearZeroVec(v)){
           if(n % 2){
             v = vecMul(v, -1)
             // console.log('vecMul', v)
@@ -458,7 +459,7 @@ $.E(M, {
       }
 
       let lam_eig_vec = M.eigvec(minus_lam(a, root[i]))
-      // console.log('simple', root[i], lam_eig_vec.simple())
+      console.log('simple', root[i], lam_eig_vec)
       for(var j = 0; j < lam_eig_vec.shape[1]; j++){
         eig_arr.push(root[i])
 
@@ -4707,7 +4708,7 @@ $.E(M, {
         }
         return vecAdd(a, b)
       }
-      return +a + b
+      return a + b
     })
   },
   pow       : (a, p) => {
@@ -5215,9 +5216,11 @@ $.E(M, { //todo
           if(isComplex(a) && isComplex(c)){
             return a.i == c.i && a.r == c.r
           }
-
+          if(n == undefined){
+            console.log(n)
+          }
           if(n.type == c.type){
-            return n[0] == c[0]
+            return '' + n == '' + c
           }
           return n == c || myNaN(a) && myNaN(c) ? 1 : 0
         case '>':
@@ -5410,8 +5413,11 @@ $.E(M, {
     */
 
     if(newclass != 'like'){
-      if(/^u?int(8|16|32|64)$/i.test(newclass)){
+      if(/^u?int(8|16|32)$/i.test(newclass)){
         return mixfun(n => M[newclass](n), A)
+      }
+      if(/^u?int(64)$/i.test(newclass)){
+        return mixfun(n => M[newclass](BigInt(n)), A)
       }
       else{
         console.error('cast newclass not valid', newclass)
@@ -5667,34 +5673,51 @@ $.E(M, {
     return n.type ?? (isNaN(n) ? 'nan' : n % 1 == 0 ? 'int32' : 'float32')
   },
   int8     : a => {
-    return new window[numTypeMap('int8')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'int8')
   },
   int16    : a => {
-    return new window[numTypeMap('int16')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'int16')
   },
   int32    : a => {
-    return new window[numTypeMap('int32')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'int32')
   },
   int64    : a => {
-    return new window[numTypeMap('int64')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'int64')
   },
   uint8    : a => {
-    return new window[numTypeMap('uint8')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'uint8')
   },
   uint16   : a => {
-    return new window[numTypeMap('uint16')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'uint16')
   },
   uint32   : a => {
-    return new window[numTypeMap('uint32')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'uint32')
   },
   uint64   : a => {
-    return new window[numTypeMap('uint64')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'uint64')
   },
   single   : a => {
-    return new window[numTypeMap('single')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'single')
   },
   double   : a => {
-    return new window[numTypeMap('double')](isNda(a) ? a.data : isArray(a) ? a : [a])
+    return M.converToType(a, 'double')
+  },
+  converToType(a, type){
+    let min = M.intmin(type)
+    let max = M.intmax(type)
+    let d =  [''+a]
+    if(isNda(a)){
+      d = a.data
+    }
+
+    if(/64/.test(type)){
+      d = d.map(n=>BigInt($.B(min, max, n)))
+    }
+    else if(isArray(d)){
+      d = d.map(n=>''+$.B(min, max, n))
+    }
+
+    return new window[numTypeMap(type)](d)
   },
   typecast : (X, type) => { //todo
     let jstype = numTypeMap(type)
@@ -6010,6 +6033,7 @@ function action(f, ...arg){
     //   }
     // }
   }
+
   else{
     let temp
     if(typeof (f) == 'object' && f.obj && f.key){
@@ -6021,9 +6045,14 @@ function action(f, ...arg){
     else if(isNda(f)){
       temp = f
     }
+    else if(typeof (f) == 'string'){
+      temp = ndarray(f.split(''))
+    }
+    else if(isArray(f)){
+      temp = ndarray(f)
+    }
     else{
-      window[f] = ndarray([])
-      temp      = window[f]
+      temp = ndarray([])
     }
 
     if(isNda(temp)){
@@ -6066,6 +6095,10 @@ function action(f, ...arg){
 
       if(result.size == 1){
         return result.get(0)
+      }
+
+      if(typeof (f) == 'string'){
+        return result.data.join('')
       }
       return result
     }
@@ -6465,7 +6498,7 @@ function addToTable(a, v, str = '='){ //assign
     var v_arg
     if(arg){
       if(isArray(arg)){
-        arg = arg.map(item => isArray(item) ? JSON.stringify(item) : item)
+        arg = arg.map(item => isBigint(item) ? '' + item : isArray(item) ? '' + item : item)
       }
       v_arg = '(' + (isArray(arg) ? arg.join(/\>|\<|\=/g.test(arg.join('')) ? '' : ',') : arg) + ')'
     }
@@ -6493,6 +6526,7 @@ function variableType(a){
     type = 'complex'
   }
   else{
+    // type = $.myTypeof(a)
     type = myType(a)
   }
 
@@ -7808,11 +7842,11 @@ function isBigint(n){
 }
 
 function isTypeArray(n){
-  return n && /int/i.test(n.type)
+  return n && /int|float/i.test(n.type)
 }
 
 function isArray(a){
-  return Array.isArray && Array.isArray(a) || /Array/.test(Object.prototype.toString.call(a)) || isTypeArray(a)
+  return Array.isArray && Array.isArray(a) || isTypeArray(a) ///Array/.test(Object.prototype.toString.call(a)) ||
 }
 
 function isFraction(a){
@@ -7832,8 +7866,26 @@ function myType(z){
   if(isArray(z)){
     return 'array'
   }
-  // if(typeof (z) == 'string'){
-  //   return 'string'
-  // }
+
   return 'normal'
+  /*
+  null
+  number
+    single
+    double
+  string
+  array
+    typearray
+    float
+  object
+  function
+  regexp
+
+  nda
+  complex
+  fraction
+
+
+  referenceError
+   */
 }
