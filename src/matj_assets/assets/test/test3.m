@@ -7,7 +7,7 @@ multiwallet
   stoicwallet
 social
   coding share
-  coding cooperation
+  coding guestbook
 ide
   highlight
   key shortcuts
@@ -23,7 +23,9 @@ function
   subs      符号替换
   diff      求微分
   polyder   求积分
-rcon
+  bitxxx    二进制系列
+  int/uint  各型整数处理
+
 laplace
 ilaplace
 fourier
