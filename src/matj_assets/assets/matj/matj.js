@@ -4117,9 +4117,220 @@ $.E(M, {
     return action('tan', degree2angle(a))
   },
 })
+//四则运算
+$.E(M, {
+  ldivide  : (a, b) => {  // .\
+    return M.rdivide(b, a)
+  },
+  minus   : (a, b) => { // - 号处理
+    return mix2fun(a, b, (a, b) => {
+      let _ta = myType(a)
+      let _tb = myType(b)
+      if(_ta === 'complex' && _tb === 'normal'){
+        a.r -= b
+        return a
+      }
+      else if(_ta === 'normal' && _tb === 'complex'){
+        b.r = a - b.r
+        b.i = -b.i
+        return b
+      }
+      else if(_ta === 'complex' && _tb === 'complex'){
+        return a.minus(b)
+      }
+      else if(_tb === 'array'){
+        return vecAdd(a, vecMul(-1, b))
+      }
+      else if(_ta === 'array'){
+        if(_tb == 'string'){
+          b == [-1, 0]
+          return vecAdd(a, b)
+        }
+        return vecAdd(a, -b)
+      }
+      // 缺少分数计算
+      return a - b
+    })
+  },
+  mldivide: (a, b) => { // \ 处理
+    //求解关于 x 的线性方程组 ax = b,  x = a\b
+    a       = format(a)
+    b       = format(b)
+    let _ta = myType(a)
+    let _tb = myType(b)
+    if(_ta == 'ndarray' && _tb == 'normal'){
+      return a.div(b)
+    }
+    else if(_ta == 'ndarray' && _tb == 'ndarray'){
+      return M.gauss(a, b)
+    }
+    else if(_ta == 'normal' && _tb == 'normal'){
+      return a / b
+    }
+    else if(_ta === 'complex' && _tb === 'normal'){
+
+      return complex(a.r / b, a.i / b)
+    }
+    else if(_ta === 'normal' && _tb === 'complex'){
+      // return (new Complex(a, 0)).div(b)
+      var c = a / b.mag()
+      return b.conj().mul(c)
+    }
+    else if(_ta === 'complex' && _tb === 'complex'){
+      return a.div(b)
+    }
+    else{
+      // 缺少分数计算
+      log('mul type err', a, _ta, b, _tb)
+    }
+  },
+  mrdivide: (a, b) => { // / 号处理
+    // 求解关于 x 的线性方程组 xb = a,  x = a/b
+    // 运算符 / 和 \ 通过以下对应关系而相互关联：B/A = (A'\B')'。
+    // 如果 A 是方阵，则 A\B 约等于 inv(A)*B
+    // x = a/b
+    // x = mrdivide(a,b)
+    a       = format(a)
+    b       = format(b)
+    let _ta = myType(a)
+    let _tb = myType(b)
+    if(_ta == 'ndarray' && _tb == 'ndarray'){
+      return M.mtimes(a, M.inv(b))
+      // return M.mldivide(b, a)
+    }
+
+    return M.mldivide(a, b)
+  },
+  mtimes: (a, ...arg) => {  // * 号处理
+    a       = format(a)
+    let b   = format(arg[0])
+    let _ta = myType(a)
+    let _tb = myType(b)
+    let result
+    if(_ta == 'ndarray' && (_tb == 'normal' || _tb === 'complex')){
+      result = a.mul(b)
+    }
+    else if((_ta == 'normal' || _ta === 'complex') && _tb == 'ndarray'){
+      result = b.mul(a)
+    }
+    else if(_ta == 'normal' && _tb == 'normal'){
+      result = a * b
+    }
+    else if(_ta == 'ndarray' && _tb == 'ndarray'){
+      //矩阵乘法。 C = A * B是矩阵A和B的线性代数乘积。对于非标量A和B，A的列数必须等于B的行数。标量可以乘以任何大小的矩阵
+      // todo
+      if(a.shape[1] != b.shape[0]){
+        console.log('error A的列数必须等于B的行数', a.shape[1], b.shape[0])
+        return
+      }
+      else{
+        let c = ndarray([], [a.shape[0], b.shape[1]])
+        c.fill((i, j) => {
+          let d = 0
+          for(let k = b.shape[0] - 1; k >= 0; k--){
+            // d += a.get(i, k) * b.get(k, j)
+            d = d.add(a.get(i, k).mul(b.get(k, j)))
+          }
+          return d
+        })
+        result = c
+      }
+    }
+    else if(_ta === 'complex' && _tb === 'normal'){
+      result = complex(a.r * b, a.i * b)
+    }
+    else if(_ta === 'normal' && _tb === 'complex'){
+      result = complex(b.r * a, b.i * a)
+    }
+    else if(_ta === 'complex' && _tb === 'complex'){
+      result = a.mul(b)
+    }
+    else if(_ta === 'array' || _tb === 'array'){
+      result = vecMul(a, b)
+    }
+    else if(_ta === 'normal' || _tb === 'string'){
+      // 3*x
+      result = [a, 0]
+    }
+    else if(_tb === 'normal' || _ta === 'string'){
+      // 3*x
+      result = [b, 0]
+    }
+    else{
+      log('mul type err', a, b)
+    }
+
+    if(arg.length == 1){
+      return result
+    }
+
+    return M.mtimes(result, ...arg.slice(1))
+  },
+  plus  : (a, b) => { // + 号处理
+    return mix2fun(a, b, (a, b) => {
+      let _ta = myType(a)
+      let _tb = myType(b)
+      if(_ta === 'complex' && _tb === 'normal'){
+        return complex(a.r + b, a.i)
+      }
+      else if(_ta === 'normal' && _tb === 'complex'){
+        return complex(b.r + a, b.i)
+      }
+      else if(_ta === 'complex' && _tb === 'complex'){
+        return a.add(b)
+      }
+      else if(_ta === 'array' || _tb === 'array'){
+        if(_tb == 'string'){
+          b = [1, 0] // 为什么是1
+        }
+        return vecAdd(a, b)
+      }
+      // 缺少分数计算
+      return a + b
+    })
+  },
+  rdivide  : (a, b) => { // ./
+    return mix2fun(a, b, (a, b) => {
+      let _ta = myType(a)
+      let _tb = myType(b)
+      if(_ta === 'complex' && _tb === 'normal'){
+        a.r /= b
+        a.i /= b
+        return a
+      }
+      else if(_ta === 'normal' && _tb === 'complex'){
+        b.r = a / b.r
+        b.i = a / b.i
+        return b
+      }
+      else if(_ta === 'complex' && _tb === 'complex'){
+        return a.div(b)
+      }
+
+      return a / b
+    })
+  },
+  times : (a, b) => { // .* 处理
+    return mix2fun(a, b, (a, b) => {
+      let _ta = myType(a)
+      let _tb = myType(b)
+      if(_ta === 'complex' && _tb === 'normal'){
+        return complex(a.r * b, a.i * b)
+      }
+      else if(_ta === 'normal' && _tb === 'complex'){
+        return complex(b.r * a, b.i * a)
+      }
+      else if(_ta === 'complex' && _tb === 'complex'){
+        return a.mul(b)
+      }
+
+      return a * b
+    })
+  },
+})
 //基本函数
 $.E(M, {
-  abs       : a => {
+  abs      : a => {
     return mixfun(n => {
       if(isComplex(n)){
         return n.mag()
@@ -4127,9 +4338,9 @@ $.E(M, {
       return Math.abs(n)
     }, a)
   },
-  cross     : () => {    //todo
+  cross    : () => {    //todo
   },
-  cumprod   : (a, ...argu) => {
+  cumprod  : (a, ...argu) => {
     let b = ndarray([], a.shape)
 
     let dim       = argu.indexOf(2) >= 0 ? 2 : 1
@@ -4199,7 +4410,7 @@ $.E(M, {
 
     return b
   },
-  cumsum    : (a, ...argu) => {
+  cumsum   : (a, ...argu) => {
     let b = ndarray([], a.shape)
 
     let dim       = argu.indexOf(2) >= 0 ? 2 : 1
@@ -4270,10 +4481,10 @@ $.E(M, {
 
     return b
   },
-  datestr   : t => {  //todo
+  datestr  : t => {  //todo
 
   },
-  dot       : (a, b, c) => {
+  dot      : (a, b, c) => {
     let total = 0
     if(isArray(a) && isArray(b) && a.length == b.length){
       a.forEach((n, index) => total += n * b[index])
@@ -4297,7 +4508,7 @@ $.E(M, {
       return dotCol(a, b)
     }
   },
-  factorial : a => {
+  factorial: a => {
     function factorial(n){
       if(n % 1 != 0 || n < 0){
         return NaN
@@ -4312,13 +4523,10 @@ $.E(M, {
 
     return mixfun(factorial, a)
   },
-  fix       : a => {
+  fix      : a => {
     return mixfun(n => (n > 0 ? Math.floor(n) : n < 0 ? Math.ceil(n) : 0), a)
   },
-  ldivide   : (a, b) => {
-    return M.rdivide(b, a)
-  },
-  max       : (a, a1 = [], ...argu) => {
+  max      : (a, a1 = [], ...argu) => {
     let dim           = argu.indexOf(2) > -1 ? 2 : 1
     let all           = argu.indexOf('all') > -1 ? 'all' : 0
     let nanflag       = argu.indexOf('includenan') > -1 ? 'includenan' : 'omitnan'
@@ -4355,7 +4563,7 @@ $.E(M, {
       return maxmin_result
     }
   },
-  maxmin    : (f, self, a, a1, dim, all, nanflag, linear) => {
+  maxmin   : (f, self, a, a1, dim, all, nanflag, linear) => {
     let b
     a1 = a1.data || a1
 
@@ -4435,7 +4643,7 @@ $.E(M, {
     }
     return b
   },
-  min       : (a, a1 = [], ...argu) => {
+  min      : (a, a1 = [], ...argu) => {
     let dim           = argu.indexOf(2) > -1 ? 2 : 1
     let all           = argu.indexOf('all') > -1 ? 'all' : 0
     let nanflag       = argu.indexOf('includenan') > -1 ? 'includenan' : 'omitnan'
@@ -4472,70 +4680,11 @@ $.E(M, {
       return maxmin_result
     }
   },
-  minus     : (a, b) => {
-    return mix2fun(a, b, (a, b) => {
-      let _ta = myType(a)
-      let _tb = myType(b)
-      if(_ta === 'complex' && _tb === 'normal'){
-        a.r -= b
-        return a
-      }
-      else if(_ta === 'normal' && _tb === 'complex'){
-        b.r = a - b.r
-        b.i = -b.i
-        return b
-      }
-      else if(_ta === 'complex' && _tb === 'complex'){
-        return a.minus(b)
-      }
-      else if(_tb === 'array'){
-        return vecAdd(a, vecMul(-1, b))
-      }
-      else if(_ta === 'array'){
-        if(_tb == 'string'){
-          b == [-1, 0]
-          return vecAdd(a, b)
-        }
-        return vecAdd(a, -b)
-      }
-      return a - b
-    })
-  },
-  mldivide  : (a, b) => {
-    //求解关于 x 的线性方程组 ax = b,  x = a\b
-    a       = format(a)
-    b       = format(b)
-    let _ta = myType(a)
-    let _tb = myType(b)
-    if(_ta == 'ndarray' && _tb == 'normal'){
-      return a.div(b)
-    }
-    else if(_ta == 'ndarray' && _tb == 'ndarray'){
-      return M.gauss(a, b)
-    }
-    else if(_ta == 'normal' && _tb == 'normal'){
-      return a / b
-    }
-    else if(_ta === 'complex' && _tb === 'normal'){
 
-      return complex(a.r / b, a.i / b)
-    }
-    else if(_ta === 'normal' && _tb === 'complex'){
-      // return (new Complex(a, 0)).div(b)
-      var c = a / b.mag()
-      return b.conj().mul(c)
-    }
-    else if(_ta === 'complex' && _tb === 'complex'){
-      return a.div(b)
-    }
-    else{
-      log('mul type err', a, _ta, b, _tb)
-    }
-  },
-  mod       : (a, b) => {
+  mod   : (a, b) => {
     return mixfun(n => n % b, a)
   },
-  mpower    : (a, b) => {
+  mpower: (a, b) => {
     // todo
     if(isNda(a) && !isNaN(b) && b % 1 == 0){
       let c = M.mtimes(a, a)
@@ -4561,89 +4710,8 @@ $.E(M, {
       // return a+'^'+b
     }
   },
-  mrdivide  : (a, b) => {
-    // 求解关于 x 的线性方程组 xb = a,  x = a/b
-    // 运算符 / 和 \ 通过以下对应关系而相互关联：B/A = (A'\B')'。
-    // 如果 A 是方阵，则 A\B 约等于 inv(A)*B
-    // x = a/b
-    // x = mrdivide(a,b)
-    a       = format(a)
-    b       = format(b)
-    let _ta = myType(a)
-    let _tb = myType(b)
-    if(_ta == 'ndarray' && _tb == 'ndarray'){
-      return M.mtimes(a, M.inv(b))
-      // return M.mldivide(b, a)
-    }
 
-    return M.mldivide(a, b)
-  },
-  mtimes    : (a, ...arg) => {
-    a       = format(a)
-    let b   = format(arg[0])
-    let _ta = myType(a)
-    let _tb = myType(b)
-    let result
-    if(_ta == 'ndarray' && (_tb == 'normal' || _tb === 'complex')){
-      result = a.mul(b)
-    }
-    else if((_ta == 'normal' || _ta === 'complex') && _tb == 'ndarray'){
-      result = b.mul(a)
-    }
-    else if(_ta == 'normal' && _tb == 'normal'){
-      result = a * b
-    }
-    else if(_ta == 'ndarray' && _tb == 'ndarray'){
-      //矩阵乘法。 C = A * B是矩阵A和B的线性代数乘积。对于非标量A和B，A的列数必须等于B的行数。标量可以乘以任何大小的矩阵
-      // todo
-      if(a.shape[1] != b.shape[0]){
-        console.log('error A的列数必须等于B的行数', a.shape[1], b.shape[0])
-        return
-      }
-      else{
-        let c = ndarray([], [a.shape[0], b.shape[1]])
-        c.fill((i, j) => {
-          let d = 0
-          for(let k = b.shape[0] - 1; k >= 0; k--){
-            // d += a.get(i, k) * b.get(k, j)
-            d = d.add(a.get(i, k).mul(b.get(k, j)))
-          }
-          return d
-        })
-        result = c
-      }
-    }
-    else if(_ta === 'complex' && _tb === 'normal'){
-      result = complex(a.r * b, a.i * b)
-    }
-    else if(_ta === 'normal' && _tb === 'complex'){
-      result = complex(b.r * a, b.i * a)
-    }
-    else if(_ta === 'complex' && _tb === 'complex'){
-      result = a.mul(b)
-    }
-    else if(_ta === 'array' || _tb === 'array'){
-      result = vecMul(a, b)
-    }
-    else if(_ta === 'normal' || _tb === 'string'){
-      // 3*x
-      result = [a, 0]
-    }
-    else if(_tb === 'normal' || _ta === 'string'){
-      // 3*x
-      result = [b, 0]
-    }
-    else{
-      log('mul type err', a, b)
-    }
-
-    if(arg.length == 1){
-      return result
-    }
-
-    return M.mtimes(result, ...arg.slice(1))
-  },
-  multif    : (a, b) => {
+  multif: (a, b) => {
     a       = format(a)
     b       = format(b)
     let _ta = myType(a)
@@ -4689,29 +4757,8 @@ $.E(M, {
       log('mul type err', a, b)
     }
   },
-  plus      : (a, b) => {
-    return mix2fun(a, b, (a, b) => {
-      let _ta = myType(a)
-      let _tb = myType(b)
-      if(_ta === 'complex' && _tb === 'normal'){
-        return complex(a.r + b, a.i)
-      }
-      else if(_ta === 'normal' && _tb === 'complex'){
-        return complex(b.r + a, b.i)
-      }
-      else if(_ta === 'complex' && _tb === 'complex'){
-        return a.add(b)
-      }
-      else if(_ta === 'array' || _tb === 'array'){
-        if(_tb == 'string'){
-          b = [1, 0]
-        }
-        return vecAdd(a, b)
-      }
-      return a + b
-    })
-  },
-  pow       : (a, p) => {
+
+  pow      : (a, p) => {
     let f = (function(p){
       return function(n){
         return Math.pow(n, p)
@@ -4732,14 +4779,14 @@ $.E(M, {
     }
     return b
   },
-  power     : (a, n) => {
+  power    : (a, n) => {
     let b = M.times(a, a)
     for(let i = n - 3; i >= 0; i--){
       b = M.times(b, a)
     }
     return b
   },
-  prod      : (a, b) => {
+  prod     : (a, b) => {
     let fun = arr => {
       let sum = 1
       arr.forEach(a => sum *= a)
@@ -4748,7 +4795,7 @@ $.E(M, {
 
     return mix3func(fun, a, b)
   },
-  rand      : (...arg) => {
+  rand     : (...arg) => {
     if(arg.length == 0){
       return Math.random()
     }
@@ -4772,7 +4819,7 @@ $.E(M, {
       return a.fill(_ => Math.random())
     }
   },
-  randn     : (imax, ...arg) => {
+  randn    : (imax, ...arg) => {
     //正态分布
     console.log(imax, arg)
     let min = 1, max
@@ -4802,7 +4849,7 @@ $.E(M, {
 
     return ndarray([], shape).fill(_ => Math.floor(Math.random() * (max - min)) + min)
   },
-  randi     : (imax, ...arg) => {
+  randi    : (imax, ...arg) => {
     //均匀分布
     let f = _ => {
       let v = Math.random()
@@ -4839,38 +4886,17 @@ $.E(M, {
 
     return ndarray([], shape).fill(_ => f())
   },
-  rem       : (a, b) => { //todo
+  rem      : (a, b) => { //todo
     return mix2fun((n, m) => n - M.fix(n / m) * m, a)
   },
-  rdivide   : (a, b) => {
-    return mix2fun(a, b, (a, b) => {
-      let _ta = myType(a)
-      let _tb = myType(b)
-      if(_ta === 'complex' && _tb === 'normal'){
-        a.r /= b
-        a.i /= b
-        return a
-      }
-      else if(_ta === 'normal' && _tb === 'complex'){
-        b.r = a / b.r
-        b.i = a / b.i
-        return b
-      }
-      else if(_ta === 'complex' && _tb === 'complex'){
-        return a.div(b)
-      }
-
-      return a / b
-    })
-  },
-  sign      : a => {
+  sign     : a => {
     if(isComplex(a)){
       return a.div(a.mag())
     }
 
     return mixfun(Math.sign, a)
   },
-  sqrt      : a => {
+  sqrt     : a => {
     if(a < 0){
       return complex(0, Math.sqrt(-a))
     }
@@ -4885,14 +4911,14 @@ $.E(M, {
     }
     return mixfun(fun, a)
   },
-  strlength : a => {
+  strlength: a => {
     let b = a.clone()
     b.data.forEach((_, index) => {
       b.data[index] = ('' + _).length
     })
     return b
   },
-  sum       : (a, b) => {
+  sum      : (a, b) => {
     let fun = function(arr){
       let sum = 0
       arr.forEach(a => sum += a)
@@ -4901,23 +4927,7 @@ $.E(M, {
 
     return mix3func(fun, a, b)
   },
-  times     : (a, b) => {
-    return mix2fun(a, b, (a, b) => {
-      let _ta = myType(a)
-      let _tb = myType(b)
-      if(_ta === 'complex' && _tb === 'normal'){
-        return complex(a.r * b, a.i * b)
-      }
-      else if(_ta === 'normal' && _tb === 'complex'){
-        return complex(b.r * a, b.i * a)
-      }
-      else if(_ta === 'complex' && _tb === 'complex'){
-        return a.mul(b)
-      }
 
-      return a * b
-    })
-  },
   uplus     : a => {
     return a
   },
@@ -5705,16 +5715,16 @@ $.E(M, {
   converToType(a, type){
     let min = M.intmin(type)
     let max = M.intmax(type)
-    let d =  [''+a]
+    let d   = ['' + a]
     if(isNda(a)){
       d = a.data
     }
 
     if(/64/.test(type)){
-      d = d.map(n=>BigInt($.B(min, max, n)))
+      d = d.map(n => BigInt($.B(min, max, n)))
     }
     else if(isArray(d)){
-      d = d.map(n=>''+$.B(min, max, n))
+      d = d.map(n => '' + $.B(min, max, n))
     }
 
     return new window[numTypeMap(type)](d)
@@ -6147,7 +6157,7 @@ function actionshow(f, ...arg){
 }
 
 function assign(b, a){
-  b = b.single || b
+  b = b.single ?? b
   // console.log('assign', a, b)
   if(M[a] || resident_command.includes(a)){
     console.error(a, 'can not be assign', b)
@@ -7589,13 +7599,13 @@ function mix2fun(a, b, f){
   b       = format(b)
   let _ta = myType(a)
   let _tb = myType(b)
+  if(_tb === 'ndarray' && _ta !== 'ndarray'){
+    [a, b] = [b, a]
+    [_ta, _tb] = [_tb, _ta]
+  }
   if(_ta === 'ndarray' && _tb === 'normal'){
     a.data = a.data.map(n => f(n, b))
     return a
-  }
-  else if(_ta === 'normal' && _tb === 'ndarray'){
-    b.data = b.data.map(n => f(a, n))
-    return b
   }
   else if(_ta === 'ndarray' && _tb === 'ndarray'){
     let c
@@ -7613,10 +7623,6 @@ function mix2fun(a, b, f){
   else if(_ta === 'ndarray' && _tb === 'complex'){
     a.data = a.data.map(n => f(n, b))
     return a
-  }
-  else if(_ta === 'complex' && _tb === 'ndarray'){
-    b.data = b.data.map(n => f(a, n))
-    return b
   }
 
   return f(a, b)
