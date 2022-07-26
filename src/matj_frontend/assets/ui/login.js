@@ -148,7 +148,7 @@ function login(f){
   })
 
   P.buymecafe = $.C(P, {
-    I : 'buy auther cafe',
+    I : 'buy author cafe',
     L : 60,
     W : 200,
     H : 40,
@@ -159,7 +159,7 @@ function login(f){
     TA: 'center',
     T : P.H_ - 20
   }).H().down(async eobj => {
-    let amount = +prompt('you will send auther some ICP, change it less or more', 0.1)
+    let amount = +prompt('you will send author some ICP, change it less or more', 0.1)
     if(typeof (amount) == 'number' && amount > 0 && amount < DATA.icp_balance){
       let result = await payOwner('359646224d9cd82d26f73cc9dcddbaa041f13ee5802560b65f58db0ed02b8cf2', amount)
       if(result){

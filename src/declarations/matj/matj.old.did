@@ -1,6 +1,0 @@
-service : {
-  get: (text) -> (opt text) query;
-  principalget: (text) -> (opt text) query;
-  set: (text, text) -> (opt text);
-  who: () -> (text) query;
-}

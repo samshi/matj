@@ -1,7 +1,7 @@
 {
   "canisters": {
     "matj": {
-      "main": "src/matj/main.mo",
+      "main": "src/matj_backend/main.mo",
       "type": "motoko"
     },
     "matj_assets": {
@@ -9,11 +9,11 @@
         "matj"
       ],
       "frontend": {
-        "entrypoint": "src/matj_assets/src/index.html"
+        "entrypoint": "src/matj_frontend/src/index.html"
       },
       "source": [
-        "src/matj_assets/assets",
-        "dist/matj_assets/"
+        "src/matj_frontend/assets",
+        "dist/matj_frontend/"
       ],
       "type": "assets"
     }
@@ -24,7 +24,7 @@
       "packtool": ""
     }
   },
-  "dfx": "0.10.0",
+  "dfx": "0.11.0",
   "networks": {
     "local": {
       "bind": "127.0.0.1:8000",
