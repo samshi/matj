@@ -22,8 +22,8 @@ function Fraction(n, d){
     throw new TypeError()
   }
 
-  this.n = d > 0 ? n : -n
-  this.d = d > 0 ? d : -d
+  this.n = d > 0 ? +n : -n
+  this.d = d > 0 ? +d : -d
 
   return this.reduction()
 }

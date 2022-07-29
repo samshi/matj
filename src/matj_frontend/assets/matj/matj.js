@@ -1562,8 +1562,7 @@ $.E(M, {
   },
   ctranspose: a => {
     //复数共轭转置
-    let _ta = myType(a)
-    if(_ta === 'ndarray'){
+    if(isNda(a)){
       let ct = a.transpose().simple()
       ct.data.map(item => isComplex(item) ? item.conj() : item)
       return ct
@@ -2026,8 +2025,7 @@ $.E(M, {
   },
   transpose : a => {
     a       = format(a)
-    let _ta = myType(a)
-    if(_ta === 'ndarray'){
+    if(isNda(a)){
       return a.transpose()
       // let b=a.transpose()
       // return b.simple()
@@ -4126,29 +4124,47 @@ $.E(M, {
     return mix2fun(a, b, (a, b) => {
       let _ta = myType(a)
       let _tb = myType(b)
-      if(_ta === 'complex' && _tb === 'normal'){
-        a.r -= b
-        return a
-      }
-      else if(_ta === 'normal' && _tb === 'complex'){
-        b.r = a - b.r
-        b.i = -b.i
-        return b
-      }
-      else if(_ta === 'complex' && _tb === 'complex'){
-        return a.minus(b)
-      }
-      else if(_tb === 'array'){
+      // complex
+      // fraction
+      // array
+      // normal
+      if(_ta === 'array' || _tb === 'array'){
+        if(typeof(a) == 'string'){
+          a = [1, 0] // 为什么是1
+        }
+
+        if(typeof(b) == 'string'){
+          b = [1, 0] // 为什么是1
+        }
         return vecAdd(a, vecMul(-1, b))
       }
-      else if(_ta === 'array'){
-        if(_tb == 'string'){
-          b == [-1, 0]
-          return vecAdd(a, b)
+      else if (_ta === 'complex' || _tb === 'complex'){
+        if(_ta == 'fraction' ){
+          a = a.toNumber()
         }
-        return vecAdd(a, -b)
+        if(_tb == 'fraction' ){
+          b = b.toNumber()
+        }
+
+        if(_ta === 'complex' && _tb !== 'complex'){
+          return complex(a.r - b, a.i)
+        }
+        else if(_ta !== 'complex' && _tb === 'complex'){
+          return complex(a - b.r, -b.i)
+        }
+        else if(_ta === 'complex' && _tb === 'complex'){
+          return a.minus(b)
+        }
       }
-      // 缺少分数计算
+      else if(_ta === 'fraction' || _tb === 'fraction'){
+        if(_ta === 'fraction'){
+          return a.minus(b)
+        }      
+        if(_tb === 'fraction'){
+          return b.mul(-1).add(a)
+        }
+      }
+
       return a - b
     })
   },
@@ -4158,30 +4174,32 @@ $.E(M, {
     b       = format(b)
     let _ta = myType(a)
     let _tb = myType(b)
-    if(_ta == 'ndarray' && _tb == 'normal'){
-      return a.div(b)
-    }
-    else if(_ta == 'ndarray' && _tb == 'ndarray'){
+    if(_ta == 'ndarray' && _tb == 'ndarray'){
       return M.gauss(a, b)
     }
-    else if(_ta == 'normal' && _tb == 'normal'){
-      return a / b
-    }
-    else if(_ta === 'complex' && _tb === 'normal'){
+    else {
+      if(_ta == 'ndarray' && _tb == 'normal'){
+        return a.div(b)
+      }
+      else if(_ta == 'normal' && _tb == 'normal'){
+        return a / b
+      }
+      else if(_ta === 'complex' && _tb === 'normal'){
 
-      return complex(a.r / b, a.i / b)
-    }
-    else if(_ta === 'normal' && _tb === 'complex'){
-      // return (new Complex(a, 0)).div(b)
-      var c = a / b.mag()
-      return b.conj().mul(c)
-    }
-    else if(_ta === 'complex' && _tb === 'complex'){
-      return a.div(b)
-    }
-    else{
-      // 缺少分数计算
-      log('mul type err', a, _ta, b, _tb)
+        return complex(a.r / b, a.i / b)
+      }
+      else if(_ta === 'normal' && _tb === 'complex'){
+        // return (new Complex(a, 0)).div(b)
+        var c = a / b.mag()
+        return b.conj().mul(c)
+      }
+      else if(_ta === 'complex' && _tb === 'complex'){
+        return a.div(b)
+      }
+      else{
+        // 缺少分数计算
+        log('mul type err', a, _ta, b, _tb)
+      }
     }
   },
   mrdivide: (a, b) => { // / 号处理
@@ -4192,11 +4210,8 @@ $.E(M, {
     // x = mrdivide(a,b)
     a       = format(a)
     b       = format(b)
-    let _ta = myType(a)
-    let _tb = myType(b)
-    if(_ta == 'ndarray' && _tb == 'ndarray'){
+    if(isNda(a) && isNda(b)){
       return M.mtimes(a, M.inv(b))
-      // return M.mldivide(b, a)
     }
 
     return M.mldivide(a, b)
@@ -4207,16 +4222,7 @@ $.E(M, {
     let _ta = myType(a)
     let _tb = myType(b)
     let result
-    if(_ta == 'ndarray' && (_tb == 'normal' || _tb === 'complex')){
-      result = a.mul(b)
-    }
-    else if((_ta == 'normal' || _ta === 'complex') && _tb == 'ndarray'){
-      result = b.mul(a)
-    }
-    else if(_ta == 'normal' && _tb == 'normal'){
-      result = a * b
-    }
-    else if(_ta == 'ndarray' && _tb == 'ndarray'){
+    if(_ta == 'ndarray' && _tb == 'ndarray'){
       //矩阵乘法。 C = A * B是矩阵A和B的线性代数乘积。对于非标量A和B，A的列数必须等于B的行数。标量可以乘以任何大小的矩阵
       // todo
       if(a.shape[1] != b.shape[0]){
@@ -4228,7 +4234,6 @@ $.E(M, {
         c.fill((i, j) => {
           let d = 0
           for(let k = b.shape[0] - 1; k >= 0; k--){
-            // d += a.get(i, k) * b.get(k, j)
             d = d.add(a.get(i, k).mul(b.get(k, j)))
           }
           return d
@@ -4236,28 +4241,50 @@ $.E(M, {
         result = c
       }
     }
-    else if(_ta === 'complex' && _tb === 'normal'){
-      result = complex(a.r * b, a.i * b)
-    }
-    else if(_ta === 'normal' && _tb === 'complex'){
-      result = complex(b.r * a, b.i * a)
-    }
-    else if(_ta === 'complex' && _tb === 'complex'){
-      result = a.mul(b)
-    }
-    else if(_ta === 'array' || _tb === 'array'){
-      result = vecMul(a, b)
-    }
-    else if(_ta === 'normal' || _tb === 'string'){
-      // 3*x
-      result = [a, 0]
-    }
-    else if(_tb === 'normal' || _ta === 'string'){
-      // 3*x
-      result = [b, 0]
-    }
-    else{
-      log('mul type err', a, b)
+    else {
+      result = mix2fun(a, b, (a, b) => {
+        let _ta = myType(a)
+        let _tb = myType(b)
+
+        if(_ta === 'array' || _tb === 'array'){
+          if(typeof(a) == 'string'){
+            a = [1, 0] // 为什么是1
+          }
+  
+          if(typeof(b) == 'string'){
+            b = [1, 0] // 为什么是1
+          }
+          return vecMul(a, b)
+        }
+        else if (_ta === 'complex' || _tb === 'complex'){
+          if(_ta == 'fraction' ){
+            a = a.toNumber()
+          }
+          if(_tb == 'fraction' ){
+            b = b.toNumber()
+          }
+  
+          if(_ta === 'complex' && _tb !== 'complex'){
+            return complex(a.r * b, a.i * b)
+          }
+          else if(_ta !== 'complex' && _tb === 'complex'){
+            return complex(b.r * a, b.i * a)
+          }
+          else if(_ta === 'complex' && _tb === 'complex'){
+            return a.mul(b)
+          }
+        }
+        else if(_ta === 'fraction' || _tb === 'fraction'){
+          if(_ta === 'fraction'){
+            return a.mul(b)
+          }      
+          if(_tb === 'fraction'){
+            return b.mul(a)
+          }
+        }
+     
+        return a * b
+      })
     }
 
     if(arg.length == 1){
@@ -4270,22 +4297,47 @@ $.E(M, {
     return mix2fun(a, b, (a, b) => {
       let _ta = myType(a)
       let _tb = myType(b)
-      if(_ta === 'complex' && _tb === 'normal'){
-        return complex(a.r + b, a.i)
-      }
-      else if(_ta === 'normal' && _tb === 'complex'){
-        return complex(b.r + a, b.i)
-      }
-      else if(_ta === 'complex' && _tb === 'complex'){
-        return a.add(b)
-      }
-      else if(_ta === 'array' || _tb === 'array'){
-        if(_tb == 'string'){
+      // complex
+      // fraction
+      // array
+      // normal
+      if(_ta === 'array' || _tb === 'array'){
+        if(typeof(a) == 'string'){
+          a = [1, 0] // 为什么是1
+        }
+
+        if(typeof(b) == 'string'){
           b = [1, 0] // 为什么是1
         }
         return vecAdd(a, b)
       }
-      // 缺少分数计算
+      else if (_ta === 'complex' || _tb === 'complex'){
+        if(_ta == 'fraction' ){
+          a = a.toNumber()
+        }
+        if(_tb == 'fraction' ){
+          b = b.toNumber()
+        }
+
+        if(_ta === 'complex' && _tb !== 'complex'){
+          return complex(a.r + b, a.i)
+        }
+        else if(_ta !== 'complex' && _tb === 'complex'){
+          return complex(b.r + a, b.i)
+        }
+        else if(_ta === 'complex' && _tb === 'complex'){
+          return a.add(b)
+        }
+      }
+      else if(_ta === 'fraction' || _tb === 'fraction'){
+        if(_ta === 'fraction'){
+          return a.add(b)
+        }      
+        if(_tb === 'fraction'){
+          return b.add(a)
+        }
+      }
+   
       return a + b
     })
   },
@@ -4307,6 +4359,7 @@ $.E(M, {
         return a.div(b)
       }
 
+      // fraction ?
       return a / b
     })
   },
@@ -4324,6 +4377,7 @@ $.E(M, {
         return a.mul(b)
       }
 
+      // fraction ?
       return a * b
     })
   },
@@ -5979,7 +6033,7 @@ function action(f, ...arg){
   }
   else if(Math[f]){
     if(f == 'exp'){
-      if(myType(arg[0]) == 'complex'){
+      if(isComplex(arg[0])){
         return M.mtimes(Math.exp(arg[0].r), complex(Math.cos(arg[0].i), Math.sin(arg[0].i)))
       }
     }
@@ -6417,7 +6471,8 @@ function doubleor(a, b){
 }
 
 function format(a){
-  // if($.isArray(a)){
+  // 这段代码造成向量减法出错
+  // if(isArray(a)){
   //   return ndarray(a)
   // }
 
@@ -6476,21 +6531,6 @@ function log(...arg){
 
   OUTPUT_PAGES[0].I(str)
 }
-
-// function showVariable(){
-//   // if(window.ans){
-//   //   addToTable('ans', window.ans)
-//   // }
-//
-//   let table = $.C($.body, {
-//     L: 5,
-//     T: 180,
-//     W: 2
-//   }, 'table')
-//
-//   table.I(TABLE_TR.join(''))
-//
-// }
 
 function addToTable(a, v, str = '='){ //assign
   let name = a.name ?? a
@@ -7597,17 +7637,19 @@ function mix2fun(a, b, f){
   }
   a       = format(a)
   b       = format(b)
-  let _ta = myType(a)
-  let _tb = myType(b)
-  if(_tb === 'ndarray' && _ta !== 'ndarray'){
-    [a, b] = [b, a]
-    [_ta, _tb] = [_tb, _ta]
-  }
-  if(_ta === 'ndarray' && _tb === 'normal'){
+  let _ta = isNda(a)
+  let _tb = isNda(b)
+
+
+  if(_ta && !_tb){
     a.data = a.data.map(n => f(n, b))
     return a
   }
-  else if(_ta === 'ndarray' && _tb === 'ndarray'){
+  else if(!_ta && _tb){
+    b.data = b.data.map(n => f(a, n))
+    return b
+  }
+  else if(_ta && _tb){
     let c
     if(a.dimension == 2 && b.dimension == 2){
       c = ndarray([], [Math.max(a.shape[0], b.shape[0]), Math.max(a.shape[1], b.shape[1])])
@@ -7619,10 +7661,6 @@ function mix2fun(a, b, f){
     }
 
     return c
-  }
-  else if(_ta === 'ndarray' && _tb === 'complex'){
-    a.data = a.data.map(n => f(n, b))
-    return a
   }
 
   return f(a, b)
@@ -7815,14 +7853,6 @@ function UNINDEX(n){
   return n
 }
 
-function myNaN(a){
-  return isNaN(a) && typeof (a) == 'number'
-}
-
-function isRational(n){
-  return Math.abs(n) % 1 == 0
-}
-
 function str2reg(s){
   let map = '()^/+-*'
   for(let i = map.length - 1; i >= 0; i--){
@@ -7835,63 +7865,3 @@ function str2reg(s){
   return new RegExp(s, 'g')
 }
 
-function isNda(a){
-  return a instanceof ndarray.create
-}
-
-function isComplex(a){
-  return a instanceof Complex
-}
-
-function isBigint(n){
-  return typeof (n) == 'bigint'
-}
-
-function isTypeArray(n){
-  return n && /int|float/i.test(n.type)
-}
-
-function isArray(a){
-  return Array.isArray && Array.isArray(a) || isTypeArray(a) ///Array/.test(Object.prototype.toString.call(a)) ||
-}
-
-function isFraction(a){
-  return a instanceof Fraction
-}
-
-function myType(z){
-  if(isNda(z)){
-    return 'ndarray'
-  }
-  if(isComplex(z)){
-    return 'complex'
-  }
-  if(isFraction(z)){
-    return 'fraction'
-  }
-  if(isArray(z)){
-    return 'array'
-  }
-
-  return 'normal'
-  /*
-  null
-  number
-    single
-    double
-  string
-  array
-    typearray
-    float
-  object
-  function
-  regexp
-
-  nda
-  complex
-  fraction
-
-
-  referenceError
-   */
-}
