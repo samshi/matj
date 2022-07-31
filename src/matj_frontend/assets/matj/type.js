@@ -20,6 +20,10 @@ function isBigint(n) {
     return typeof (n) == 'bigint'
 }
 
+function isBoolean(n) {
+    return typeof (n) == 'boolean'
+}
+
 function isTypeArray(n) {
     return n && /int|float/i.test(n.type)
 }
@@ -52,22 +56,22 @@ function myType(z) {
     number
     string
     array
-      array
-      typearray
+        array
+        typearray
         intX
         uintX
-      float
+        float
         single
         double
     object
     function
     regexp
-  
+    
     nda
     complex
     fraction
-  
-  
+    
+    
     referenceError
-     */
+        */
 }

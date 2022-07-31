@@ -37,11 +37,12 @@ abs, acosd, acot, acotd, acoth, acsc, acscd, acsch, all, angle, any, asec, asecd
 uint8, uint16, uint32, uint64, int8, int16, int32, int32, int64
 bitand, bitcmp, bitget, bitor, bitset, bitxor, cast, typecast
 intmin, intmax, realmin, realmax, islogical, bitshift
+and, not, or, xor, false, find,  true
 
 2022 onprogress:
 swapbytes
 collect, colspace, datestr, diff, expand, expm, intersect, ismember, limit, numden, null, randn, setdiff, setxor, simplify, solve, unique,
-and, not, or, xor, false, find, isequal, isequaln, true,
+isequal, isequaln,
 eq, ge, gt, le, lt, ne, iscolumn, isempty,
 
 2023:

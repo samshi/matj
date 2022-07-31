@@ -415,8 +415,13 @@ function trans2js(s, fgroup = []){
           c = ['M.mldivide(', c.slice(0, a.index), ',', c.slice(a.index + a[0].length), ')'].join('')
           break
         case 'LG':
-          c = c.replace(/\|/g, '||')
-          c = c.replace(/\&/g, '&&')
+          a = c.match(/\||\&/)
+          if(a[0] == '|'){
+            c = 'M.or('+c.replace(/\|/g, ',')+')'
+          }
+          else if(a[0] == '&'){
+            c = 'M.and('+c.replace(/\&/g, ',')+')'
+          }
           break
         case 'MA':
           act = c.slice(-1) == ';' ? 'multias' : 'multiasshow'
@@ -460,7 +465,11 @@ function trans2js(s, fgroup = []){
         case 'NN':
           return ''
         case 'NT':
-          c = c.replace(/\s*\~\s*/, '!')
+          // c = c.replace(/\s*\~\s*/, '!')
+          a = c.match(/\~/)
+          if(a[0] == '~'){
+            c = 'M.not('+c.replace(/\~/g, '')+')'
+          }
           break
         case 'OC':
           c = `calcshow(${c})`
