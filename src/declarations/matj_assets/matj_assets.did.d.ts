@@ -9,7 +9,12 @@ export type BatchOperationKind = { 'CreateAsset' : CreateAssetArguments } |
   { 'Clear' : ClearArguments };
 export type ChunkId = bigint;
 export type ClearArguments = {};
-export interface CreateAssetArguments { 'key' : Key, 'content_type' : string }
+export interface CreateAssetArguments {
+  'key' : Key,
+  'content_type' : string,
+  'headers' : [] | [Array<HeaderField>],
+  'max_age' : [] | [bigint],
+}
 export interface DeleteAssetArguments { 'key' : Key }
 export type HeaderField = [string, string];
 export interface HttpRequest {

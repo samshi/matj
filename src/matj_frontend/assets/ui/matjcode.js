@@ -1,7 +1,7 @@
 function createMatjArea(f){
   var P = P_MATJ = $.C(f, P_JS.CSS_).S({
-    id : 'id_matj_area',
-    BG : '#900',
+    id: 'id_matj_area',
+    BG: '#900',
   })
 
   P.zoomin  = $.C(f, {
@@ -78,7 +78,7 @@ function createMatjArea(f){
     }
 
     window.code_changed = true
-    let channel_index = P_CHANNEL.focus_channel || 0
+    let channel_index   = P_CHANNEL.focus_channel || 0
     if(channel_index == 10){
       return
     }
@@ -94,13 +94,14 @@ function createMatjArea(f){
 }
 
 var timers = []
+
 function codeSave(delay = 60000){
   let channel_index = P_CHANNEL.focus_channel || 0
 
-  let name          = 'channel' + channel_index
+  let name = 'channel' + channel_index
 
-  let source        = P_MATJ.editor.getValue()
-  LS[name]          = source
+  let source = P_MATJ.editor.getValue()
+  LS[name]   = source
 
   if(DATA.accountId){
     // 静等60秒后再保存，尽量减少上传次数
@@ -112,14 +113,11 @@ function codeSave(delay = 60000){
         P_CHANNEL.setLight(channel_index, 'green')
         P_CHANNEL.setMsg(channel_index, 'uploading...')
         P_CHANNEL.freeze = true
-        let result       = await INNER.matj.set(name, source)
-        if(result[0] == source){
-          P_CHANNEL.setLight(channel_index, '#888')
-          P_CHANNEL.setMsg(channel_index, 'saved')
-        }
-        else{
-          console.log('different')
-        }
+        let size = await INNER.matj.set(name, source)
+        console.log(source.length, size)
+        P_CHANNEL.setLight(channel_index, '#888')
+        P_CHANNEL.setMsg(channel_index, 'saved')
+
         P_CHANNEL.freeze = false
       }
     })(channel_index, name, source), delay)
@@ -132,8 +130,8 @@ function codeSave(delay = 60000){
 
 function codeRun(){
   window.code_changed = false
-  var matj_code = P_MATJ.editor.getValue()
-  var analy_str = tidy(matj_code)
+  var matj_code       = P_MATJ.editor.getValue()
+  var analy_str       = tidy(matj_code)
   setRoot(analy_str)
 
   var js_code = trans2js(analy_str)

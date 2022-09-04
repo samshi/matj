@@ -1,46 +1,46 @@
-function trans2js(s, fgroup = []){
+function trans2js(s, fgroup = []) {
   var REG = TIDY.正则
 
   var i = 100000
   var j, act, fun, arg
 
-  var id_reg   = REG.id[1]
+  var id_reg = REG.id[1]
   var add_line = 0
-  while(id_reg.test(s) && i--){
+  while (id_reg.test(s) && i--) {
     j = 0
-    s = s.replace(id_reg, function(uuid){
+    s = s.replace(id_reg, function (uuid) {
       j++
-      var group  = getGroup(uuid)
+      var group = getGroup(uuid)
       var source = getUuidCode(group, uuid)
 
       let newline = source.split(/_\d{5}_NN_/g)
-      if(newline.length > 1){
+      if (newline.length > 1) {
         add_line += newline.length - 1
       }
 
       var c = source.trim()
-      c     = c.replace(/_\d{5}_RF_/g, '')
-      c     = c.replace(/_\d{5}_NN_/g, ' ').trim()
+      c = c.replace(/_\d{5}_RF_/g, '')
+      c = c.replace(/_\d{5}_NN_/g, ' ').trim()
 
       var a, f
-      switch(group){
+      switch (group) {
         case 'AC':
           fun = c.slice(0, -10).trim()
           group += fun
           arg = c.slice(-10)
           act = 'action'
           // var f = c.slice(0, -10).trim()
-          if(fgroup[0] == 'MA' && j == 1){
+          if (fgroup[0] == 'MA' && j == 1) {
             // f = 1 || M[fun] ? `"${fun}"` : fun
             c = `pickset("${fun}",${arg})`
           }
-            // else if(fgroup.includes('MA')){
-            //   c = ['pickget("', f, '",', c.slice(-10), ')'].join('')
+          // else if(fgroup.includes('MA')){
+          //   c = ['pickget("', f, '",', c.slice(-10), ')'].join('')
           // }
-          else if(/_\d{5}_DT_/g.test(fun)){
+          else if (/_\d{5}_DT_/g.test(fun)) {
             c = `${act}(${fun},${arg})`
           }
-          else{
+          else {
             // c = `${act}(this.${fun}??"${fun}",${arg})`
             f = M[fun] ? `"${fun}"` : `typeof(${fun})=="undefined"?"${fun}":${fun}`
             c = `${act}(${f},${arg})`
@@ -56,30 +56,30 @@ function trans2js(s, fgroup = []){
           break
         case 'AD':
           let pre = ''
-          if(c[0] == '+'){
+          if (c[0] == '+') {
             c = c.slice(1)
           }
-          if(c[0] == '-'){
-            c   = c.slice(1)
+          if (c[0] == '-') {
+            c = c.slice(1)
             pre = '-'
           }
 
           a = c.split(/\s*\+\s*/g)
-          if(a.length == 2){
-            if(pre == '-'){
+          if (a.length == 2) {
+            if (pre == '-') {
               c = ['M.plus(M.mtimes(', a[0], ', -1),', a[1], ')'].join('')
             }
-            else{
+            else {
               c = ['M.plus(', a[0], ',', a[1], ')'].join('')
             }
           }
-          else{
+          else {
             a = c.split(/\s*\-\s*/g)
-            if(a.length == 2){
-              if(pre == '-'){
+            if (a.length == 2) {
+              if (pre == '-') {
                 c = ['M.minus(M.mtimes(', a[0], ', -1),', a[1], ')'].join('')
               }
-              else{
+              else {
                 c = ['M.minus(', a[0], ',', a[1], ')'].join('')
               }
             }
@@ -90,18 +90,18 @@ function trans2js(s, fgroup = []){
           console.log('AF', c) //AF @_10015_BR_ _10046_DR
           let func_head = c.slice(1, 11)
           let func_body = c.slice(11)
-          c             = `function(${func_head}){return ${func_body}}`
+          c = `function(${func_head}){return ${func_body}}`
           break
         case 'AL':
-          if(c.slice(-1) == ';'){
+          if (c.slice(-1) == ';') {
             act = 'action'
-            c   = c.slice(0, -1)
+            c = c.slice(0, -1)
           }
-          else{
-            if(c.slice(0, 4) == 'plot'){
+          else {
+            if (c.slice(0, 4) == 'plot') {
               act = 'action'
             }
-            else{
+            else {
               act = 'actionshow'
             }
           }
@@ -111,8 +111,8 @@ function trans2js(s, fgroup = []){
 
           arg = c.slice(-10)
           // c   = `${act}(this.${fun}??"${fun}",${arg})`
-          f   = M[fun] ? `"${fun}"` : `typeof(${fun})!='undefined'?${fun}:"${fun}"` //`"${fun}"`
-          c   = `${act}(${f},${arg})`
+          f = M[fun] ? `"${fun}"` : `typeof(${fun})!='undefined'?${fun}:"${fun}"` //`"${fun}"`
+          c = `${act}(${f},${arg})`
           // c   = `${act}(typeof(${fun})!='undefined'?${fun}:"${fun}",${arg})`
           // c = [act, '("', c.slice(0, -10).trim(), '",', c.slice(-10), ')'].join('')
 
@@ -126,7 +126,7 @@ function trans2js(s, fgroup = []){
           // A = [true false true; true true false]
           // A=[a,a]
 
-          if(0 && fgroup[0] == 'MA'){ //为什么屏蔽过这一项？ A(:,:,1) = [2 3; 1 6]
+          if (0 && fgroup[0] == 'MA') { //为什么屏蔽过这一项？ A(:,:,1) = [2 3; 1 6]
             c = c.slice(1, -1)
             a = c.split(/[\s,]+/g)
 
@@ -134,21 +134,22 @@ function trans2js(s, fgroup = []){
             c = '["' + a.join('","') + '"]' //[invA, invB] = inv(A)
             // c = '[' + a.join(',') + ']'
           }
-          else{
-            c = c.slice(1, -1)
+          else {
+            c = c.slice(1, -1).trim()
             //replace(/\s+/g, ' ').
-            a = c.trim().split(/[;\n]+/g) //;和换行都是矩阵的新行的分隔符
-            for(let i = a.length - 1; i >= 0; i--){
-              if(a[i].trim() == ''){
+            c = c.replace(/\,\s+/g, ',')
+            a = c.split(/[;\n]+/g) //;和换行都是矩阵的新行的分隔符
+            for (let i = a.length - 1; i >= 0; i--) {
+              if (a[i].trim() == '') {
                 a.splice(i, 1)
               }
             }
 
-            if(a.length == 1){
-              if(/_\d{5}_(CC|SC)_/.test(c)){ //x=[1:10]
+            if (a.length == 1) {
+              if (/_\d{5}_(CC|SC)_/.test(c)) { //x=[1:10]
 
               }
-              else if(/^[\+\-\d\.\s\,\/]+$/.test(c)){
+              else if (/^[\+\-\d\.\s\,\/]+$/.test(c)) {
                 //增加 \w : A = [true false true true true false]
                 //不增加 A=[a,a]
                 a = a[0].trim().split(/[\s\,]+/g).map(s => isNaN(s) ? s : +s)
@@ -157,13 +158,13 @@ function trans2js(s, fgroup = []){
                 //checkMt(cumsum(A), [1 1 2 3 4 4]);
                 c = 0 && a.length == 1 ? '[' + a[0] + ']' : 'M.concatenate(' + a.join(',') + ')'
               }
-              else{
+              else {
                 a = a[0].trim().split(/[\s\,]+/g)
                 c = a.length == 1 ? '[' + a[0] + ']' : 'M.concatenate(' + a.join(',') + ')'
               }
             }
-            else{
-              if(/^[\+\-\d\.\s\,\;\/]+$/.test(c)){
+            else {
+              if (/^[\+\-\d\.\s\,\;\/]+$/.test(c)) {
                 //增加 \w : A = [true false true; true true false]
                 //不增加 A=[a;a]
                 a = a.map(row => {
@@ -175,7 +176,7 @@ function trans2js(s, fgroup = []){
 
                 c = 'M.concatenateV(' + a.join(',') + ')'
               }
-              else{
+              else {
                 a = a.map(row => {
                   row = row.trim().split(/[\s\,]+/g)
                   return (row.length == 1 ? row[0] : 'M.concatenate(' + row.join(',') + ')')
@@ -184,7 +185,7 @@ function trans2js(s, fgroup = []){
 
               }
               let newline0 = source.split('\n')
-              if(newline0.length > 1){
+              if (newline0.length > 1) {
                 c += (new Array(newline0.length)).join('\n')
               }
             }
@@ -193,32 +194,32 @@ function trans2js(s, fgroup = []){
           break
         case 'AS':
           var hascolon = c.slice(-1) == ';'
-          act          = hascolon ? 'assign' : 'assignshow'
-          c            = hascolon ? c.slice(0, -1) : c
-          a            = c.split(/\s*\=\s*/)
-          a[1]         = a[1].replace(/_\d{5}_AR_/, s => {
+          act = hascolon ? 'assign' : 'assignshow'
+          c = hascolon ? c.slice(0, -1) : c
+          a = c.split(/\s*\=\s*/)
+          a[1] = a[1].replace(/_\d{5}_AR_/, s => {
             return 'ndarray(' + s + ')'
           })
 
-          if(/_\d{5}_(AC|PS|AE|BE)_/.test(a[0])){
+          if (/_\d{5}_(AC|PS|AE|BE)_/.test(a[0])) {
             c = act + '(' + a[1] + ',' + a[0] + ')'
           }
-            // else if(/_\d{5}_PS_/.test(a[0])){
-            //   c = act + '(' + a[0] + ',' + a[1] + ')'
+          // else if(/_\d{5}_PS_/.test(a[0])){
+          //   c = act + '(' + a[0] + ',' + a[1] + ')'
           // }
-          else if(/_\d{5}_\w\w_/.test(a[0])){
+          else if (/_\d{5}_\w\w_/.test(a[0])) {
             c = act + '(' + a[1] + ',' + a[0] + ')' //x.a.b.c=[1;2]
             // c = act + '(' + a[1] + ',"' + a[0] + '")'
           }
-          else if(fgroup[0] == 'FR='){
+          else if (fgroup[0] == 'FR=') {
             c = a[0] + '=' + a[1]
           }
-          else{
+          else {
             // c = a[0] + '=' + a[1]
             c = act + '(' + a[1] + ',"' + a[0] + '")'
           }
 
-          if(hascolon){
+          if (hascolon) {
             c += ';'
           }
 
@@ -231,11 +232,11 @@ function trans2js(s, fgroup = []){
           // let s = c
           c = c.slice(1, -1)
           c = c.replace(/end/g, '"end"')
-          if(fgroup[0] == 'MA'){
+          if (fgroup[0] == 'MA') {
             a = c.split(/[,\s]+/g)
             c = '["' + a.join('","') + '"]'
           }
-          else{
+          else {
             // c = s
           }
           // console.log(fgroup[0], c)
@@ -243,17 +244,17 @@ function trans2js(s, fgroup = []){
         case 'BR':
           c = c.slice(1, -1)
           c = c.replace(/end/g, '"end"')
-          if(fgroup[0] == 'MA'){
+          if (fgroup[0] == 'MA') {
             a = c.split(/[,\s]+/g)
             c = '["' + a.join('","') + '"]'
           }
 
-          if(/A\w(factor|checkLimit|limit|solve|mathjax|simplify|expand|sym2poly|newtonCotes)$/.test(fgroup[0])){ // && !/_AC_/.test(c)
+          if (/A\w(factor|checkLimit|limit|solve|mathjax|simplify|expand|sym2poly|newtonCotes)$/.test(fgroup[0])) { // && !/_AC_/.test(c)
             let s = 全部复原(c)
             let a = s.split(',')
             a = a.map(item => {
               item = item.trim()
-              if(!/^([\'\"]).*\1$/g.test(item)){
+              if (!/^([\'\"]).*\1$/g.test(item)) {
                 return '"' + item + '"'
               }
               return item
@@ -269,15 +270,15 @@ function trans2js(s, fgroup = []){
         case 'CC':
           //B = 0:10:100
           // m=[1:2:10;2:6]
-          if(fgroup[0] == 'AR'){
+          if (fgroup[0] == 'AR') {
             a = c.split(/\s*\:\s*/)
             c = 'M.linear(' + a[0] + ',' + a[1] + ',' + a[2] + ')' // A=[1:3:7;2:3:8;3:3:9]
           }
-          else if(fgroup[0] == 'AR' || fgroup[0] == 'AS' && fgroup[1] !== 'FR='){
+          else if (fgroup[0] == 'AR' || fgroup[0] == 'AS' && fgroup[1] !== 'FR=') {
             a = c.split(/\s*\:\s*/)
             c = 'M.linear(' + a[0] + ',' + a[1] + ',' + a[2] + ')'
           }
-          else if(fgroup[0] == 'BR' && /^[\+\-\d\.\:]+$/g.test(c)){
+          else if (fgroup[0] == 'BR' && /^[\+\-\d\.\:]+$/g.test(c)) {
             // str2(4:2:8)
             // c = '"' + c + '"'
             // console.log(source)
@@ -286,7 +287,7 @@ function trans2js(s, fgroup = []){
             a = c.split(/\s*\:\s*/)
             c = 'M.linear(' + a[0] + ',' + a[1] + ',' + a[2] + ')'
           }
-          else if(fgroup[1] != 'FR='){
+          else if (fgroup[1] != 'FR=') {
             //D(1:2:end)
             c = '"' + c + '"'
           }
@@ -305,12 +306,12 @@ function trans2js(s, fgroup = []){
         case 'CP':
           // a = c.split(/\b/g)
           // a = c.slice(0, -1)
-          c      = c.replace(/\s*/g, '')
+          c = c.replace(/\s*/g, '')
           let im = c.match(/[\+\-]?\s*\d*(\.\d+)?[ij]/g)
           let re = +c.replace(im[0], '')
-          im     = im[0].slice(0, -1) || 1
-          im     = im == '-' || im == '+' ? +(im + '1') : +im
-          c      = ['complex(', re, ',', im, ')'].join('')
+          im = im[0].slice(0, -1) || 1
+          im = im == '-' || im == '+' ? +(im + '1') : +im
+          c = ['complex(', re, ',', im, ')'].join('')
           break
         case 'DA':
           a = c.match(/&&/)
@@ -349,25 +350,25 @@ function trans2js(s, fgroup = []){
           break
         case 'FN':
           let function_head_pos = c.indexOf('\n')
-          let line0             = c.slice(9, function_head_pos).trim()
-          let source_code       = 单级复原(line0, 1)
-          let return_func       = source_code.split('=')
+          let line0 = c.slice(9, function_head_pos).trim()
+          let source_code = 单级复原(line0, 1)
+          let return_func = source_code.split('=')
 
-          if(return_func.length == 1){
+          if (return_func.length == 1) {
             line0 = 'function ' + return_func[0]
-            if(line0.indexOf('(') == -1){
+            if (line0.indexOf('(') == -1) {
               line0 += '()'
             }
             c = line0 + '{' + c.slice(function_head_pos)
             c = c.replace(/end\w*/, '}')
           }
-          else{
+          else {
             // console.log(trans2js(line0))
             line0 = 'function ' + return_func[1]
             // line0                 = line0.replace(/^[^\(]+/, s => {
             //   return s + '=function'
             // })
-            if(line0.indexOf('(') == -1){
+            if (line0.indexOf('(') == -1) {
               line0 += '()'
             }
             c = line0 + '{' + c.slice(function_head_pos)
@@ -378,17 +379,17 @@ function trans2js(s, fgroup = []){
         case 'FR':
           a = c.match(/_\d{5}_AS_/)
           c = c.replace(a[0], s => {
-            s     = trans2js(s, ['FR=', ...fgroup])
+            s = trans2js(s, ['FR=', ...fgroup])
             //i=1:5
             var a = s.split('=')
             //.replace(/"/g, '')
             var b = a.slice(1).join('').split(':')
-            if(b.length == 2){
-              var l    = b[1]
+            if (b.length == 2) {
+              var l = b[1]
               var step = 1
             }
-            else if(b.length == 3){
-              var l    = b[2]
+            else if (b.length == 3) {
+              var l = b[2]
               var step = b[1]
             }
             var lname = 'l' + a[0]
@@ -404,7 +405,7 @@ function trans2js(s, fgroup = []){
           a.forEach(str => {
             c = c.replace(str, s => {
               let mid = s.slice(3, -1)
-              mid     = trans2js(mid, [group, ...fgroup])
+              mid = trans2js(mid, [group, ...fgroup])
               return 'if (' + mid + '){\n'
             })
           })
@@ -416,17 +417,17 @@ function trans2js(s, fgroup = []){
           break
         case 'LG':
           a = c.match(/\||\&/)
-          if(a[0] == '|'){
-            c = 'M.or('+c.replace(/\|/g, ',')+')'
+          if (a[0] == '|') {
+            c = 'M.or(' + c.replace(/\|/g, ',') + ')'
           }
-          else if(a[0] == '&'){
-            c = 'M.and('+c.replace(/\&/g, ',')+')'
+          else if (a[0] == '&') {
+            c = 'M.and(' + c.replace(/\&/g, ',') + ')'
           }
           break
         case 'MA':
           act = c.slice(-1) == ';' ? 'multias' : 'multiasshow'
-          c   = c.slice(-1) == ';' ? c.slice(0, -1) : c
-          a   = c.split(/\s*\=\s*/g)
+          c = c.slice(-1) == ';' ? c.slice(0, -1) : c
+          a = c.split(/\s*\=\s*/g)
 
           a[1] = a[1].replace(/_\d{5}_AR_/, s => {
             return 'ndarray(' + s + ')'
@@ -440,19 +441,19 @@ function trans2js(s, fgroup = []){
           break
         case 'MN': //被add代替
           a = c.split(/\s*\-\s*/g)
-          if(a.length == 3){
+          if (a.length == 3) {
             c = ['M.minus(M.mtimes(', a[1], ', -1),', a[2], ')'].join('')
           }
-          else{
+          else {
             c = ['M.minus(', a[0], ',', a[1], ')'].join('')
           }
           break
         case 'MU':
           a = c.split(/\s*\*\s*/g)
-          if(a[0][0] == '-'){
+          if (a[0][0] == '-') {
             c = ['M.mtimes(M.mtimes(', a[1].slice(1), ', -1),', a[2], ')'].join('')
           }
-          else{
+          else {
             c = ['M.mtimes(', a[0], ',', a[1], ')'].join('')
           }
           break
@@ -467,31 +468,31 @@ function trans2js(s, fgroup = []){
         case 'NT':
           // c = c.replace(/\s*\~\s*/, '!')
           a = c.match(/\~/)
-          if(a[0] == '~'){
-            c = 'M.not('+c.replace(/\~/g, '')+')'
+          if (a[0] == '~') {
+            c = 'M.not(' + c.replace(/\~/g, '') + ')'
           }
           break
         case 'OC':
           c = `calcshow(${c})`
           break
         case 'OB':
-          if(fgroup[0] == 'CA'){
+          if (fgroup[0] == 'CA') {
             a = c.slice(1, -1).split(',')
             c = a.join(':\ncase ')
           }
-          else{
+          else {
             a = c.slice(1, -1).split(';')
             c = '[' + a.join(',') + ']'
           }
           break
         case 'OP':
-          if(/\belse\b/g.test(source)){
+          if (/\belse\b/g.test(source)) {
             return source.replace(/\belse\b/g, '}else{')
           }
-          else if(/\botherwise\b/g.test(c)){
+          else if (/\botherwise\b/g.test(c)) {
             return source.replace(/\botherwise\b/g, '\nbreak\ndefault:')
           }
-          else{
+          else {
             c = `M.printline("${c}", ${c})`
           }
           break
@@ -499,7 +500,7 @@ function trans2js(s, fgroup = []){
           var fun = c.slice(0, -10).trim()
           var arg = c.slice(-10)
           // f = 1 || M[fun] ? `"${fun}"` : fun
-          c       = `pickset("${fun}",${arg})`
+          c = `pickset("${fun}",${arg})`
           // c       = `pickset(typeof(${fun})!='undefined'?${fun}:"${fun}",${arg})`
           // if(fgroup[0] == 'MA' && j == 1){
           // }
@@ -516,7 +517,7 @@ function trans2js(s, fgroup = []){
           break
         case 'RB':
           let newline = c.split('\n')
-          if(newline.length > 1){
+          if (newline.length > 1) {
             return (new Array(newline.length)).join('\n')
           }
           return ''
@@ -532,35 +533,35 @@ function trans2js(s, fgroup = []){
         case 'SC':
           // m=[1:2:10;2:6]
           a = c.split(/\s*\:\s*/)
-          if(fgroup[0] == 'AR'){
+          if (fgroup[0] == 'AR') {
             c = 'M.linear(' + a[0] + ',' + a[1] + ')'
           }
-          else if(fgroup[0] == 'AR' || fgroup[0] == 'AS' && fgroup[1] !== 'FR='){
+          else if (fgroup[0] == 'AR' || fgroup[0] == 'AS' && fgroup[1] !== 'FR=') {
             c = 'M.linear(' + a[0] + ',' + a[1] + ')'
           }
-          else if(fgroup[0] == 'BR' && /DG|DR/.test(fgroup[1]) && !/end/g.test(c)){
+          else if (fgroup[0] == 'BR' && /DG|DR/.test(fgroup[1]) && !/end/g.test(c)) {
             //cavg=cumsum(x)./(1:length(x))
-            if(!a[0].length || !a[1].length){
+            if (!a[0].length || !a[1].length) {
               c = '"' + c + '"'
             }
-            else{
+            else {
               c = 'M.linear(' + a[0] + ',' + a[1] + ')'
             }
           }
-          else if(fgroup[1] == 'FR='){
+          else if (fgroup[1] == 'FR=') {
 
           }
-          else{
+          else {
             c = '"' + c + '"'
             c = c.replace(/_\d{5}_\w\w_/g, s => {
               return '"+' + s + '+"'
             })
 
-            if(c.slice(0, 3) == '""+'){
+            if (c.slice(0, 3) == '""+') {
               c = c.slice(3)
             }
 
-            if(c.slice(-3) == '+""'){
+            if (c.slice(-3) == '+""') {
               c = c.slice(0, -3)
             }
           }
@@ -610,7 +611,7 @@ function trans2js(s, fgroup = []){
     })
   }
 
-  if(add_line){
+  if (add_line) {
     s = (new Array(add_line + 1)).join('\n') + s
   }
   return s

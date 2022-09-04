@@ -24,14 +24,14 @@ function createChannel(f){
     }
 
     P.channels[i] = $.C(P, {
+      I : html,
       L : 20,
       T : 60 * i + 18,
       W : 250,
       H : 40,
       F : 20,
       C : '#000000',
-      TA: 'center',
-      I : html
+      TA: 'center'
     }, 'button').click(eobj => {
       if(P_CHANNEL.freeze){
         return
@@ -137,7 +137,7 @@ function createChannel(f){
 
     setTimeout(_ => {
       eobj.I('share')
-    }, 3000)
+    }, 2000)
   })
 
   P.upload = $.C(P.buttons, {
@@ -154,9 +154,9 @@ function createChannel(f){
   P.qrimg = $.C(f, {
     L : 100,
     T : P.buttons.T_ + 50,
-    W : 200,
-    H : 200,
-    BD: '1px solid'
+    W : 202,
+    H : 202,
+    BD: '1px solid #e0e0e0'
   }, 'img').H()
 
   //=================================================
@@ -224,18 +224,23 @@ function createChannel(f){
         let name = 'channel' + i
         P.setLight(i, 'green')
         P.setMsg(i, 'loading')
-        console.log(Date.now(), principal_str + name)
         let result = await INNER.matj_default.principalget(principal_str + name)
         // let result = await INNER.matj_default.get(name)
         console.log(Date.now(), principal_str + name, result)
-        if(!LS[name]){
-          LS[name] = result[0] || ''
+        if(result.length){
+          if(!LS[name]){
+            LS[name] = result[0] || ''
+          }
+          else if(result[0] != LS[name]){
+            // 本地文件为主
+            LS[name + '_r'] = result[0]
+            console.warn(name + '_r has different code')
+          }
         }
-        else if(result[0] != LS[name]){
-          // 本地文件为主
-          LS[name + '_r'] = result[0]
-          console.warn(name + '_r has different code')
+        else{
+          delete LS[name + '_r']
         }
+
 
         P.checkLight(i)
         P.setMsg(i, LS[name] ? 'loaded' : 'empty')
