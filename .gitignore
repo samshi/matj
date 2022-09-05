@@ -14,3 +14,8 @@ src/declarations/
 # frontend code
 node_modules/
 dist/
+
+src/matj_frontend/assets/ui/del.js
+canister_ids*
+
+

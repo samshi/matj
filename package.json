@@ -1,5 +1,5 @@
 {
-  "name": "hello_frontend",
+  "name": "matj_frontend",
   "version": "0.1.0",
   "description": "Internet Computer starter application",
   "keywords": [
@@ -16,9 +16,9 @@
     "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --exclude='*.most' --delete src/declarations"
   },
   "devDependencies": {
-    "@dfinity/agent": "0.12.1",
-    "@dfinity/candid": "0.12.1",
-    "@dfinity/principal": "0.12.1",
+    "@dfinity/agent": "0.13.2",
+    "@dfinity/candid": "0.13.2",
+    "@dfinity/principal": "0.13.2",
     "assert": "2.0.0",
     "buffer": "6.0.3",
     "events": "3.3.0",
@@ -41,6 +41,6 @@
     "last 2 edge version"
   ],
   "dependencies": {
-    "@dfinity/auth-client": "^0.12.1"
+    "@dfinity/auth-client": "^0.13.2"
   }
 }
