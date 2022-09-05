@@ -29,7 +29,6 @@ $(function(){
   createOutputArea(main)
 
   onresize()
-  onhashchange()
 
   // 切换上次的channel
   setTimeout(function(){
@@ -84,7 +83,7 @@ function principalToAvatar(principal_str, eobj){
   }
   v.length = mode.len
   console.log(v);
-  P_CHANNEL.qrimg.V()
+  // P_CHANNEL.qrimg.V()
   let CANVAS = $.c(P_CHANNEL, {
     W: 202,
     H: 202
@@ -126,7 +125,7 @@ function principalToAvatar(principal_str, eobj){
     }
   }
 
-  eobj.S({
+  eobj.V().S({
     src: CTX.canvas.toDataURL(),
     BR : 100,
     BD : '1px solid #e0e0e0'

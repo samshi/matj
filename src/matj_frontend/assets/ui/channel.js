@@ -10,23 +10,20 @@ function createChannel(f){
     BR: 5,
     O : 'hidden'
   })
-  //   .click(eobj => {
-  //   eobj.H_ == 38 ? P.max() : P.min()
-  // })
 
-  P.LEN      = 11
-  P.channels = []
-  for(var i = 0; i < P.LEN; i++){
-    // var html      = {0: 'local'}[i] || 'remote ' + i
-    var html = LS['channel_name_' + i] ?? 'file' + (i + 1)
-    if(i == P.LEN - 1){
-      html = 'share file, read only'
-    }
+  P.LEN       = 10
+  P.channels  = {}
+  P.share_arr = []
+  for(var i = 1; i <= P.LEN; i++){
+    var html = LS['channel_name_' + i] ?? 'untitled ' + (i)
+    // if(i == P.LEN - 1){
+    //   html = 'share file, read only'
+    // }
 
     P.channels[i] = $.C(P, {
       I : html,
       L : 20,
-      T : 60 * i + 18,
+      T : 60 * (i - 1) + 18,
       W : 250,
       H : 40,
       F : 20,
@@ -44,7 +41,7 @@ function createChannel(f){
 
     P.channels[i].input_component = $.C(P, {
       L : 20,
-      T : 60 * i + 18,
+      T : 60 * (i - 1) + 18,
       W : 400,
       H : 40,
       BG: '#fff',
@@ -94,16 +91,29 @@ function createChannel(f){
     P.channels[i].msg = $.C(P, {
       L: P.channels[i].light.L_ + 30,
       T: P.channels[i].T_ + 5,
-      W: 100,
+      W: 80,
       H: 30,
-      F: 20, // BD: '1px solid'
+      LH: 30,
+      F: 16, // BD: '1px solid'
+    }).down(eobj => {
+      if(eobj.I_ == 'pedding'){
+        codeSave(10)
+      }
     })
+
   }
 
-  P.buttons = $.C(f, {
-    L: 20,
-    T: P.T_ + P.channels[P.LEN - 1].T_ + P.channels[P.LEN - 1].H_ + 30,
+  P.more = $.C(P, {I:'...'}).down(eobj=>{
+    P.buttons.toggle().S({
+      L:eobj.L_-60,
+      T:eobj.T_+50
+    })
   })
+
+  P.buttons = $.C(P, {
+    L: 20,
+    T: P.T_ + P.channels[P.LEN].T_ + P.channels[P.LEN].H_ + 30,
+  }).H()
 
   P.rename = $.C(P.buttons, {
     W    : 80,
@@ -118,48 +128,64 @@ function createChannel(f){
     let channel = P.channels[P.focus_channel]
     channel.input_component.toggle()
     channel.input.focusMe().val(channel.I_)
+    P.buttons.H()
   })
 
   P.share = $.C(P.buttons, P.rename.CSS_, 'button').S({
-    L: 123,
+    T: 50,
     I: 'share',
-  }).H().click(eobj => {
-    let principal_str = DATA.principal + ''
-    let channel_index = P_CHANNEL.focus_channel || 0
-    let name          = 'channel' + channel_index
-    let share_hash    = encodeShare(principal_str + name)
-    let share_url     = document.location.host + '#' + share_hash
+  }).H().click(async eobj => {
+    let P             = P_CHANNEL
+    let channel_index = P.focus_channel || 0
 
-    copyContent(share_url)
-    eobj.I('Copied')
+    if(P.share_arr.includes('' + channel_index)){
+      await INNER.matj.unshare('' + channel_index)
+    }
+    else{
+      await INNER.matj.share('' + channel_index)
+    }
 
-    P.qrimg.V().S({src: showQRCode(share_url)})
+    P.freshShare()
 
-    setTimeout(_ => {
-      eobj.I('share')
-    }, 2000)
+    // let name          = 'channel' + channel_index
+    // let share_hash    = encodeShare(principal_str + name)
+    // let share_url     = document.location.host + '#' + share_hash
+    //
+    // copyContent(share_url)
+    // eobj.I('Copied')
+    //
+    // P.qrimg.V().S({src: showQRCode(share_url)})
+    //
+    // setTimeout(_ => {
+    //   eobj.I('share')
+    // }, 2000)
   })
 
-  P.upload = $.C(P.buttons, {
-    L    : 240,
-    W    : 140,
-    H    : 40,
-    F    : 20,
-    C    : '#000000',
-    TA   : 'center',
-    I    : 'upload now',
-    title: i
-  }, 'button').click(codeSave).H()
-
-  P.qrimg = $.C(f, {
-    L : 100,
-    T : P.buttons.T_ + 50,
-    W : 202,
-    H : 202,
-    BD: '1px solid #e0e0e0'
-  }, 'img').H()
+  // P.qrimg = $.C(f, {
+  //   L : 100,
+  //   T : P.buttons.T_ + 50,
+  //   W : 202,
+  //   H : 202,
+  //   BD: '1px solid #e0e0e0'
+  // }, 'img').H()
 
   //=================================================
+
+  P.freshShare = async () => {
+    let P             = P_CHANNEL
+    let principal_str = DATA.principal + ''
+    let sharestr      = await INNER.matj_default.getshare(principal_str)
+    console.log(sharestr)
+    P.share_arr = sharestr.length == 0 ? [] : sharestr[0].slice(1, -1).split('=_')
+
+    for(let i in P.channels){
+      P.channels[i].S({
+        BG: P.share_arr.includes('' + i) ? '#a7daf1' : ''
+      })
+    }
+
+    P.share.I(P.share_arr.includes('' + P.focus_channel) ? 'unshare' : 'share')
+  }
 
   P.selectChannel = n => {
     LS.focus_channel = n
@@ -168,7 +194,12 @@ function createChannel(f){
     P_MATJ.editor.setValue(code)
 
     P.focus_channel = n
-    P.channels.forEach(eobj => {
+
+    P.share.I(P.share_arr.includes('' + P.focus_channel) ? 'unshare' : 'share')
+
+    for(let i in P.channels){
+      let eobj = P.channels[i]
+
       eobj.S({
         C: n == eobj.index ? 'red' : ''
       })
@@ -176,16 +207,22 @@ function createChannel(f){
       eobj.light.S({
         BG: LS['channel' + eobj.index] ? '#888' : ''
       })
-    })
-
-    if(n == P.LEN - 1){
-      P.buttons.H()
-    }
-    else{
-      P.buttons.V()
     }
 
-    P.qrimg.H()
+
+
+    P.more.S({
+      L:P.channels[n].W_ + 150,
+      T:P.channels[n].T_
+    }).V()
+    // if(n == P.LEN - 1){
+    //   P.buttons.H()
+    // }
+    // else{
+    //   P.buttons.V()
+    // }
+
+    // P.qrimg.H()
   }
 
   P.setLight = (n, c) => {
@@ -202,7 +239,18 @@ function createChannel(f){
   }
 
   P.setMsg = (n, s) => {
-    P.channels[n].msg.I(s)
+    let msg_eobj = P.channels[n].msg
+    msg_eobj.I(s)
+    if(s == 'pedding'){
+      msg_eobj.S({
+        CS: 'pointer',
+      })
+    }
+    else{
+      msg_eobj.S({
+        CS: '',
+      })
+    }
   }
 
   P.max = () => {
@@ -217,11 +265,13 @@ function createChannel(f){
   }
 
   P.getChannelsCode = () => {
-    (async () => {
-      let P             = P_CHANNEL
-      let principal_str = DATA.principal + ''
-      for(let i = 1, l = P.channels.length; i < 10; i++){
+    let P             = P_CHANNEL
+    let principal_str = DATA.principal + ''
+
+    for(let i = 1; i <= 10; i++){
+      (async () => {
         let name = 'channel' + i
+
         P.setLight(i, 'green')
         P.setMsg(i, 'loading')
         let result = await INNER.matj_default.principalget(principal_str + name)
@@ -241,80 +291,18 @@ function createChannel(f){
           delete LS[name + '_r']
         }
 
-
         P.checkLight(i)
         P.setMsg(i, LS[name] ? 'loaded' : 'empty')
-      }
-    })()
+      })()
+    }
+
+    P.freshShare()
   }
 
+  P.afterLogin = ()=>{
+    P_CHANNEL.getChannelsCode()
+    P_CHANNEL.share.V()
+  }
   //一开始就显示所有频道
   P.max()
-}
-
-var CODEBASE = []
-$(function(){
-  for(let i = 0; i < 10; i++){
-    (function(i){
-      $.get(`/test/test${i}.m`, '', res => {
-        if(res){
-          CODEBASE[i] = res
-          let name    = 'channel' + i
-          if(!LS[name]){
-            LS[name] = CODEBASE[i]
-            let m    = CODEBASE[i].match(/^\%\s*title\s*\=([\w\s]+?)\n/)
-            console.log(m)
-            if(m && m[1].trim()){
-              LS['channel_name_' + i] = m[1].trim()
-              if(window.P_CHANNEL){
-                let channel = P_CHANNEL.channels[i]
-                channel.I(LS['channel_name_' + i])
-              }
-            }
-          }
-        }
-      })
-    })(i)
-  }
-})
-
-function encodeShare(s){
-  let out = ''
-  for(let i = 0, l = s.length; i < l; i++){
-    let code = s.charCodeAt(i)
-    //40-122
-    code += i - 40
-    code     = code % 83 + 40
-    out += String.fromCharCode(code)
-  }
-  return encodeURI(out)
-}
-
-function decodeShare(s){
-  s       = decodeURI(s)
-  let out = ''
-  for(let i = 0, l = s.length; i < l; i++){
-    let code = s.charCodeAt(i)
-    //40-122
-    code += -40 - i
-    code     = (code + 83) % 83 + 40
-    out += String.fromCharCode(code)
-  }
-  return out
-}
-
-window.onhashchange = async function(){
-  if(!window.INNER){
-    setTimeout(onhashchange, 200)
-    return
-  }
-
-  let hash          = document.location.hash.slice(1);
-  let share_url     = decodeShare(hash)
-  let i             = P_CHANNEL.LEN - 1
-  LS['channel' + i] = await INNER.matj_default.principalget(share_url)
-
-  if(LS.focus_channel == i){
-    P.selectChannel(i)
-  }
 }

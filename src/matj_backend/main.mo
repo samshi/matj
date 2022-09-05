@@ -102,8 +102,7 @@ actor Registry {
     }
   };
 
-  public query(msg) func getshare() : async ?Text {
-    let principalId = Principal.toText(msg.caller);
+  public query func getshare(principalId : Text) : async ?Text {
     share_map.get(principalId);
   };
 

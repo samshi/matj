@@ -1,6 +1,6 @@
 service : {
   get: (text) -> (opt text) query;
-  getshare: () -> (opt text) query;
+  getshare: (text) -> (opt text) query;
   principalget: (text) -> (opt text) query;
   set: (text, text) -> (nat);
   share: (text) -> (text);

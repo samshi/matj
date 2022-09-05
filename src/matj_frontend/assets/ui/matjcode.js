@@ -93,11 +93,11 @@ function createMatjArea(f){
   $('#id_matj_mirror').S({H: 'calc(100% + 8px'})
 }
 
-var timers = []
+var timers = {}
 
-function codeSave(delay = 60000){
+function codeSave(delay = 20000){
   let channel_index = P_CHANNEL.focus_channel || 0
-
+console.log('codeSave', channel_index, delay)
   let name = 'channel' + channel_index
 
   let source = P_MATJ.editor.getValue()
@@ -107,7 +107,7 @@ function codeSave(delay = 60000){
     // 静等60秒后再保存，尽量减少上传次数
     P_CHANNEL.setLight(channel_index, '#f4d71a')
     P_CHANNEL.setMsg(channel_index, 'pedding')
-    delete timers[channel_index]
+    clearTimeout(timers[channel_index])
     timers[channel_index] = setTimeout((function(channel_index, name, source){
       return async function(){
         P_CHANNEL.setLight(channel_index, 'green')

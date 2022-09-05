@@ -66,9 +66,7 @@ async function afterLogin(){
 }
 
 async function getBalance(){
-  P_CHANNEL.getChannelsCode()
-  P_CHANNEL.share.V()
-  P_CHANNEL.upload.V()
+  P_CHANNEL.afterLogin()
 
   var P = P_LOGIN
   P.login_plug_box.H()
