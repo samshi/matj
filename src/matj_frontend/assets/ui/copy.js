@@ -6,11 +6,13 @@ function createCopyPage (f) {
   P.input = $.c(P, {
     type: 'text'
   }, 'input')
+
+  P.copyContent = (str) => {
+    var P = P_COPY
+    P.input.val(str)
+    P.input.context.select()
+    document.execCommand('copy')
+  }
 }
 
-function copyContent (str) {
-  var P = P_COPY
-  P.input.val(str)
-  P.input.context.select()
-  document.execCommand('copy')
-}
+

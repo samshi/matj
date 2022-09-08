@@ -139,7 +139,7 @@ function login(f){
     PD: '5px 10px',
     I : 'Copy'
   }, 'button').H().down(eobj => {
-    copyContent(DATA.accountId)
+    P_COPY.copyContent(DATA.accountId)
     eobj.I('Copied')
 
     setTimeout(_ => {

@@ -13,12 +13,12 @@ function createOutputArea(f){
     BD : '1px solid',
     BG : '#fff'
   }, 'iframe').over(_=>{
-    //鼠标移动其上，刷新一次，除非代码再次改动
+    //榧犳爣绉诲姩鍏朵笂锛屽埛鏂颁竴娆★紝闄ら潪浠ｇ爜鍐嶆鏀瑰姩
     if(!window.code_changed){
       return
     }
 
-    codeRun()
+    P_MATJ.codeRun()
   })
 
   P.run_btn = $.C(f, {
@@ -34,6 +34,6 @@ function createOutputArea(f){
     BG:'#4aac0c',
     TA: 'center'
   }).down(_=>{
-    codeRun()
+    P_MATJ.codeRun()
   })
 }

@@ -11,6 +11,15 @@ function createChannel(f){
     O : 'hidden'
   })
 
+  P.auther   = $.C(P, {
+    L: 20,
+    T: 10,
+    F: 18
+  })
+  P.private  = $.C(P)
+  P.faverate = $.C(P)
+  P.public   = $.C(P)
+
   P.LEN       = 10
   P.channels  = {}
   P.share_arr = []
@@ -20,10 +29,10 @@ function createChannel(f){
     //   html = 'share file, read only'
     // }
 
-    P.channels[i] = $.C(P, {
+    P.channels[i] = $.C(P.private, {
       I : html,
       L : 20,
-      T : 60 * (i - 1) + 18,
+      T : 60 * (i - 1) + 58,
       W : 250,
       H : 40,
       F : 20,
@@ -39,48 +48,7 @@ function createChannel(f){
 
     P.channels[i].index = i
 
-    P.channels[i].input_component = $.C(P, {
-      L : 20,
-      T : 60 * (i - 1) + 18,
-      W : 400,
-      H : 40,
-      BG: '#fff',
-      Z : 1
-    }).H()
-
-    P.channels[i].input  = $.C(P.channels[i].input_component, {
-      W : P.channels[i].W_ - 8,
-      H : 34,
-      F : 20,
-      C : '#000000',
-      TA: 'center',
-    }, 'input')
-    P.channels[i].ok     = $.C(P.channels[i].input_component, {
-      L    : P.channels[i].W_ + 10,
-      W    : 45,
-      H    : 38,
-      F    : 20,
-      I    : 'ok',
-      title: i
-    }, 'button').click(eobj => {
-      let index                   = eobj.TITLE_
-      let channel                 = P_CHANNEL.channels[index]
-      let new_name                = channel.input.val()
-      LS['channel_name_' + index] = new_name
-      channel.I(new_name)
-      eobj.FATHER.H()
-    })
-    P.channels[i].cancel = $.C(P.channels[i].input_component, {
-      L: P.channels[i].ok.L_ + P.channels[i].ok.W_ + 10,
-      W: 75,
-      H: 38,
-      F: 20,
-      I: 'cancle'
-    }, 'button').click(eobj => {
-      eobj.FATHER.H()
-    })
-
-    P.channels[i].light = $.C(P, {
+    P.channels[i].light = $.C(P.private, {
       L : P.channels[i].W_ + 30,
       T : P.channels[i].T_ + 10,
       W : 20,
@@ -88,34 +56,91 @@ function createChannel(f){
       BR: 10, // BD: 'gray'
     })
 
-    P.channels[i].msg = $.C(P, {
-      L: P.channels[i].light.L_ + 30,
-      T: P.channels[i].T_ + 5,
-      W: 80,
-      H: 30,
+    P.channels[i].msg = $.C(P.private, {
+      L : P.channels[i].light.L_ + 30,
+      T : P.channels[i].T_ + 5,
+      W : 80,
+      H : 30,
       LH: 30,
-      F: 16, // BD: '1px solid'
+      F : 16, // BD: '1px solid'
     }).down(eobj => {
       if(eobj.I_ == 'pedding'){
-        codeSave(10)
+        P_MATJ.codeSave(10)
       }
     })
-
   }
 
-  P.more = $.C(P, {I:'...'}).down(eobj=>{
-    P.buttons.toggle().S({
-      L:eobj.L_-60,
-      T:eobj.T_+50
-    })
+  P.input_component = $.C(P.private, {
+    L : 20,
+    W : 400,
+    H : 40,
+    BG: '#fff',
+    Z : 1
+  }).H()
+
+  P.input  = $.C(P.input_component, {
+    W : P.channels[1].W_ - 8,
+    H : 34,
+    F : 20,
+    C : '#000000',
+    TA: 'center',
+  }, 'input').keydown(eobj => {
+    if(eobj.KEYCODE == 13){
+      P.ok.CLICK(P.ok)
+    }
+    else if(eobj.KEYCODE == 27){
+      P.cancel.CLICK(P.cancel)
+    }
+  }, 1)
+  P.ok     = $.C(P.input_component, {
+    L    : P.channels[1].W_ + 10,
+    W    : 45,
+    H    : 38,
+    F    : 20,
+    I    : 'ok',
+    title: i
+  }, 'button').click(eobj => {
+    let index                   = P.focus_channel
+    let new_title               = P.input.val()
+    LS['channel_name_' + index] = new_title
+    P.channels[index].I(new_title)
+
+    let source          = P_MATJ.editor.getValue()
+    let {title, auther} = P_MATJ.getTitleAuther(source)
+    console.log(title, auther);
+
+    if(!title && !auther){
+      P_MATJ.addTitleAuther(new_title, LS.auther || '')
+    }
+    else{
+      P_MATJ.setTitleAuther(new_title, auther || LS.auther || '')
+    }
+
+    eobj.FATHER.H()
+  })
+  P.cancel = $.C(P.input_component, {
+    L: P.ok.L_ + P.ok.W_ + 10,
+    W: 75,
+    H: 38,
+    F: 20,
+    I: 'cancle'
+  }, 'button').click(eobj => {
+    eobj.FATHER.H()
   })
 
-  P.buttons = $.C(P, {
+  P.more = $.C(P.private, {I: '...'}).down(eobj => {
+    P.moreButtons.toggle().S({
+      L: eobj.L_ - 60,
+      T: eobj.T_ + 40
+    })
+  }).H()
+
+  P.moreButtons = $.C(P.private, {
     L: 20,
     T: P.T_ + P.channels[P.LEN].T_ + P.channels[P.LEN].H_ + 30,
   }).H()
 
-  P.rename = $.C(P.buttons, {
+  P.rename = $.C(P.moreButtons, {
     W    : 80,
     H    : 40,
     F    : 20,
@@ -124,19 +149,21 @@ function createChannel(f){
     I    : 'rename',
     title: i
   }, 'button').click(eobj => {
-    let P       = P_CHANNEL
-    let channel = P.channels[P.focus_channel]
-    channel.input_component.toggle()
-    channel.input.focusMe().val(channel.I_)
-    P.buttons.H()
+    let P     = P_CHANNEL
+    let index = P.focus_channel
+    P.input_component.toggle().S({
+      T: P.channels[index].T_
+    })
+    P.input.focusMe().val(P.channels[index].I_)
+    P.moreButtons.H()
   })
 
-  P.share = $.C(P.buttons, P.rename.CSS_, 'button').S({
+  P.share = $.C(P.moreButtons, P.rename.CSS_, 'button').S({
     T: 50,
-    I: 'share',
+    I: 'share'
   }).H().click(async eobj => {
     let P             = P_CHANNEL
-    let channel_index = P.focus_channel || 0
+    let channel_index = P.focus_channel
 
     if(P.share_arr.includes('' + channel_index)){
       await INNER.matj.unshare('' + channel_index)
@@ -146,28 +173,7 @@ function createChannel(f){
     }
 
     P.freshShare()
-
-    // let name          = 'channel' + channel_index
-    // let share_hash    = encodeShare(principal_str + name)
-    // let share_url     = document.location.host + '#' + share_hash
-    //
-    // copyContent(share_url)
-    // eobj.I('Copied')
-    //
-    // P.qrimg.V().S({src: showQRCode(share_url)})
-    //
-    // setTimeout(_ => {
-    //   eobj.I('share')
-    // }, 2000)
   })
-
-  // P.qrimg = $.C(f, {
-  //   L : 100,
-  //   T : P.buttons.T_ + 50,
-  //   W : 202,
-  //   H : 202,
-  //   BD: '1px solid #e0e0e0'
-  // }, 'img').H()
 
   //=================================================
 
@@ -184,18 +190,19 @@ function createChannel(f){
       })
     }
 
-    P.share.I(P.share_arr.includes('' + P.focus_channel) ? 'unshare' : 'share')
+    P.changeButtonText()
   }
 
   P.selectChannel = n => {
     LS.focus_channel = n
     var code         = LS['channel' + n] || ''
-    noOnChange       = true
+    noOnChange       = true //不会触发codeSave
     P_MATJ.editor.setValue(code)
 
     P.focus_channel = n
 
-    P.share.I(P.share_arr.includes('' + P.focus_channel) ? 'unshare' : 'share')
+    P.changeButtonText()
+    P.showTitleAuther(code)
 
     for(let i in P.channels){
       let eobj = P.channels[i]
@@ -209,20 +216,16 @@ function createChannel(f){
       })
     }
 
-
-
     P.more.S({
-      L:P.channels[n].W_ + 150,
-      T:P.channels[n].T_
+      L: P.channels[n].W_ + 150,
+      T: P.channels[n].T_
     }).V()
-    // if(n == P.LEN - 1){
-    //   P.buttons.H()
-    // }
-    // else{
-    //   P.buttons.V()
-    // }
 
-    // P.qrimg.H()
+    P.moreButtons.H()
+  }
+
+  P.changeButtonText = () => {
+    P.share.I(P.share_arr.includes('' + P.focus_channel) ? 'unshare' : 'share')
   }
 
   P.setLight = (n, c) => {
@@ -269,6 +272,7 @@ function createChannel(f){
     let principal_str = DATA.principal + ''
 
     for(let i = 1; i <= 10; i++){
+      //并行读取所有远程内容
       (async () => {
         let name = 'channel' + i
 
@@ -299,9 +303,30 @@ function createChannel(f){
     P.freshShare()
   }
 
-  P.afterLogin = ()=>{
+  P.afterLogin = () => {
     P_CHANNEL.getChannelsCode()
     P_CHANNEL.share.V()
+  }
+
+  P.showTitleAuther = source => {
+    let channel_index   = P_CHANNEL.focus_channel
+    let {title, auther} = P_MATJ.getTitleAuther(source)
+    console.log(title, auther)
+    title = title || `untitled ${channel_index}`
+    if(auther != ''){
+      LS.auther = auther
+    }
+    else if(LS.auther){
+      auther = LS.auther
+    }
+    P_CHANNEL.channels[channel_index].I(title)
+    P_CHANNEL.showAuther(auther)
+
+    P_MATJ.setTitleAuther(title, auther)
+  }
+
+  P.showAuther = (auther) => {
+    P.auther.I(`auther: ${auther || LS.auther || 'anonymous'}`)
   }
   //一开始就显示所有频道
   P.max()
