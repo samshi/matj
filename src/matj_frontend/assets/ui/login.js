@@ -105,7 +105,6 @@ function login(f){
     }
     DATA = {}
     P_CHANNEL.share.H()
-    P_CHANNEL.upload.H()
     var P = P_LOGIN
 
     P.login_plug_img.H()

@@ -6703,7 +6703,8 @@ function variableValue(a) {
   }
 
   if ($.isString(a)) {
-    return "'" + a + "'"
+    return a
+    // return "'" + a + "'"
   }
 
   if (isComplex(a) || !isNaN(a)) {

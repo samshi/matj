@@ -136,11 +136,13 @@ function createChannel(f){
   }).H()
 
   P.moreButtons = $.C(P.private, {
-    L: 20,
-    T: P.T_ + P.channels[P.LEN].T_ + P.channels[P.LEN].H_ + 30,
+    // L: 20,
+    // T: P.T_ + P.channels[P.LEN].T_ + P.channels[P.LEN].H_ + 30,
+    PD: 4,
+    BG: '#eee'
   }).H()
 
-  P.rename = $.C(P.moreButtons, {
+  P.rename = $.c(P.moreButtons, {
     W    : 80,
     H    : 40,
     F    : 20,
@@ -158,8 +160,8 @@ function createChannel(f){
     P.moreButtons.H()
   })
 
-  P.share = $.C(P.moreButtons, P.rename.CSS_, 'button').S({
-    T: 50,
+  P.share = $.c(P.moreButtons, P.rename.CSS_, 'button').S({
+    // T: 50,
     I: 'share'
   }).H().click(async eobj => {
     let P             = P_CHANNEL
