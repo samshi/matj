@@ -76,7 +76,7 @@ function login(f){
     // F:16,
     L  : 50,
     T  : 75,
-    H  : 40,
+    H  : 30,
     src: 'img/plug.svg'
   }, 'img').H()
 
@@ -89,16 +89,17 @@ function login(f){
   }, 'img').H()
 
   P.account_balance = $.C(P, {
-    F: 24,
-    L: 100,
+    F: 20,
+    L: 120,
     T: 75,
   }).H()
 
   P.logout_btn = $.C(P, {
     L : 330,
     T : P.account_balance.T_ + 3,
+    W : 70,
     PD: '5px 10px',
-    I : 'logout'
+    I : 'Logout'
   }, 'button').H().down(_ => {
     if(DATA.login == 'plug'){
       window.ic.plug.disconnect()
@@ -110,7 +111,7 @@ function login(f){
     P.login_plug_img.H()
     P.login_identity_img.H()
     P.account_balance.H()
-    P.avatar.H()
+    P.id_avatar.H()
     P.account.H()
     P.logout_btn.H()
     P.account_copy.H()
@@ -127,20 +128,39 @@ function login(f){
     }
   })
 
-  P.avatar = $.C(P, {
-    L:30,
-    CN:'avatar'
-  }, 'img').H()
+  P.id_avatar = $.C(P, {
+    L : 45,
+    T : P.account_balance.T_ + 40,
+    TS : 300,
+    CN: 'avatar'
+  }, 'img').H().over(eobj => {
+    eobj.S({
+      L: 45 - 26,
+      T: P.account_balance.T_ + 40 - 26,
+      W: 82,
+      H: 82,
+      Z: 1
+    })
+  }).out(eobj => {
+    eobj.S({
+      L : 45,
+      T : P.account_balance.T_ + 40,
+      W: 30,
+      H: 30,
+      Z: 0
+    })
+  })
 
   P.account = $.C(P, {
     F: 20,
-    L: 150,
-    T: P.account_balance.T_ + 40
+    L: 120,
+    T: P.id_avatar.T_ + 0
   }).H()
 
   P.account_copy = $.C(P, {
-    L : 220,
-    T : P.account_balance.T_ + 40,
+    L : P.logout_btn.L_,
+    T : P.id_avatar.T_,
+    W : 70,
     PD: '5px 10px',
     I : 'Copy'
   }, 'button').H().down(eobj => {
@@ -152,17 +172,43 @@ function login(f){
     }, 3000)
   })
 
+  P.avatar = $.C(P, {
+    src: 'img/samshi.jpeg',
+    L  : 45,
+    T  : P.H_ - 20,
+    W  : 30,
+    H  : 30,
+    BR : 20,
+    TS : 300,
+    BD : '1px solid #444'
+  }, 'img').H().over(eobj => {
+    eobj.S({
+      L: 45 - 26,
+      T: P.H_ - 20 - 26,
+      W: 82,
+      H: 82,
+      Z: 1
+    })
+  }).out(eobj => {
+    eobj.S({
+      L: 45,
+      T: P.H_ - 20,
+      W: 30,
+      H: 30,
+      Z: 0
+    })
+  })
+
   P.buymecafe = $.C(P, {
-    I : '<img width=24 src="img/cafe.svg"/> support me on MatJ',
-    L : 60,
-    W : 200,
-    H : 40,
-    LH: 40,
+    I : '<img width=24 src="img/cafe.svg" style="display:inline;vertical-align:middle;margin-right:5px;"/> support me on MatJ',
+    L : 120,
+    W : 250,
+    H : 30,
     BR: 20,
     F : 18,
     BD: '1px solid',
     TA: 'center',
-    T : P.H_ - 20
+    T : P.avatar.T_
   }).H().down(async eobj => {
     let amount = +prompt('you will send author some ICP, change it less or more', 0.1)
     if(typeof (amount) == 'number' && amount > 0 && amount < DATA.icp_balance){
@@ -180,29 +226,5 @@ function login(f){
     }
   })
 
-  P.avatar = $.C(P, {
-    src: 'img/samshi.jpeg',
-    L  : P.buymecafe.L_ + P.buymecafe.W_ + 30,
-    T  : P.buymecafe.T_,
-    W  : 42,
-    H  : 42,
-    BR : 20,
-    TS : 300,
-    BD : '1px solid #444'
-  }, 'img').H().over(eobj => {
-    eobj.S({
-      L: P.buymecafe.L_ + P.buymecafe.W_ + 10,
-      T: P.buymecafe.T_ - 20,
-      W: 82,
-      H: 82,
-    })
-  }).out(eobj => {
-    eobj.S({
-      L: P.buymecafe.L_ + P.buymecafe.W_ + 30,
-      T: P.buymecafe.T_,
-      W: 42,
-      H: 42,
-    })
-  })
 }
 

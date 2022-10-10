@@ -5,9 +5,7 @@ function createCopyPage(f){
     H: 202
   }, 'canvas')
 
-  P.principalToAvatar = function(principal_str){
-    let accountId = INNER.principalToAccountAddress(principal_str)
-    console.log(principal_str, accountId);
+  P.accountToAvatar = function(accountId){
     let N    = 2
     let mode = {
       2: {
@@ -69,5 +67,11 @@ function createCopyPage(f){
     }
 
     return CTX.canvas.toDataURL()
+  }
+
+  P.principalToAvatar = function(principal_str){
+    let accountId = INNER.principalToAccountAddress(principal_str)
+    console.log(principal_str, accountId);
+    return P.accountToAvatar(accountId);
   }
 }

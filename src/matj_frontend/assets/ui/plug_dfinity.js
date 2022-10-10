@@ -78,7 +78,7 @@ async function getBalance(){
     P.login_identity_img.V()
   }
   P.account_balance.V().I('get balance ...')
-  P.avatar.V().S({src: P_CANVAS.principalToAvatar(DATA.accountId)})
+  P.id_avatar.V().S({src: P_CANVAS.accountToAvatar(DATA.accountId)})
   P.account.V().I(shortPrincipal(DATA.accountId))
   P.logout_btn.V()
   P.account_copy.V()

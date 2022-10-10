@@ -433,7 +433,7 @@ function createPublic(P){
           s += `<td width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`
           s += `<td>${auther}</td>`
           s += `<th style="text-align:right;">${title}</th>`
-          s += `<td width=40><img class="favorite" src="img/un-favorite.svg"/></td>`
+          s += `<td width=30><img class="favorite" src="img/un-favorite.svg"/></td>`
           s += `</tr></table>`
         })
 
