@@ -16,6 +16,6 @@ node_modules/
 dist/
 
 src/matj_frontend/assets/ui/del.js
-canister_ids*.*
-
-
+canister_ids_dev.json
+canister_ids_test.json
+canister_ids_prod.json

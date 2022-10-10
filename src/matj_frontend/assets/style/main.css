@@ -35,3 +35,19 @@ button[type="submit"] {
 #greeting:empty {
     display: none;
 }
+
+.public_channel {
+    width: 408px;
+    font-size: 18px;
+    color: #000000;
+    border: 1px solid;
+    margin: 10px;
+    padding: 7px 10px;
+    border-radius: 7px;
+}
+
+.avatar{
+    border-radius: 50%;
+    border: 1px solid #e0e0e0;
+    width: 30px;
+}

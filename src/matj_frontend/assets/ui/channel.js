@@ -11,31 +11,94 @@ function createChannel(f){
     O : 'hidden'
   })
 
-  P.auther   = $.C(P, {
-    L: 20,
-    T: 10,
-    F: 18
-  })
-  P.private  = $.C(P)
-  P.faverate = $.C(P)
-  P.public   = $.C(P)
+  createTab(P)
+  createPrivate(P)
+  createPublic(P)
+  createFavorite(P)
 
-  P.LEN       = 10
-  P.channels  = {}
-  P.share_arr = []
+  P.tab.DOWN({
+    target_eobj: P.private_tab
+  })
+}
+
+function createTab(P){
+  P.tab = $.C(P, {
+    // I: 'tab',
+    L: 10,
+    T: 10,
+    F: 18,
+    W: 'calc(100% - 20px)', // BG:'gray'
+  }).down(eobj => {
+    var target    = eobj.target_eobj
+    var css_focus = {
+      C : '#fff',
+      BG: '#000'
+    }
+    var css_blur  = {
+      C : '',
+      BG: ''
+    }
+    P.public_tab.S(target == P.public_tab ? css_focus : css_blur)
+    P.private_tab.S(target == P.private_tab ? css_focus : css_blur)
+    P.favorite_tab.S(target == P.favorite_tab ? css_focus : css_blur)
+
+    P.private.V(target == P.private_tab)
+    P.public.V(target == P.public_tab)
+    P.favorite.V(target == P.favorite_tab)
+
+    if(target == P.public_tab){
+      P_CHANNEL.getPublicChannel()
+    }
+  })
+
+  P.public_tab   = $.C(P.tab, {
+    I : 'public',
+    L : '33.3%',
+    T : 0,
+    W : 'calc(33.3% - 1px)',
+    PD: '5px 0',
+    BD: '1px solid #000', // BG:'red',
+    TA: 'center'
+  })
+  P.private_tab  = $.C(P.tab, P.public_tab.CSS_).S({
+    I                     : 'private',
+    L                     : 0,
+    borderTopLeftRadius   : '2em',
+    borderBottomLeftRadius: '2em',
+  })
+  P.favorite_tab = $.C(P.tab, P.public_tab.CSS_).S({
+    I                      : 'favorite',
+    L                      : '66.6%',
+    W                      : '33.4%',
+    borderTopRightRadius   : '2em',
+    borderBottomRightRadius: '2em',
+  })
+}
+
+function createPrivate(P){
+  P.private = $.C(P, {
+    L: 0,
+    T: 50,
+    W: '100%',
+    H: 'calc(100% - 65px)', // BD:'1px solid red',
+    O: 'auto'
+  })
+
+  P.LEN      = 10
+  P.channels = {}
+  P.sharestr = ''
   for(var i = 1; i <= P.LEN; i++){
-    var html = LS['channel_name_' + i] ?? 'untitled ' + (i)
-    // if(i == P.LEN - 1){
-    //   html = 'share file, read only'
-    // }
+    var source          = LS['channel' + i]
+    let {title, auther} = P_MATJ.getTitleAuther(source)
+    var html            = (title ?? 'untitled ' + (i)) + ' - ' + (auther || '')
 
     P.channels[i] = $.C(P.private, {
       I : html,
       L : 20,
-      T : 60 * (i - 1) + 58,
+      T : 60 * (i - 1) + 20,
       W : 250,
       H : 40,
-      F : 20,
+      F : 18,
       C : '#000000',
       TA: 'center'
     }, 'button').click(eobj => {
@@ -167,11 +230,13 @@ function createChannel(f){
     let P             = P_CHANNEL
     let channel_index = P.focus_channel
 
-    if(P.share_arr.includes('' + channel_index)){
+    if(P.checkShare(channel_index)){
       await INNER.matj.unshare('' + channel_index)
     }
     else{
-      await INNER.matj.share('' + channel_index)
+      let source          = P_MATJ.editor.getValue()
+      let {title, auther} = P_MATJ.getTitleAuther(source)
+      await INNER.matj.share('' + channel_index, title, auther)
     }
 
     P.freshShare()
@@ -184,50 +249,54 @@ function createChannel(f){
     let principal_str = DATA.principal + ''
     let sharestr      = await INNER.matj_default.getshare(principal_str)
     console.log(sharestr)
-    P.share_arr = sharestr.length == 0 ? [] : sharestr[0].slice(1, -1).split('=_')
+    P.sharestr = sharestr.length == 0 ? '' : sharestr[0] //.slice(1, -1).split('=_')
 
     for(let i in P.channels){
       P.channels[i].S({
-        BG: P.share_arr.includes('' + i) ? '#a7daf1' : ''
+        BG: P.checkShare(i) ? '#a7daf1' : ''
       })
     }
 
     P.changeButtonText()
   }
 
-  P.selectChannel = n => {
-    LS.focus_channel = n
-    var code         = LS['channel' + n] || ''
-    noOnChange       = true //不会触发codeSave
-    P_MATJ.editor.setValue(code)
+  P.checkShare = n => {
+    return $.F(P.sharestr, '_' + n + '%') || $.F(P.sharestr, '_' + n + '=')
+  },
 
-    P.focus_channel = n
+    P.selectChannel = n => {
+      LS.focus_channel = n
+      var code         = LS['channel' + n] || ''
+      noOnChange       = true //不会触发codeSave
+      P_MATJ.editor.setValue(code)
 
-    P.changeButtonText()
-    P.showTitleAuther(code)
+      P.focus_channel = n
 
-    for(let i in P.channels){
-      let eobj = P.channels[i]
+      P.changeButtonText()
+      P.showTitleAuther(code)
 
-      eobj.S({
-        C: n == eobj.index ? 'red' : ''
-      })
+      for(let i in P.channels){
+        let eobj = P.channels[i]
 
-      eobj.light.S({
-        BG: LS['channel' + eobj.index] ? '#888' : ''
-      })
+        eobj.S({
+          C: n == eobj.index ? 'red' : ''
+        })
+
+        eobj.light.S({
+          BG: LS['channel' + eobj.index] ? '#888' : ''
+        })
+      }
+
+      P.more.S({
+        L: P.channels[n].W_ + 150,
+        T: P.channels[n].T_
+      }).V()
+
+      P.moreButtons.H()
     }
-
-    P.more.S({
-      L: P.channels[n].W_ + 150,
-      T: P.channels[n].T_
-    }).V()
-
-    P.moreButtons.H()
-  }
 
   P.changeButtonText = () => {
-    P.share.I(P.share_arr.includes('' + P.focus_channel) ? 'unshare' : 'share')
+    P.share.I(P.checkShare(P.focus_channel) ? 'unshare' : 'share')
   }
 
   P.setLight = (n, c) => {
@@ -319,10 +388,10 @@ function createChannel(f){
       LS.auther = auther
     }
     else if(LS.auther){
-      auther = LS.auther
+      auther = '' //LS.auther
     }
-    P_CHANNEL.channels[channel_index].I(title)
-    P_CHANNEL.showAuther(auther)
+    P_CHANNEL.channels[channel_index].I(title + ' - ' + auther)
+    // P_CHANNEL.showAuther(auther)
 
     P_MATJ.setTitleAuther(title, auther)
   }
@@ -330,6 +399,54 @@ function createChannel(f){
   P.showAuther = (auther) => {
     P.auther.I(`auther: ${auther || LS.auther || 'anonymous'}`)
   }
+
   //一开始就显示所有频道
   P.max()
+}
+
+function createPublic(P){
+  P.public = $.C(P, P.private.CSS_)
+
+  P.getPublicChannel = () => {
+    let P = P_CHANNEL;
+    if(!window.INNER){
+      setTimeout(P.getPublicChannel, 1000)
+      return
+    }
+
+    ;(async () => {
+      let result = await INNER.matj_default.getallshare()
+      // let result = await INNER.matj_default.get(name)
+      console.log(result)
+      // [['bd2wg-k5qgq-hxlt4-km3ub-65vbo-sm2s2-byexk-vowwq-ubcgi-ocxz3-hae', '_6=_9=_8=_4='],
+      // ['jxod7-ldlti-mmxc6-rrojx-peixc-vskod-pmv7f-aroz7-wtrys-eq3xg-kqe', '_4=']]
+
+      let s = ''
+      result.forEach(pair => {
+        let principalid   = pair[0]
+        let sharedchannel = pair[1].slice(1, -1).split('=_')
+        console.log(principalid, sharedchannel)
+
+        sharedchannel.map(channelstr => {
+          let [channel, title, auther] = channelstr.split('%')
+          s += `<table onclick="P_CHANNEL.openpublic(this)" class="public_channel" data-id="${principalid}" data-channel="${channel}" data-auther="${auther}"><tr>`
+          s += `<td width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`
+          s += `<td>${auther}</td>`
+          s += `<th style="text-align:right;">${title}</th>`
+          s += `<td width=40><img class="favorite" src="img/un-favorite.svg"/></td>`
+          s += `</tr></table>`
+        })
+
+      })
+      P.public.I(s)
+    })()
+  }
+
+  P.openpublic = function(node){
+    console.log(node.dataset)
+  }
+}
+
+function createFavorite(P){
+  P.favorite = $.C(P, P.private.CSS_)
 }

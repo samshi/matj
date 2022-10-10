@@ -4,6 +4,8 @@ import Array "mo:base/Array";
 import Iter "mo:base/Iter";
 import Principal "mo:base/Principal";
 import Nat "mo:base/Nat";
+import Debug "mo:base/Debug";
+import Char "mo:base/Char";
 
 actor Registry {
 
@@ -39,15 +41,17 @@ actor Registry {
     map.get(principalname);
   };
 
-  public shared(msg) func share(name : Text) : async Text {
+  public shared(msg) func share(name : Text, title: Text, auther: Text) : async Text {
     let principalId = Principal.toText(msg.caller);
-    let key = "_"#name#"=";
+    let key = "_"#name#"%"#title#"%"#auther#"=";
 
     switch(share_map.get(principalId)){
       case (?shared_str) {
         let shared_name_array : [Text] = Iter.toArray<Text>(Text.split(shared_str, #char '='));
         let item : ?Text = Array.find<Text>(shared_name_array, func(x: Text): Bool {
-          x == "_"#name;
+          //x == key;
+          let k = "_"#name#"%";
+          extract(x, 0, k.size()) == k
         });
 
         switch(item){
@@ -71,7 +75,6 @@ actor Registry {
 
   public shared(msg) func unshare(name : Text) : async Text {
     let principalId = Principal.toText(msg.caller);
-    let key = "_"#name#"=";
 
     switch(share_map.get(principalId)){
       case (?shared_str) {
@@ -79,7 +82,8 @@ actor Registry {
         var out = "";
 
         for (x in shared_name_array.vals()) {
-          if (x != "_"#name and x != "") {
+          let k = "_"#name#"%";
+          if (extract(x, 0, k.size()) != k and x#"%" != k and x != "") {
             out #= x#"="
           }
         };
@@ -104,6 +108,36 @@ actor Registry {
 
   public query func getshare(principalId : Text) : async ?Text {
     share_map.get(principalId);
+  };
+
+  public query func getallshare() : async [(Text, Text)] {
+    Iter.toArray(share_map.entries());
+  };
+
+  private func extract(t : Text, i : Nat, k : Nat) : Text {
+    let size = t.size();
+    var j = k;
+    if(k > size){
+      j := size;
+    };
+
+    if (i == 0 and j == size) return t;
+    let cs = t.chars();
+    var r = "";
+    var n = i;
+    while (n > 0) {
+      ignore cs.next();
+      n -= 1;
+    };
+    n := j;
+    while (n > 0) {
+      switch (cs.next()) {
+        case null { assert false };
+        case (?c) { r #= Char.toText(c) }
+      };
+      n -= 1;
+    };
+    return r;
   };
 
   system func preupgrade() {

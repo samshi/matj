@@ -110,6 +110,7 @@ function login(f){
     P.login_plug_img.H()
     P.login_identity_img.H()
     P.account_balance.H()
+    P.avatar.H()
     P.account.H()
     P.logout_btn.H()
     P.account_copy.H()
@@ -126,9 +127,14 @@ function login(f){
     }
   })
 
+  P.avatar = $.C(P, {
+    L:30,
+    CN:'avatar'
+  }, 'img').H()
+
   P.account = $.C(P, {
     F: 20,
-    L: 50,
+    L: 150,
     T: P.account_balance.T_ + 40
   }).H()
 
@@ -147,7 +153,7 @@ function login(f){
   })
 
   P.buymecafe = $.C(P, {
-    I : 'buy author cafe',
+    I : '<img width=24 src="img/cafe.svg"/> support me on MatJ',
     L : 60,
     W : 200,
     H : 40,
