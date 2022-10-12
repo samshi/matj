@@ -28,7 +28,7 @@ function createJsArea(f){
     console.log('js')
     $('#id_js_area').V()
     $('#id_matj_area').H()
-  })
+  }).H()
 
   P.textarea = $.C(P, {
     id: 'js_textarea'

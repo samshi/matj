@@ -31,7 +31,7 @@ function createMatjArea(f){
     })
   })
 
-  P.show = $.C(f, {
+  P.show_mat_code_button = $.C(f, {
     I : 'matj code',
     L : 450,
     T : 10,
@@ -44,6 +44,12 @@ function createMatjArea(f){
 
     $('#id_matj_area').V()
     $('#id_js_area').H()
+  })
+
+  P.show_readonly = $.C(f, {
+    L : 750,
+    T : 25,
+    F : 14,
   })
 
   P.textarea = $.C(P, {
@@ -71,13 +77,17 @@ function createMatjArea(f){
   }, option)
 
   P.editor.on('change', function(cm, change_obj){
-    if(window.noOnChange){
-      window.noOnChange = false
+    if(P_MATJ.noOnChange){
+      P_MATJ.noOnChange = false
       //codeRun() //打开页面，自动填入程序后，是否自动执行
       return
     }
 
-    window.code_changed = true
+    if(P_MATJ.is_readonly){
+      return
+    }
+
+    P_MATJ.code_changed = true
     let channel_index   = P_CHANNEL.focus_channel
 
     P_CHANNEL.setLight(channel_index, 'red')
@@ -153,7 +163,7 @@ function createMatjArea(f){
   }
 
   P.codeRun = () => {
-    window.code_changed = false
+    P_MATJ.code_changed = false
     var matj_code       = P_MATJ.editor.getValue()
     var analy_str       = tidy(matj_code)
     setRoot(analy_str)

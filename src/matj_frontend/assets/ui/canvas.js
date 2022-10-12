@@ -21,7 +21,7 @@ function createCopyPage(f){
         margin: 17
       },
     }[N]
-    console.log(mode)
+    // console.log(mode)
     var v = [accountId.slice(0, 3) + accountId.slice(-3)]
     for(let i = mode.from; i < 64; i += mode.step){
       let s = accountId.slice(i, i + mode.step)
@@ -53,7 +53,7 @@ function createCopyPage(f){
     var m         = mode.margin
     var w         = (202 - m - m) / (N * 2 + 1)
     let w1        = N + 1
-    console.log(m, w, w1)
+    // console.log(m, w, w1)
     for(let i = 1; i < len; i++){
       if(v[i]){
         l = m + w * ((i - 1) % w1)
@@ -71,7 +71,7 @@ function createCopyPage(f){
 
   P.principalToAvatar = function(principal_str){
     let accountId = INNER.principalToAccountAddress(principal_str)
-    console.log(principal_str, accountId);
+    // console.log(principal_str, accountId);
     return P.accountToAvatar(accountId);
   }
 }

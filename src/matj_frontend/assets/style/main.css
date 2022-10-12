@@ -44,10 +44,16 @@ button[type="submit"] {
     margin: 10px;
     padding: 7px 10px;
     border-radius: 7px;
+    cursor: pointer;
 }
 
 .avatar{
     border-radius: 50%;
     border: 1px solid #e0e0e0;
     width: 30px;
+}
+
+#channel_box svg{
+    margin: 6px 0 0 5px;
+    width: 1em;
 }

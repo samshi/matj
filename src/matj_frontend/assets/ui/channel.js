@@ -13,8 +13,8 @@ function createChannel(f){
 
   createTab(P)
   createPrivate(P)
-  createPublic(P)
   createFavorite(P)
+  createPublic(P)
 
   P.tab.DOWN({
     target_eobj: P.private_tab
@@ -262,38 +262,40 @@ function createPrivate(P){
 
   P.checkShare = n => {
     return $.F(P.sharestr, '_' + n + '%') || $.F(P.sharestr, '_' + n + '=')
-  },
+  }
 
-    P.selectChannel = n => {
-      LS.focus_channel = n
-      var code         = LS['channel' + n] || ''
-      noOnChange       = true //不会触发codeSave
-      P_MATJ.editor.setValue(code)
+  P.selectChannel = n => {
+    LS.focus_channel  = n
+    var code          = LS['channel' + n] || ''
+    P_MATJ.noOnChange = true //不会触发codeSave
+    P_MATJ.editor.setValue(code)
+    P_MATJ.is_readonly = false
+    P_MATJ.show_readonly.I('')
 
-      P.focus_channel = n
+    P.focus_channel = n
 
-      P.changeButtonText()
-      P.showTitleAuther(code)
+    P.changeButtonText()
+    P.showTitleAuther(code)
 
-      for(let i in P.channels){
-        let eobj = P.channels[i]
+    for(let i in P.channels){
+      let eobj = P.channels[i]
 
-        eobj.S({
-          C: n == eobj.index ? 'red' : ''
-        })
+      eobj.S({
+        C: n == eobj.index ? 'red' : ''
+      })
 
-        eobj.light.S({
-          BG: LS['channel' + eobj.index] ? '#888' : ''
-        })
-      }
-
-      P.more.S({
-        L: P.channels[n].W_ + 150,
-        T: P.channels[n].T_
-      }).V()
-
-      P.moreButtons.H()
+      eobj.light.S({
+        BG: LS['channel' + eobj.index] ? '#888' : ''
+      })
     }
+
+    P.more.S({
+      L: P.channels[n].W_ + 150,
+      T: P.channels[n].T_
+    }).V()
+
+    P.moreButtons.H()
+  }
 
   P.changeButtonText = () => {
     P.share.I(P.checkShare(P.focus_channel) ? 'unshare' : 'share')
@@ -406,6 +408,31 @@ function createPrivate(P){
 
 function createPublic(P){
   P.public = $.C(P, P.private.CSS_)
+  P.allshare = []
+
+  P.showPublic = function(){
+    let s  = ''
+    let s1 = ''
+    P.allshare.forEach(pair => {
+      let principalid   = pair[0]
+      let sharedchannel = pair[1].slice(1, -1).split('=_')
+
+      sharedchannel.map(channelstr => {
+        let [channel, title, auther] = channelstr.split('%')
+        let item                     = principalid + 'channel' + channel
+
+        s += `<table onclick="P_CHANNEL.openpublic(this, event)" class="public_channel" data-id="${principalid}" data-channel="${channel}"><tr>`
+        s += `<td width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`
+        s += `<td>${auther}</td>`
+        s += `<th style="text-align:right;">${title}</th>`
+        s += `<td width=30>${P.hasFavorite(item) ? SVG.favorite : SVG.unfavorite}</td>`
+        s += `</tr></table>`
+      })
+    })
+
+    P.public.I(s)
+  }
+
 
   P.getPublicChannel = () => {
     let P = P_CHANNEL;
@@ -415,38 +442,132 @@ function createPublic(P){
     }
 
     ;(async () => {
-      let result = await INNER.matj_default.getallshare()
-      // let result = await INNER.matj_default.get(name)
-      console.log(result)
-      // [['bd2wg-k5qgq-hxlt4-km3ub-65vbo-sm2s2-byexk-vowwq-ubcgi-ocxz3-hae', '_6=_9=_8=_4='],
-      // ['jxod7-ldlti-mmxc6-rrojx-peixc-vskod-pmv7f-aroz7-wtrys-eq3xg-kqe', '_4=']]
+      P.allshare = await INNER.matj_default.getallshare()
+      // P.allshare = [
+      //   ['bd2wg-k5qgq-hxlt4-km3ub-65vbo-sm2s2-byexk-vowwq-ubcgi-ocxz3-hae', '_6%charts%samshi=_4%for loop%samshi=_7%factor%samshi='],
+      //   ['jxod7-ldlti-mmxc6-rrojx-peixc-vskod-pmv7f-aroz7-wtrys-eq3xg-kqe', '_3%todolist%samshi=']
+      // ]
+      console.log(P.allshare)
 
-      let s = ''
-      result.forEach(pair => {
-        let principalid   = pair[0]
-        let sharedchannel = pair[1].slice(1, -1).split('=_')
-        console.log(principalid, sharedchannel)
-
-        sharedchannel.map(channelstr => {
-          let [channel, title, auther] = channelstr.split('%')
-          s += `<table onclick="P_CHANNEL.openpublic(this)" class="public_channel" data-id="${principalid}" data-channel="${channel}" data-auther="${auther}"><tr>`
-          s += `<td width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`
-          s += `<td>${auther}</td>`
-          s += `<th style="text-align:right;">${title}</th>`
-          s += `<td width=30><img class="favorite" src="img/un-favorite.svg"/></td>`
-          s += `</tr></table>`
-        })
-
-      })
-      P.public.I(s)
+      P.showPublic()
+      P.showFavorite()
     })()
   }
 
-  P.openpublic = function(node){
-    console.log(node.dataset)
+  P.openpublic = function(node, event){
+    let target
+    if(event.target.nodeName == 'svg'){
+      target = event.target
+    }
+    else if(event.target.nodeName == 'path'){
+      target = event.target.parentNode
+    }
+    else if(event.target.firstChild?.nodeName == 'svg'){
+      target = event.target.firstChild
+    }
+
+    if(target){
+      let item = node.dataset.id+'channel'+node.dataset.channel
+      if(P.hasFavorite(item)){
+        P.removeFavorite(item)
+        target.outerHTML = SVG.unfavorite
+        console.log('removeFavorite', item)
+      }
+      else{
+        P.addFavorite(item)
+        target.outerHTML = SVG.favorite
+        console.log('addFavorite', item)
+      }
+
+      P.showFavorite()
+      return
+    }
+
+    P_MATJ.is_readonly = true
+    P_MATJ.show_readonly.I('read only')
+
+    let public_file_name = node.dataset.id+'channel'+node.dataset.channel
+    ;(async ()=>{
+      let result = await INNER.matj_default.principalget(public_file_name)
+      P_MATJ.editor.setValue(result[0])
+    })();
+
+    var brothers = node.parentNode.childNodes
+    brothers.forEach(item =>{
+      item.style.background = item == node ? '#eee' : ''
+    })
   }
+
+  P.getPublicChannel()
 }
 
 function createFavorite(P){
   P.favorite = $.C(P, P.private.CSS_)
+  P.showFavorite = function(){
+    let s  = ''
+    P.allshare.forEach(pair => {
+      let principalid   = pair[0]
+      let sharedchannel = pair[1].slice(1, -1).split('=_')
+
+      sharedchannel.map(channelstr => {
+        let [channel, title, auther] = channelstr.split('%')
+        let item                     = principalid + 'channel' + channel
+
+        if(P.hasFavorite(item)){
+          s += `<table onclick="P_CHANNEL.openpublic(this, event)" class="public_channel" data-id="${principalid}" data-channel="${channel}"><tr>`
+          s += `<td width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`
+          s += `<td>${auther}</td>`
+          s += `<th style="text-align:right;">${title}</th>`
+          // s += `<td width=30><img class="favorite" src="img/favorite.svg"/></td>`
+          s += `<td width=30>${SVG.favorite}</td>`
+          s += `</tr></table>`
+        }
+      })
+    })
+
+    P.favorite.I(s)
+  }
+  P.hasFavorite = function(item){
+    // console.log(P.favorite_list, item, P.favorite_list.includes(item))
+    return P.favorite_list.includes(item)
+  }
+
+  P.addFavorite = function(item){
+    if(!P.favorite_list.includes(item)){
+      P.favorite_list.push(item)
+    }
+    P.setFavorite()
+  }
+
+  P.removeFavorite = function(item){
+    var list = []
+    P.favorite_list.map(favorite => {
+      if(favorite != item){
+        list.push(favorite)
+      }
+    })
+
+    P.favorite_list = list
+
+    P.setFavorite()
+  }
+
+  P.setFavorite = function(){
+    LS.favorite = JSON.stringify(P.favorite_list)
+  }
+
+  P.getFavorite = function(node){
+    let list = []
+    if(LS.favorite){
+      try{
+        list = JSON.parse(LS.favorite)
+      }
+      catch(e){
+
+      }
+    }
+    return list
+  }
+
+  P.favorite_list = P.getFavorite()
 }

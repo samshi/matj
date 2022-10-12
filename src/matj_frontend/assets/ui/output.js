@@ -14,7 +14,7 @@ function createOutputArea(f){
     BG : '#fff'
   }, 'iframe').over(_=>{
     //鼠标移动其上，刷新一次，除非代码再次改动
-    if(!window.code_changed){
+    if(!P_MATJ.code_changed){
       return
     }
 
