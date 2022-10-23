@@ -9,7 +9,11 @@ export const idlFactory = ({ IDL }) => {
     'getshare' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
     'principalget' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Text)], ['query']),
     'set' : IDL.Func([IDL.Text, IDL.Text], [IDL.Nat], []),
-    'share' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Text], []),
+    'share' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
     'unshare' : IDL.Func([IDL.Text], [IDL.Text], []),
     'who' : IDL.Func([], [IDL.Text], ['query']),
   });

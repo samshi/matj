@@ -36,8 +36,11 @@ button[type="submit"] {
     display: none;
 }
 
-.public_channel {
-    width: 408px;
+.channel {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    width: 388px;
     font-size: 18px;
     color: #000000;
     border: 1px solid;
@@ -46,7 +49,14 @@ button[type="submit"] {
     border-radius: 7px;
     cursor: pointer;
 }
-
+.channel div{
+    /*flex-grow: 2;*/
+    /*border:1px solid;*/
+    width: 33%;
+    vertical-align:middle;
+    line-height:20px;
+    font-family:monospace;
+}
 .avatar{
     border-radius: 50%;
     border: 1px solid #e0e0e0;

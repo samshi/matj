@@ -200,18 +200,18 @@ var now = (Date.now() - (new Date('0000-01-01')))/87600000 //日期序列值表�
     R   : Math.round,
     SIZE: function(n){
       if(n < 1024){
-        return n + ' 字节'
+        return n //+ ' bytes'
       }
       var k = $.R(n / 102.4) / 10
       if(k < 1024){
-        return k + ' KB'
+        return k + 'KB'
       }
       var m = $.R(k / 102.4) / 10
       if(m < 1024){
-        return m + ' MB'
+        return m + 'MB'
       }
       var g = $.R(m / 102.4) / 10
-      return g + ' GB'
+      return g + 'GB'
     },
 
     //STRING
@@ -1103,6 +1103,28 @@ var now = (Date.now() - (new Date('0000-01-01')))/87600000 //日期序列值表�
       g = g.length == 1 ? '0' + g : g
       b = b.length == 1 ? '0' + b : b
       return '#' + r + g + b
+    },
+
+    //datetime
+    getDatetime: function(format, t = $.MS()){
+      let d = new Date(+t)
+      switch(format){
+        case 'y':
+          return d.getFullYear()
+        case 'm':
+          return d.getMonth() + 1
+        case 'd':
+          return d.getDate()
+        case 'date':
+          return $.getDatetime('y', t) + '-'
+            + ('0'+$.getDatetime('m', t)).slice(-2) + '-'
+            + ('0'+$.getDatetime('d', t)).slice(-2)
+        case 'dort':
+          let date = $.getDatetime('date', t)
+          return date == $.getDatetime('date') ? d.toTimeString().slice(0, 8) : date
+        default:
+          return $.getDatetime('date') + ' ' + d.toTimeString().slice(0, 8)
+      }
     },
 
     //DEBUG

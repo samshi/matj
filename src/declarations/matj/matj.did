@@ -7,7 +7,7 @@ service : {
   getshare: (text) -> (opt text) query;
   principalget: (text) -> (opt text) query;
   set: (text, text) -> (nat);
-  share: (text, text, text) -> (text);
+  share: (text, text, text, text) -> (text);
   unshare: (text) -> (text);
   who: () -> (text) query;
 }

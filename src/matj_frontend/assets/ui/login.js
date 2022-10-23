@@ -1,29 +1,19 @@
 function login(f){
-  var P = W.P_LOGIN = $.C(f, {
-    id: 'login_box',
-    L : 0,
-    T : 0,
-    W : 388,
-    H : 178,
-    BG: '#fff',
-    PD: 20,
-    BR: 5,
-  })
-
-  $.C(P, {
-    L : 0,
-    T : 20,
-    W : '100%',
-    F : 30,
-    FF: 'STSongti-SC-Bold, STSongti-SC',
-    FW: 'bold',
-    C : '#000000',
-    TA: 'center',
-    I : 'MatJ <span style="font-size:20px;color:#666">a js math library for matlab script</span>'
-  })
+  var P = W.P_LOGIN = f
+  // $.C(f, {
+  //   id: 'login_box',
+  //   L : 0,
+  //   T : 0,
+  //   W : 388,
+  //   // H : 178,
+  //   BG: '#fff',
+  //   PD: 20,
+  //   BR: 5,
+  // })
 
   P.login_plug_box = $.c(P, {
-    MT: 60,
+    MT: 25,
+    ML: 30,
     id: 'login_plug_box',
     T : 100,
     W : 168,
@@ -54,6 +44,7 @@ function login(f){
   }, 'img')
 
   P.login_identity_box = $.c(P, P.login_plug_box.CSS_).S({
+    ML: 0,
     id: 'login_identity_box',
   }).over(eobj => {
     eobj.S({
@@ -75,7 +66,7 @@ function login(f){
   P.login_plug_img = $.C(P, {
     // F:16,
     L  : 50,
-    T  : 75,
+    T  : 20,
     H  : 30,
     src: 'img/plug.svg'
   }, 'img').H()
@@ -83,7 +74,7 @@ function login(f){
   P.login_identity_img = $.C(P, {
     // F:16,
     L  : 50,
-    T  : 82,
+    T  : 27,
     H  : 20,
     src: 'img/dfinity.svg'
   }, 'img').H()
@@ -91,7 +82,7 @@ function login(f){
   P.account_balance = $.C(P, {
     F: 20,
     L: 120,
-    T: 75,
+    T: P.login_plug_img.T_,
   }).H()
 
   P.logout_btn = $.C(P, {
@@ -105,7 +96,7 @@ function login(f){
       window.ic.plug.disconnect()
     }
     DATA = {}
-    P_CHANNEL.share.H()
+    // P_CHANNEL.share.H()
     var P = P_LOGIN
 
     P.login_plug_img.H()
@@ -121,8 +112,8 @@ function login(f){
     P.login_plug_box.V()
     P.login_identity_box.V()
 
-    for(let channel_index in timers){
-      delete timers[channel_index]
+    for(let channel_index in P_MATJ.timers){
+      delete P_MATJ.timers[channel_index]
       P_CHANNEL.setLight(channel_index, '#888')
       P_CHANNEL.setMsg(channel_index, '')
     }
@@ -175,7 +166,7 @@ function login(f){
   P.avatar = $.C(P, {
     src: 'img/samshi.jpeg',
     L  : 45,
-    T  : P.H_ - 20,
+    T  : P.id_avatar.T_ + 40,
     W  : 30,
     H  : 30,
     BR : 20,
@@ -184,7 +175,7 @@ function login(f){
   }, 'img').H().over(eobj => {
     eobj.S({
       L: 45 - 26,
-      T: P.H_ - 20 - 26,
+      T: P.id_avatar.T_ + 40 - 26,
       W: 82,
       H: 82,
       Z: 1
@@ -192,7 +183,7 @@ function login(f){
   }).out(eobj => {
     eobj.S({
       L: 45,
-      T: P.H_ - 20,
+      T: P.id_avatar.T_ + 40,
       W: 30,
       H: 30,
       Z: 0

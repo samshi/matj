@@ -90,8 +90,8 @@ function createMatjArea(f){
     P_MATJ.code_changed = true
     let channel_index   = P_CHANNEL.focus_channel
 
-    P_CHANNEL.setLight(channel_index, 'red')
-    P_CHANNEL.setMsg(channel_index, 'update')
+    // P_CHANNEL.setLight(channel_index, 'red')
+    // P_CHANNEL.setMsg(channel_index, 'update')
 
     clearTimeout(P.timer)
     P.timer = setTimeout(P_MATJ.codeSave, 1000)
@@ -101,64 +101,80 @@ function createMatjArea(f){
 
   P.addTitleAuther = (title, auther) => {
     let source = P_MATJ.editor.getValue()
-    source     = `% title = ${title} % auther = ${auther}\n` + source
+    source     = `% title = ${title} % auther = ${auther} % time = ${$.MS()}\n` + source
     P_MATJ.editor.setValue(source)
   }
 
   P.setTitleAuther = (title, auther) => {
-    let source    = P_MATJ.editor.getValue()
-    let line0_pos = source.indexOf("\n")
-    let new_line0 = `% title = ${title} % auther = ${auther}`
-    if(source.slice(0, line0_pos) != new_line0){
+    let source    = P.editor.getValue()
+    let info = P.getTitleAuther(source)
+    if(info.title != title || info.auther != auther){
+      let line0_pos = source.indexOf("\n")
+      let new_line0 = `% title = ${title} % auther = ${auther} % time = ${$.MS()}\n`
       source = `${new_line0}\n` + source.slice(line0_pos)
       P_MATJ.editor.setValue(source)
     }
   }
 
   P.getTitleAuther = (source = '') => {
-    let line0  = source.slice(0, source.indexOf("\n"))
+    let first_line_point = source.indexOf("\n")
+    let line0  = source.slice(0, first_line_point)
     let title  = line0.match(/\%\s*title\s*\=([^%]+)/)
     let auther = line0.match(/\%\s*auther\s*\=([^%]+)/)
+    let time   = line0.match(/\%\s*time\s*\=([^%]+)/)
+    let size   = source.length - first_line_point -1
 
     return {
       title : title ? title[1].trim() : '',
-      auther: auther ? auther[1].trim() : ''
+      auther: auther ? auther[1].trim() : '',
+      time  : time ? $.getDatetime('dort', time[1].trim()) : '',
+      size  : size
     }
   }
 
   P.timers = {}
 
   P.codeSave = (delay = 20000) => {
+    // 处理local / remote
     let channel_index = P_CHANNEL.focus_channel
     let name          = 'channel' + channel_index
 
     let source = P_MATJ.editor.getValue()
-    P_CHANNEL.showTitleAuther(source)
-
+    let info = P.getTitleAuther(source)
+    let line0_pos = source.indexOf("\n")
+    let time = $.MS()
+    let new_line0 = `% title = ${info.title} % auther = ${info.auther} % time = ${time}`
+    source = `${new_line0}` + source.slice(line0_pos)
+    // P_MATJ.editor.setValue(source)
+    clearTimeout(P.timer)
     LS[name] = source
+    let children = P_CHANNEL.channels[channel_index].context.children
+    children[0].innerHTML = info.title
+    children[1].innerHTML = source.length - new_line0.length - 1
+    children[2].innerHTML = $.getDatetime('dort', time)
 
     if(DATA.accountId){
       // 静等60秒后再保存，尽量减少上传次数
-      P_CHANNEL.setLight(channel_index, '#f4d71a')
-      P_CHANNEL.setMsg(channel_index, 'pedding')
+      // P_CHANNEL.setLight(channel_index, '#f4d71a')
+      // P_CHANNEL.setMsg(channel_index, 'pedding')
       clearTimeout(P_MATJ.timers[channel_index])
       P_MATJ.timers[channel_index] = setTimeout((function(channel_index, name, source){
         return async function(){
-          P_CHANNEL.setLight(channel_index, 'green')
-          P_CHANNEL.setMsg(channel_index, 'uploading...')
+          // P_CHANNEL.setLight(channel_index, 'green')
+          // P_CHANNEL.setMsg(channel_index, 'uploading...')
           P_CHANNEL.freeze = true
           let size         = await INNER.matj.set(name, source)
           console.log(source.length, size)
-          P_CHANNEL.setLight(channel_index, '#888')
-          P_CHANNEL.setMsg(channel_index, 'saved')
+          // P_CHANNEL.setLight(channel_index, '#888')
+          // P_CHANNEL.setMsg(channel_index, 'saved')
 
           P_CHANNEL.freeze = false
         }
       })(channel_index, name, source), delay)
     }
     else{
-      P_CHANNEL.setLight(channel_index, '#888')
-      P_CHANNEL.setMsg(channel_index, '')
+      // P_CHANNEL.setLight(channel_index, '#888')
+      // P_CHANNEL.setMsg(channel_index, '')
     }
   }
 

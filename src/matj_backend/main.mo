@@ -41,34 +41,43 @@ actor Registry {
     map.get(principalname);
   };
 
-  public shared(msg) func share(name : Text, title: Text, auther: Text) : async Text {
+  public shared(msg) func share(name : Text, title: Text, auther: Text, time: Text) : async Text {
     let principalId = Principal.toText(msg.caller);
-    let key = "_"#name#"%"#title#"%"#auther#"=";
+    let key = "_"#name#"%"#title#"%"#auther#"%"#time#"=";
 
     switch(share_map.get(principalId)){
       case (?shared_str) {
         let shared_name_array : [Text] = Iter.toArray<Text>(Text.split(shared_str, #char '='));
-        let item : ?Text = Array.find<Text>(shared_name_array, func(x: Text): Bool {
-          //x == key;
-          let k = "_"#name#"%";
-          extract(x, 0, k.size()) == k
-        });
+        var out = "";
+        var update = false;
 
-        switch(item){
-          case null {
-            share_map.put(principalId, shared_str#key);
-            "add"
-          };
-          case (?abc) {
-            "find"
+        for (x in shared_name_array.vals()) {
+          let k = "_"#name#"%";
+          if (extract(x, 0, k.size()) != k and x#"%" != k and x != "") {
+            out #= x#"=";
           }
+          else if(x != ""){
+            update := true;
+            out #= key;
+          }
+        };
+
+        if(update == false){
+          out #= key;
+          share_map.put(principalId, out);
+          "add"
+        }
+        else if(shared_str == out){
+          "same"
+        }
+        else{
+          share_map.put(principalId, out);
+          "update"
         }
       };
       case null {
         share_map.put(principalId, key);
         "new"
-        // Array.init(1, [])
-        // Iter.toArray(Text.split(key, #char '='));
       };
     }
   };
