@@ -50,7 +50,7 @@ $(function () {
 
   // 切换上次的channel
   setTimeout(function () {
-    P_CHANNEL.selectLocal(LS.focus_local || 0);
+    P_CHANNEL.selectLocal(LS.focus_local || 1);
   }, 100);
 });
 

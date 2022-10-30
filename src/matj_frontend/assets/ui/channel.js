@@ -1,15 +1,14 @@
-function createChannel(f) {
+function createChannel(f){
   var P = (W.P_CHANNEL = $.C(f, {
     id: "channel_box",
-    L: 0,
-    T: 80,
-    W: 388,
-    H: "100%",
-    // H : 38,//580,
+    L : 0,
+    T : 80,
+    W : 388,
+    H : "100%", // H : 38,//580,
     BG: "#fff",
     PD: 20,
     BR: 5,
-    O: "hidden",
+    O : "hidden",
   }));
 
   createTab(P);
@@ -23,21 +22,21 @@ function createChannel(f) {
   });
 }
 
-function createTab(P) {
+function createTab(P){
   P.tab = $.C(P, {
     id: "tab",
-    L: 10,
-    T: 10,
-    F: 18,
-    W: "calc(100% - 20px)", // BG:'gray'
+    L : 10,
+    T : 10,
+    F : 18,
+    W : "calc(100% - 20px)", // BG:'gray'
   }).down((eobj) => {
-    var target = eobj.target_eobj;
+    var target    = eobj.target_eobj;
     var css_focus = {
-      C: "#fff",
+      C : "#fff",
       BG: "#000",
     };
-    var css_blur = {
-      C: "",
+    var css_blur  = {
+      C : "",
       BG: "",
     };
     P.public_tab.S(target == P.public_tab ? css_focus : css_blur);
@@ -50,98 +49,83 @@ function createTab(P) {
     P.public.V(target == P.public_tab);
     P.favorite.V(target == P.favorite_tab);
 
-    if (target == P.public_tab) {
+    if(target == P.public_tab){
       P_CHANNEL.getPublicChannel();
     }
   });
 
-  P.public_tab = $.C(P.tab, {
-    I: "public",
-    L: "50%",
-    T: 0,
-    W: "calc(25% - 1px)",
+  P.public_tab   = $.C(P.tab, {
+    I : "public",
+    L : "50%",
+    T : 0,
+    W : "calc(25% - 1px)",
     PD: "5px 0",
     BD: "1px solid #000", // BG:'red',
     TA: "center",
   });
-  P.local_tab = $.C(P.tab, P.public_tab.CSS_).S({
-    I: "local",
-    L: 0,
-    borderTopLeftRadius: "2em",
+  P.local_tab    = $.C(P.tab, P.public_tab.CSS_).S({
+    I                     : "local",
+    L                     : 0,
+    borderTopLeftRadius   : "2em",
     borderBottomLeftRadius: "2em",
   });
-  P.remote_tab = $.C(P.tab, P.public_tab.CSS_).S({
+  P.remote_tab   = $.C(P.tab, P.public_tab.CSS_).S({
     I: "remote",
     L: "25%",
   });
   P.favorite_tab = $.C(P.tab, P.public_tab.CSS_).S({
-    I: "favorite",
-    L: "75%",
-    borderTopRightRadius: "2em",
+    I                      : "favorite",
+    L                      : "75%",
+    borderTopRightRadius   : "2em",
     borderBottomRightRadius: "2em",
   });
 }
 
-function createLocal(P) {
+function createLocal(P){
   P.local = $.C(P, {
     id: "local",
-    L: 0,
-    T: 50,
-    W: "100%",
-    O: "auto",
+    L : 0,
+    T : 50,
+    W : "100%",
+    O : "auto",
   });
 
-  P.LEN = 16;
-  P.locals = {};
-  P.sharestr = "";
+  P.updateLocal = (detail_obj, i = P_CHANNEL.focus_local) => {
+    let cells = P.locals[i].context.firstChild.rows[0].cells
 
-  for (var i = 1; i <= P.LEN; i++) {
-    var source = LS["local" + i];
-    let detail = P_MATJ.getDetail(source);
+    if(detail_obj.title){
+      cells[0].innerHTML = detail_obj.title
+    }
 
-    let s = `<table>`
-    s += `<tr>`
-    s += `<td style="font-weight:bold;width:220px">${detail.title || "untitled " + i}</td>`;
-    s += `<td style="text-align:right;width:50px;font-size:14px;" >${$.SIZE(detail.code.length)}</td>`;
-    s += `<td style="text-align:right;width:90px;font-size:14px;" >${detail.time||''}</td>`;
-    s += `</tr>`
-    s += `</table>`
+    if(detail_obj.size){
+      cells[1].innerHTML = $.SIZE(detail_obj.size)
+    }
 
-    P.locals[i] = $.c(P.local, {
-      I: s,
-      CN: "channel",
-    }).click((eobj) => {
-      // P_CHANNEL.openlocal(eobj)
-      if (P_CHANNEL.freeze) {
-        return;
-      }
-
-      P_CHANNEL.selectLocal(eobj.index);
-    });
-
-    P.locals[i].index = i;
+    if(detail_obj.time){
+      cells[2].innerHTML = $.getDatetime("dort", detail_obj.time)
+    }
   }
 
   P.selectLocal = (n) => {
     P_MATJ.codeSaveNow()
 
-    P.focus_local = n;
+    P.focus_local  = n;
     LS.focus_local = n;
-    var source = LS["local" + n] || "";
-    let detail = P_MATJ.getDetail(source);
+    var source     = LS["local" + n] || "";
+    let detail     = P_MATJ.getDetail(source);
 
-    P_MATJ.type = "local";
+    P_MATJ.type       = "local";
     P_MATJ.noOnChange = true; //不会触发codeSave
     P_MATJ.input_auther.H();
-    P_MATJ.input_title.val(detail.title||'');
+    P_MATJ.input_title.val(detail.title || '');
     P_MATJ.input_share.H();
     P_MATJ.is_readonly = false;
     P_MATJ.show_readonly.I("");
 
     P_MATJ.noOnChange = true
-    P_MATJ.editor.setValue(detail.code||'');
+    P_MATJ.editor.setValue(detail.code || '');
 
-    for (let i in P.locals) {
+    for(let i in P.locals){
       let eobj = P.locals[i];
 
       eobj.S({
@@ -150,34 +134,49 @@ function createLocal(P) {
     }
   };
 
-  P.updateLocal = detail_obj =>{
-    P.locals[P_CHANNEL.focus_local]
-    console.log(P.locals[P_CHANNEL.focus_local])
-    let cells = P.locals[P_CHANNEL.focus_local].context.firstChild.rows[0].cells
+  P.LEN      = 16;
+  P.locals   = {};
+  P.sharestr = "";
 
-    if(detail_obj.title){
-      cells[0].innerHTML = detail_obj.title
-    }
+  for(var i = 1; i <= P.LEN; i++){
+    var source     = LS["local" + i];
+    let detail_obj = P_MATJ.getDetail(source);
 
-    if(detail_obj.time){
-      cells[2].innerHTML = $.getDatetime("dort", detail_obj.time)
-    }
+    let s = `<table>`
+    s += `<tr>`
+    s += `<td style="font-weight:bold;width:220px"></td>`;
+    s += `<td style="text-align:right;width:50px;font-size:14px;"></td>`;
+    s += `<td style="text-align:right;width:90px;font-size:14px;"></td>`;
+    s += `</tr>`
+    s += `</table>`
 
-    // let children = P_CHANNEL[P.type + "s"][index].context.children;
-    // children[0].innerHTML = detail_obj.title;
-    // children[1].innerHTML = $.SIZE(code.length);
-    // children[2].innerHTML = $.getDatetime("dort", detail_obj.time);
+    P.locals[i] = $.c(P.local, {
+      I : s,
+      CN: "channel",
+    }).click((eobj) => {
+      // P_CHANNEL.openlocal(eobj)
+      if(P_CHANNEL.freeze){
+        return;
+      }
+
+      P_CHANNEL.selectLocal(eobj.index);
+    });
+
+    P.locals[i].index = i;
+
+    P.updateLocal(detail_obj, i)
   }
 }
 
-function createRemote(P) {
+function createRemote(P){
+  let i
   P.remote = $.C(P, {
     id: "remote",
-    L: 0,
-    T: 50,
-    W: "100%",
-    H: "calc(100% - 65px)", // BD:'1px solid red',
-    O: "auto",
+    L : 0,
+    T : 50,
+    W : "100%",
+    H : "calc(100% - 65px)", // BD:'1px solid red',
+    O : "auto",
   });
 
   P.login_box = $.c(P.remote, {
@@ -185,22 +184,133 @@ function createRemote(P) {
     H: 156,
   });
 
-  P.RLEN = 10;
+  P.selectRemote = (n) => {
+    P_MATJ.codeSaveNow()
+
+    P.focus_remote = n;
+
+    var source        = LS["remote" + n] || "";
+    let detail        = P_MATJ.getDetail(source);
+    P_MATJ.type       = "remote";
+    P_MATJ.noOnChange = true; //不会触发codeSave
+    P_MATJ.editor.setValue(detail.code);
+    P_MATJ.input_auther.val(detail.auther || '').V();
+    P_MATJ.input_title.val(detail.title || '');
+    P_MATJ.input_share.S({ checked: detail.share }).V();
+    P_MATJ.is_readonly = false;
+    P_MATJ.show_readonly.I("");
+
+    P_MATJ.noOnChange = true
+    P_MATJ.editor.setValue(detail.code || '');
+
+    // P.changeButtonText()
+    // P.showTitleAuther(code)
+
+    for(let i in P.remotes){
+      let eobj = P.remotes[i];
+
+      eobj.S({
+        C: n == eobj.index ? "red" : "",
+      });
+
+      // eobj.light.S({
+      //   BG: LS['local' + eobj.index] ? '#888' : ''
+      // })
+    }
+
+    // P.more.S({
+    //   L: P.locals[n].W_ + 150,
+    //   T: P.locals[n].T_
+    // }).V()
+    //
+    // P.moreButtons.H()
+  };
+
+  P.updateRemote = (detail_obj, i = P_CHANNEL.focus_remote) => {
+    let cells = P.remotes[i].V().context.firstChild.rows[0].cells
+
+    if(detail_obj.title){
+      cells[0].innerHTML = detail_obj.title
+    }
+
+    if(detail_obj.size){
+      cells[1].innerHTML = $.SIZE(detail_obj.size)
+    }
+
+    if(detail_obj.time){
+      cells[2].innerHTML = $.getDatetime("dort", detail_obj.time)
+    }
+
+    cells[3].innerHTML = detail_obj.share ? SVG.share : SVG.unshare
+
+    // let children = P_CHANNEL.remotes[i].V().context.children;
+    //
+    // children[0].innerHTML = detail.title;
+    // children[1].innerHTML = $.SIZE(detail.code.length);
+    // children[2].innerHTML = detail.time;
+    // children[3].innerHTML = detail.share? SVG.share : SVG.unshare;
+  }
+
+  P.afterLogin = () => {
+    P_CHANNEL.getRemoteCode();
+    // P_CHANNEL.share.V()
+  };
+
+  P.getRemoteCode = () => {
+    let P             = P_CHANNEL;
+    let principal_str = DATA.principal + "";
+
+    for(let i = 1; i <= 10; i++){
+      //并行读取所有远程内容
+      (async () => {
+        let remote_name = "remote" + i;
+
+        // P.setLight(i, 'green')
+        // P.setMsg(i, 'loading')
+        let result = await INNER.matj_default.principalget(principal_str + remote_name);
+
+        let source = result[0] || "";
+        console.log(Date.now(), principal_str + name, source);
+
+        if(result.length){
+          if(!LS[remote_name]){
+            LS[remote_name] = source;
+          }
+          else if(result[0] != LS[remote_name]){
+            // 远程文件为主
+            LS[remote_name + "_" + $.MS()] = LS[remote_name];
+            LS[remote_name]                = source;
+            console.warn(remote_name + " has different backup code");
+          }
+        }
+
+        let detail = P_MATJ.getDetail(source);
+
+        P.updateRemote(detail, i)
+
+        // P.checkLight(i)
+        // P.setMsg(i, LS[name] ? 'loaded' : 'empty')
+      })();
+    }
+
+    // P.freshShare()
+  };
+
+  P.RLEN    = 10;
   P.remotes = {};
-  for (var i = 1; i <= P.RLEN; i++) {
+  for(i = 1; i <= P.RLEN; i++){
     let s = `<table>`
     s += `<tr>`
-    s += `<td style="font-weight:bold;">title</td>`;
-    s += `<td style="text-align:right;width:50px;font-size:14px;" >size</td>`;
-    s += `<td style="text-align:right;width:90px;font-size:14px;" >time</td>`;
+    s += `<td style="font-weight:bold;"></td>`;
+    s += `<td style="text-align:right;width:50px;font-size:14px;"></td>`;
+    s += `<td style="text-align:right;width:90px;font-size:14px;"></td>`;
     s += `<td style="text-align:right;width:30px;"></td>`;
     s += `</tr>`
     s += `</table>`
 
     P.remotes[i] = $.c(P.remote, {
-      I: s,
-      CN: "channel",
-      // L : 20,
+      I : s,
+      CN: "channel", // L : 20,
       // T : 60 * (i - 1) + 20,
       // W : 250,
       // H : 40,
@@ -208,7 +318,7 @@ function createRemote(P) {
       // C : '#000000',
       // TA: 'center'
     }).click((eobj) => {
-      if (P_CHANNEL.freeze) {
+      if(P_CHANNEL.freeze){
         return;
       }
 
@@ -239,169 +349,62 @@ function createRemote(P) {
     // })
   }
 
-  P.afterLogin = () => {
-    P_CHANNEL.getRemoteCode();
-    // P_CHANNEL.share.V()
-  };
-
-  P.getRemoteCode = () => {
-    let P = P_CHANNEL;
-    let principal_str = DATA.principal + "";
-
-    for (let i = 1; i <= 10; i++) {
-      //并行读取所有远程内容
-      (async () => {
-        let remote_name = "remote" + i;
-
-        // P.setLight(i, 'green')
-        // P.setMsg(i, 'loading')
-        let result = await INNER.matj_default.principalget(
-          principal_str + remote_name
-        );
-
-        let source = result[0] || "";
-        console.log(Date.now(), principal_str + name, source);
-
-        if (result.length) {
-          if (!LS[remote_name]) {
-            LS[remote_name] = source;
-          } else if (result[0] != LS[remote_name]) {
-            // 远程文件为主
-            LS[remote_name + "_" + $.MS()] = LS[remote_name];
-            LS[remote_name] = source;
-            console.warn(remote_name + " has different backup code");
-          }
-        }
-
-        let detail = P_MATJ.getDetail(source);
-
-        let children = P_CHANNEL.remotes[i].V().context.children;
-
-        children[0].innerHTML = detail.title;
-        children[1].innerHTML = $.SIZE(detail.code.length);
-        children[2].innerHTML = detail.time;
-        children[3].innerHTML = detail.share? SVG.share : SVG.unshare;
-
-        // P.checkLight(i)
-        // P.setMsg(i, LS[name] ? 'loaded' : 'empty')
-      })();
-    }
-
-    // P.freshShare()
-  };
-
-  P.selectRemote = (n) => {
-    P_MATJ.codeSaveNow()
-
-    P.focus_remote = n;
-
-    var source = LS["remote" + n] || "";
-    let detail = P_MATJ.getDetail(source);
-    P_MATJ.type = "remote";
-    P_MATJ.noOnChange = true; //不会触发codeSave
-    P_MATJ.editor.setValue(detail.code);
-    P_MATJ.input_auther.val(detail.auther||'').V();
-    P_MATJ.input_title.val(detail.title||'');
-    P_MATJ.input_share.S({ checked: detail.share }).V();
-    P_MATJ.is_readonly = false;
-    P_MATJ.show_readonly.I("");
-
-    P_MATJ.noOnChange = true
-    P_MATJ.editor.setValue(detail.code||'');
-
-    // P.changeButtonText()
-    // P.showTitleAuther(code)
-
-    for (let i in P.remotes) {
-      let eobj = P.remotes[i];
-
-      eobj.S({
-        C: n == eobj.index ? "red" : "",
-      });
-
-      // eobj.light.S({
-      //   BG: LS['local' + eobj.index] ? '#888' : ''
-      // })
-    }
-
-    // P.more.S({
-    //   L: P.locals[n].W_ + 150,
-    //   T: P.locals[n].T_
-    // }).V()
-    //
-    // P.moreButtons.H()
-  };
-
-  P.updateRemote = v =>{
-    P.remotes[P_CHANNEL.focus_remote]
-    console.log(P.remotes[P_CHANNEL.focus_remote])
-  }
   return;
   P.input_component = $.C(P.remote, {
-    L: 20,
-    W: 400,
-    H: 40,
+    L : 20,
+    W : 400,
+    H : 40,
     BG: "#fff",
-    Z: 1,
+    Z : 1,
   }).H();
 
-  P.input = $.C(
-    P.input_component,
-    {
-      W: P.locals[1].W_ - 8,
-      H: 34,
-      F: 20,
-      C: "#000000",
-      TA: "center",
-    },
-    "input"
-  ).keydown((eobj) => {
-    if (eobj.KEYCODE == 13) {
+  P.input  = $.C(P.input_component, {
+    W : P.locals[1].W_ - 8,
+    H : 34,
+    F : 20,
+    C : "#000000",
+    TA: "center",
+  }, "input").keydown((eobj) => {
+    if(eobj.KEYCODE == 13){
       P.ok.CLICK(P.ok);
-    } else if (eobj.KEYCODE == 27) {
+    }
+    else if(eobj.KEYCODE == 27){
       P.cancel.CLICK(P.cancel);
     }
   }, 1);
-  P.ok = $.C(
-    P.input_component,
-    {
-      L: P.locals[1].W_ + 10,
-      W: 45,
-      H: 38,
-      F: 20,
-      I: "ok",
-      title: i,
-    },
-    "button"
-  ).click((eobj) => {
-    let index = P.focus_local;
-    let new_title = P.input.val();
+  P.ok     = $.C(P.input_component, {
+    L    : P.locals[1].W_ + 10,
+    W    : 45,
+    H    : 38,
+    F    : 20,
+    I    : "ok",
+    title: i,
+  }, "button").click((eobj) => {
+    let index                   = P.focus_local;
+    let new_title               = P.input.val();
     LS["channel_name_" + index] = new_title;
     P.locals[index].I(new_title);
 
-    let source = P_MATJ.editor.getValue();
+    let source            = P_MATJ.editor.getValue();
     let { title, auther } = P_MATJ.getDetail(source);
     console.log(title, auther);
 
-    if (!title && !auther) {
+    if(!title && !auther){
       P_MATJ.addTitleAuther(new_title, LS.auther || "");
-    } else {
+    }
+    else{
       P_MATJ.setTitleAuther(new_title, auther || LS.auther || "");
     }
 
     eobj.FATHER.H();
   });
-  P.cancel = $.C(
-    P.input_component,
-    {
-      L: P.ok.L_ + P.ok.W_ + 10,
-      W: 75,
-      H: 38,
-      F: 20,
-      I: "cancle",
-    },
-    "button"
-  ).click((eobj) => {
+  P.cancel = $.C(P.input_component, {
+    L: P.ok.L_ + P.ok.W_ + 10,
+    W: 75,
+    H: 38,
+    F: 20,
+    I: "cancle",
+  }, "button").click((eobj) => {
     eobj.FATHER.H();
   });
 
@@ -421,20 +424,16 @@ function createRemote(P) {
     BG: "#eee",
   }).H();
 
-  P.rename = $.c(
-    P.moreButtons,
-    {
-      W: 80,
-      H: 40,
-      F: 20,
-      C: "#000000",
-      TA: "center",
-      I: "rename",
-      title: i,
-    },
-    "button"
-  ).click((eobj) => {
-    let P = P_CHANNEL;
+  P.rename = $.c(P.moreButtons, {
+    W    : 80,
+    H    : 40,
+    F    : 20,
+    C    : "#000000",
+    TA   : "center",
+    I    : "rename",
+    title: i,
+  }, "button").click((eobj) => {
+    let P     = P_CHANNEL;
     let index = P.focus_local;
     P.input_component.toggle().S({
       T: P.locals[index].T_,
@@ -450,12 +449,13 @@ function createRemote(P) {
     })
     .H()
     .click(async (eobj) => {
-      let P = P_CHANNEL;
+      let P     = P_CHANNEL;
       let index = P.focus_local;
 
-      if (P.checkShare(index)) {
+      if(P.checkShare(index)){
         await INNER.matj.unshare("" + index);
-      } else {
+      }
+      else{
         let source = P_MATJ.editor.getValue();
         await P.share(index, source)
       }
@@ -463,20 +463,20 @@ function createRemote(P) {
       P.freshShare();
     });
 
-  P.share = async (index, source)=>{
+  P.share = async (index, source) => {
     let { title, auther, time, code } = P_MATJ.getDetail(source);
-    await INNER.matj.share("" + index, title, auther, ''+time, ''+code.length);
+    await INNER.matj.share("" + index, title, auther, '' + time, '' + code.length);
   }
   //=================================================
 
   P.freshShare = async () => {
-    let P = P_CHANNEL;
+    let P             = P_CHANNEL;
     let principal_str = DATA.principal + "";
-    let sharestr = await INNER.matj_default.getshare(principal_str);
+    let sharestr      = await INNER.matj_default.getshare(principal_str);
     console.log(sharestr);
     P.sharestr = sharestr.length == 0 ? "" : sharestr[0]; //.slice(1, -1).split('=_')
 
-    for (let i in P.locals) {
+    for(let i in P.locals){
       P.locals[i].S({
         BG: P.checkShare(i) ? "#a7daf1" : "",
       });
@@ -500,20 +500,21 @@ function createRemote(P) {
   };
 
   P.checkLight = (n) => {
-    let P = P_CHANNEL;
+    let P    = P_CHANNEL;
     let eobj = P.locals[n];
-    let c = LS["local" + eobj.index] ? "#888" : "";
+    let c    = LS["local" + eobj.index] ? "#888" : "";
     P.setLight(n, c);
   };
 
   P.setMsg = (n, s) => {
     let msg_eobj = P.locals[n].msg;
     msg_eobj.I(s);
-    if (s == "pedding") {
+    if(s == "pedding"){
       msg_eobj.S({
         CS: "pointer",
       });
-    } else {
+    }
+    else{
       msg_eobj.S({
         CS: "",
       });
@@ -532,13 +533,14 @@ function createRemote(P) {
   };
 
   P.showTitleAuther = (source) => {
-    let index = P_CHANNEL.focus_local;
+    let index             = P_CHANNEL.focus_local;
     let { title, auther } = P_MATJ.getDetail(source);
     console.log(title, auther);
     title = title || `untitled ${index}`;
-    if (auther != "") {
+    if(auther != ""){
       LS.auther = auther;
-    } else if (LS.auther) {
+    }
+    else if(LS.auther){
       auther = ""; //LS.auther
     }
     P_CHANNEL.locals[index].I(title + " - " + auther);
@@ -555,29 +557,27 @@ function createRemote(P) {
   P.max();
 }
 
-function createPublic(P) {
-  P.public = $.C(P, P.local.CSS_).S({ id: "public" });
+function createPublic(P){
+  P.public   = $.C(P, P.local.CSS_).S({ id: "public" });
   P.allshare = [];
 
-  P.showPublic = function () {
+  P.showPublic = function(){
     let s = "";
     P.allshare.forEach((pair) => {
-      let principalid = pair[0];
+      let principalid   = pair[0];
       let sharedchannel = pair[1].slice(1, -1).split("=_");
 
       sharedchannel.map((channelstr) => {
         let [channel, title, auther] = channelstr.split("%");
-        let item = principalid + "channel" + channel;
+        let item                     = principalid + "channel" + channel;
 
         s += `<div onclick="P_CHANNEL.openpublic(this, event)" class="channel" data-id="${principalid}" data-channel="${channel}">`;
-        s += `<div width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(
-          principalid
-        )}"/></div>`;
+        s += `<div width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(principalid)}"/></div>`;
         s += `<div>${auther}</div>`;
         s += `<div style="text-align:right;">${title}</div>`;
-        s += `<div style="text-align:right;" width=40>${
-          P.hasFavorite(item) ? SVG.favorite : SVG.unfavorite
-        }</div>`;
+        s += `<div style="text-align:right;" width=40>${P.hasFavorite(item)
+                                                        ? SVG.favorite
+                                                        : SVG.unfavorite}</div>`;
         s += `</div>`;
       });
     });
@@ -587,7 +587,7 @@ function createPublic(P) {
 
   P.getPublicChannel = () => {
     let P = P_CHANNEL;
-    if (!window.INNER) {
+    if(!window.INNER){
       setTimeout(P.getPublicChannel, 1000);
       return;
     }
@@ -606,23 +606,26 @@ function createPublic(P) {
     })();
   };
 
-  P.openpublic = function (node, event) {
+  P.openpublic = function(node, event){
     let target;
-    if (event.target.nodeName == "svg") {
+    if(event.target.nodeName == "svg"){
       target = event.target;
-    } else if (event.target.nodeName == "path") {
+    }
+    else if(event.target.nodeName == "path"){
       target = event.target.parentNode;
-    } else if (event.target.firstChild?.nodeName == "svg") {
+    }
+    else if(event.target.firstChild?.nodeName == "svg"){
       target = event.target.firstChild;
     }
 
-    if (target) {
+    if(target){
       let item = node.dataset.id + "channel" + node.dataset.channel;
-      if (P.hasFavorite(item)) {
+      if(P.hasFavorite(item)){
         P.removeFavorite(item);
         target.outerHTML = SVG.unfavorite;
         console.log("removeFavorite", item);
-      } else {
+      }
+      else{
         P.addFavorite(item);
         target.outerHTML = SVG.favorite;
         console.log("addFavorite", item);
@@ -632,7 +635,7 @@ function createPublic(P) {
       return;
     }
 
-    P_MATJ.type = "public";
+    P_MATJ.type        = "public";
     P_MATJ.is_readonly = true;
     P_MATJ.show_readonly.I("read only");
 
@@ -651,23 +654,21 @@ function createPublic(P) {
   P.getPublicChannel();
 }
 
-function createFavorite(P) {
-  P.favorite = $.C(P, P.local.CSS_).S({ id: "favorite" });
-  P.showFavorite = function () {
+function createFavorite(P){
+  P.favorite     = $.C(P, P.local.CSS_).S({ id: "favorite" });
+  P.showFavorite = function(){
     let s = "";
     P.allshare.forEach((pair) => {
-      let principalid = pair[0];
+      let principalid   = pair[0];
       let sharedchannel = pair[1].slice(1, -1).split("=_");
 
       sharedchannel.map((channelstr) => {
         let [channel, title, auther] = channelstr.split("%");
-        let item = principalid + "channel" + channel;
+        let item                     = principalid + "channel" + channel;
 
-        if (P.hasFavorite(item)) {
+        if(P.hasFavorite(item)){
           s += `<table onclick="P_CHANNEL.openpublic(this, event)" class="channel" data-id="${principalid}" data-channel="${channel}"><tr>`;
-          s += `<td width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(
-            principalid
-          )}"/></td>`;
+          s += `<td width=40><img class="avatar" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
           s += `<td>${auther}</td>`;
           s += `<th style="text-align:right;">${title}</th>`;
           s += `<td style="text-align:right;" width=40>${SVG.favorite}</td>`;
@@ -678,22 +679,22 @@ function createFavorite(P) {
 
     P.favorite.I(s);
   };
-  P.hasFavorite = function (item) {
+  P.hasFavorite  = function(item){
     // console.log(P.favorite_list, item, P.favorite_list.includes(item))
     return P.favorite_list.includes(item);
   };
 
-  P.addFavorite = function (item) {
-    if (!P.favorite_list.includes(item)) {
+  P.addFavorite = function(item){
+    if(!P.favorite_list.includes(item)){
       P.favorite_list.push(item);
     }
     P.setFavorite();
   };
 
-  P.removeFavorite = function (item) {
+  P.removeFavorite = function(item){
     var list = [];
     P.favorite_list.map((favorite) => {
-      if (favorite != item) {
+      if(favorite != item){
         list.push(favorite);
       }
     });
@@ -703,16 +704,18 @@ function createFavorite(P) {
     P.setFavorite();
   };
 
-  P.setFavorite = function () {
+  P.setFavorite = function(){
     LS.favorite = JSON.stringify(P.favorite_list);
   };
 
-  P.getFavorite = function (node) {
+  P.getFavorite = function(node){
     let list = [];
-    if (LS.favorite) {
-      try {
+    if(LS.favorite){
+      try{
         list = JSON.parse(LS.favorite);
-      } catch (e) {}
+      }
+      catch(e){
+      }
     }
     return list;
   };

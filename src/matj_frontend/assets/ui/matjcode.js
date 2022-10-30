@@ -184,14 +184,6 @@ function createMatjArea(f) {
       detail_obj.share = +P.input_share.val();
     }
 
-    // 更新显示
-    if(P.type === "local"){
-      P_CHANNEL.updateLocal(detail_obj)
-    }
-    else{
-      P_CHANNEL.updateRemote(detail_obj)
-    }
-
     //更新本地
     let new_line0 = P.detailToStr(detail_obj);
     let source = `${new_line0}` + code;
@@ -200,6 +192,15 @@ function createMatjArea(f) {
     let name = P.type + index;
     LS[name] = source;
     console.log('codeSave', name)
+
+    // 更新显示
+    detail_obj.size = code.length
+    if(P.type === "local"){
+      P_CHANNEL.updateLocal(detail_obj)
+    }
+    else{
+      P_CHANNEL.updateRemote(detail_obj)
+    }
 
     //更新远程
     if (DATA.accountId && P.type === "remote") {
@@ -216,7 +217,7 @@ function createMatjArea(f) {
 
             if(detail_obj.share){
               // set share 二合一
-              let result = await P_MATJ.setshare(name, source, "" + index, detail_obj.title, detail_obj.auther, ''+detail_obj.time, ''+code.length)
+              let result = await P_MATJ.setshare(name, source, "" + index, detail_obj.title, detail_obj.auther, ''+detail_obj.time, ''+detail_obj.size)
               console.log(result)
             }
             else{
@@ -283,8 +284,9 @@ function createMatjArea(f) {
       title: title ? title[1].trim() : "",
       auther: auther ? auther[1].trim() : "",
       share: share ? +share[1].trim() : "",
-      time: time ? $.getDatetime("dort", time[1].trim()) : "",
+      time: time ? time[1].trim() : "",
       code,
+      size: code.length
     };
   };
 

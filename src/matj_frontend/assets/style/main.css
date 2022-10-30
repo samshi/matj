@@ -49,6 +49,9 @@ button[type="submit"] {
     border-radius: 7px;
     cursor: pointer;
 }
+.channel table{
+    width: 100%;
+}
 .channel div{
     /*flex-grow: 2;*/
     /*border:1px solid;*/
