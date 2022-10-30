@@ -23,7 +23,7 @@ function createOutputArea(f){
 
   P.run_btn = $.C(f, {
     I : 'run',
-    L : 1050,
+    L : P_MATJ.L_ + P_MATJ.W_ - 72,
     T : 10,
     W : 50,
     PD: '2px 10px',

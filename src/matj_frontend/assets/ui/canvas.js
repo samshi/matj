@@ -70,6 +70,9 @@ function createCopyPage(f){
   }
 
   P.principalToAvatar = function(principal_str){
+    if(!principal_str){
+      return ''
+    }
     let accountId = INNER.principalToAccountAddress(principal_str)
     // console.log(principal_str, accountId);
     return P.accountToAvatar(accountId);

@@ -41,9 +41,9 @@ actor Registry {
     map.get(principalname);
   };
 
-  public shared(msg) func share(name : Text, title: Text, auther: Text, time: Text) : async Text {
+  public shared(msg) func share(index : Text, title: Text, auther: Text, time: Text, size: Text) : async Text {
     let principalId = Principal.toText(msg.caller);
-    let key = "_"#name#"%"#title#"%"#auther#"%"#time#"=";
+    let key = "_"#index#"%"#title#"%"#auther#"%"#time#"%"#size#"=";
 
     switch(share_map.get(principalId)){
       case (?shared_str) {
@@ -52,7 +52,7 @@ actor Registry {
         var update = false;
 
         for (x in shared_name_array.vals()) {
-          let k = "_"#name#"%";
+          let k = "_"#index#"%";
           if (extract(x, 0, k.size()) != k and x#"%" != k and x != "") {
             out #= x#"=";
           }
@@ -82,7 +82,13 @@ actor Registry {
     }
   };
 
-  public shared(msg) func unshare(name : Text) : async Text {
+  public shared(msg) func setshare(name : Text, code: Text, index : Text, title: Text, auther: Text, time: Text, size: Text) : async Text {
+    let principalId = Principal.toText(msg.caller);
+    map.put(principalId # name, code);
+    await share(index, title, auther, time, size);
+  };
+
+  public shared(msg) func unshare(index : Text) : async Text {
     let principalId = Principal.toText(msg.caller);
 
     switch(share_map.get(principalId)){
@@ -91,7 +97,7 @@ actor Registry {
         var out = "";
 
         for (x in shared_name_array.vals()) {
-          let k = "_"#name#"%";
+          let k = "_"#index#"%";
           if (extract(x, 0, k.size()) != k and x#"%" != k and x != "") {
             out #= x#"="
           }

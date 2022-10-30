@@ -37,9 +37,9 @@ button[type="submit"] {
 }
 
 .channel {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
+    /*display: flex;*/
+    /*flex-wrap: nowrap;*/
+    /*justify-content: space-between;*/
     width: 388px;
     font-size: 18px;
     color: #000000;

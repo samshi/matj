@@ -1717,15 +1717,22 @@ var now = (Date.now() - (new Date('0000-01-01')))/87600000 //日期序列值表�
     html      : function(a){
       return this.val(a)
     },
-    val       : function(a){
-      if(typeof (a) === nil){
-        if(this.context.nodeName == 'TEXTAREA'){
-          return this.context.value //$.TRIM()
+    val: function (a) {
+      if (typeof a === nil) {
+        if (this.context.nodeName == "TEXTAREA") {
+          return this.context.value
         }
-        return this.context.value || this.context.innerHTML
-      }
-      else{
-        this.context.value = a
+        if (this.TYPE_ === "checkbox") {
+          return this.context.checked
+        }
+        return this.context.value || this.context.innerHTML;
+      } else {
+        if (this.TYPE_ === "checkbox") {
+          this.context.checked = !!a
+        }
+        else{
+          this.context.value = a
+        }
         return this
       }
     },

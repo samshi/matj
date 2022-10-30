@@ -1,5 +1,5 @@
-function login(f){
-  var P = W.P_LOGIN = f
+function login(f) {
+  var P = (W.P_LOGIN = f);
   // $.C(f, {
   //   id: 'login_box',
   //   L : 0,
@@ -14,208 +14,265 @@ function login(f){
   P.login_plug_box = $.c(P, {
     MT: 25,
     ML: 30,
-    id: 'login_plug_box',
-    T : 100,
-    W : 168,
-    H : 100,
+    id: "login_plug_box",
+    T: 100,
+    W: 168,
+    H: 100,
     PD: 8,
     BR: 10,
-    D : 'inline-block',
-    TA: 'center',
-    I : "",
-  }).over(eobj => {
-    eobj.S({
-      BG: '#eee'
-    })
-  }).out(eobj => {
-    eobj.S({
-      BG: ''
-    })
-  }).down(async _ => {
-    var plug_is_connected = await connectPlug()
-    if(plug_is_connected){
-      connectPlug2()
-    }
+    D: "inline-block",
+    TA: "center",
+    I: "",
   })
-
-  P.plug_img = $.c(P.login_plug_box, {
-    src: 'img/plug.svg',
-    H  : 100
-  }, 'img')
-
-  P.login_identity_box = $.c(P, P.login_plug_box.CSS_).S({
-    ML: 0,
-    id: 'login_identity_box',
-  }).over(eobj => {
-    eobj.S({
-      BG: '#eee'
+    .over((eobj) => {
+      eobj.S({
+        BG: "#eee",
+      });
     })
-  }).out(eobj => {
-    eobj.S({
-      BG: ''
+    .out((eobj) => {
+      eobj.S({
+        BG: "",
+      });
     })
-  }).down(connectIC)
+    .down(async (_) => {
+      var plug_is_connected = await connectPlug();
+      if (plug_is_connected) {
+        connectPlug2();
+      }
+    });
 
-  P.identity_img = $.c(P.login_identity_box, {
-    src: 'img/dfinity.png',
-    H  : 134,
-    MT : -15,
-    ML : -5
-  }, 'img')
+  P.plug_img = $.c(
+    P.login_plug_box,
+    {
+      src: "img/plug.svg",
+      H: 100,
+    },
+    "img"
+  );
 
-  P.login_plug_img = $.C(P, {
-    // F:16,
-    L  : 50,
-    T  : 20,
-    H  : 30,
-    src: 'img/plug.svg'
-  }, 'img').H()
+  P.login_identity_box = $.c(P, P.login_plug_box.CSS_)
+    .S({
+      ML: 0,
+      id: "login_identity_box",
+    })
+    .over((eobj) => {
+      eobj.S({
+        BG: "#eee",
+      });
+    })
+    .out((eobj) => {
+      eobj.S({
+        BG: "",
+      });
+    })
+    .down(connectIC);
 
-  P.login_identity_img = $.C(P, {
-    // F:16,
-    L  : 50,
-    T  : 27,
-    H  : 20,
-    src: 'img/dfinity.svg'
-  }, 'img').H()
+  P.identity_img = $.c(
+    P.login_identity_box,
+    {
+      src: "img/dfinity.png",
+      H: 134,
+      MT: -15,
+      ML: -5,
+    },
+    "img"
+  );
+
+  P.login_plug_img = $.C(
+    P,
+    {
+      // F:16,
+      L: 50,
+      T: 20,
+      H: 30,
+      src: "img/plug.svg",
+    },
+    "img"
+  ).H();
+
+  P.login_identity_img = $.C(
+    P,
+    {
+      // F:16,
+      L: 50,
+      T: 27,
+      H: 20,
+      src: "img/dfinity.svg",
+    },
+    "img"
+  ).H();
 
   P.account_balance = $.C(P, {
     F: 20,
     L: 120,
     T: P.login_plug_img.T_,
-  }).H()
+  }).H();
 
-  P.logout_btn = $.C(P, {
-    L : 330,
-    T : P.account_balance.T_ + 3,
-    W : 70,
-    PD: '5px 10px',
-    I : 'Logout'
-  }, 'button').H().down(_ => {
-    if(DATA.login == 'plug'){
-      window.ic.plug.disconnect()
-    }
-    DATA = {}
-    // P_CHANNEL.share.H()
-    var P = P_LOGIN
+  P.logout_btn = $.C(
+    P,
+    {
+      L: 330,
+      T: P.account_balance.T_ + 3,
+      W: 70,
+      PD: "5px 10px",
+      I: "Logout",
+    },
+    "button"
+  )
+    .H()
+    .down((_) => {
+      if (DATA.login == "plug") {
+        window.ic.plug.disconnect();
+      }
+      DATA = {};
+      // P_CHANNEL.share.H()
+      var P = P_LOGIN;
 
-    P.login_plug_img.H()
-    P.login_identity_img.H()
-    P.account_balance.H()
-    P.id_avatar.H()
-    P.account.H()
-    P.logout_btn.H()
-    P.account_copy.H()
-    P.buymecafe.H()
-    P.avatar.H()
+      P.login_plug_img.H();
+      P.login_identity_img.H();
+      P.account_balance.H();
+      P.id_avatar.H();
+      P.account.H();
+      P.logout_btn.H();
+      P.account_copy.H();
+      P.buymecafe.H();
+      P.avatar.H();
 
-    P.login_plug_box.V()
-    P.login_identity_box.V()
+      P.login_plug_box.V();
+      P.login_identity_box.V();
 
-    for(let channel_index in P_MATJ.timers){
-      delete P_MATJ.timers[channel_index]
-      P_CHANNEL.setLight(channel_index, '#888')
-      P_CHANNEL.setMsg(channel_index, '')
-    }
-  })
+      for (let index in P_MATJ.timers) {
+        delete P_MATJ.timers[index];
+        // P_CHANNEL.setLight(index, "#888");
+        // P_CHANNEL.setMsg(index, "");
+      }
+    });
 
-  P.id_avatar = $.C(P, {
-    L : 45,
-    T : P.account_balance.T_ + 40,
-    TS : 300,
-    CN: 'avatar'
-  }, 'img').H().over(eobj => {
-    eobj.S({
-      L: 45 - 26,
-      T: P.account_balance.T_ + 40 - 26,
-      W: 82,
-      H: 82,
-      Z: 1
+  P.id_avatar = $.C(
+    P,
+    {
+      L: 45,
+      T: P.account_balance.T_ + 40,
+      TS: 300,
+      CN: "avatar",
+    },
+    "img"
+  )
+    .H()
+    .over((eobj) => {
+      eobj.S({
+        L: 45 - 26,
+        T: P.account_balance.T_ + 40 - 26,
+        W: 82,
+        H: 82,
+        Z: 1,
+      });
     })
-  }).out(eobj => {
-    eobj.S({
-      L : 45,
-      T : P.account_balance.T_ + 40,
-      W: 30,
-      H: 30,
-      Z: 0
-    })
-  })
+    .out((eobj) => {
+      eobj.S({
+        L: 45,
+        T: P.account_balance.T_ + 40,
+        W: 30,
+        H: 30,
+        Z: 0,
+      });
+    });
 
   P.account = $.C(P, {
     F: 20,
     L: 120,
-    T: P.id_avatar.T_ + 0
-  }).H()
+    T: P.id_avatar.T_ + 0,
+  }).H();
 
-  P.account_copy = $.C(P, {
-    L : P.logout_btn.L_,
-    T : P.id_avatar.T_,
-    W : 70,
-    PD: '5px 10px',
-    I : 'Copy'
-  }, 'button').H().down(eobj => {
-    P_COPY.copyContent(DATA.accountId)
-    eobj.I('Copied')
+  P.account_copy = $.C(
+    P,
+    {
+      L: P.logout_btn.L_,
+      T: P.id_avatar.T_,
+      W: 70,
+      PD: "5px 10px",
+      I: "Copy",
+    },
+    "button"
+  )
+    .H()
+    .down((eobj) => {
+      P_COPY.copyContent(DATA.accountId);
+      eobj.I("Copied");
 
-    setTimeout(_ => {
-      eobj.I('Copy')
-    }, 3000)
-  })
+      setTimeout((_) => {
+        eobj.I("Copy");
+      }, 3000);
+    });
 
-  P.avatar = $.C(P, {
-    src: 'img/samshi.jpeg',
-    L  : 45,
-    T  : P.id_avatar.T_ + 40,
-    W  : 30,
-    H  : 30,
-    BR : 20,
-    TS : 300,
-    BD : '1px solid #444'
-  }, 'img').H().over(eobj => {
-    eobj.S({
-      L: 45 - 26,
-      T: P.id_avatar.T_ + 40 - 26,
-      W: 82,
-      H: 82,
-      Z: 1
-    })
-  }).out(eobj => {
-    eobj.S({
+  P.avatar = $.C(
+    P,
+    {
+      src: "img/samshi.jpeg",
       L: 45,
-      T: P.id_avatar.T_ + 40,
+      T: P.id_avatar.T_ + 45,
       W: 30,
       H: 30,
-      Z: 0
+      BR: 20,
+      TS: 300,
+      BD: "1px solid #444",
+    },
+    "img"
+  )
+    .H()
+    .over((eobj) => {
+      eobj.S({
+        L: 45 - 26,
+        T: P.id_avatar.T_ + 40 - 26,
+        W: 82,
+        H: 82,
+        Z: 1,
+      });
     })
-  })
+    .out((eobj) => {
+      eobj.S({
+        L: 45,
+        T: P.id_avatar.T_ + 40,
+        W: 30,
+        H: 30,
+        Z: 0,
+      });
+    });
 
   P.buymecafe = $.C(P, {
-    I : '<img width=24 src="img/cafe.svg" style="display:inline;vertical-align:middle;margin-right:5px;"/> support me on MatJ',
-    L : 120,
-    W : 250,
-    H : 30,
+    I: '<img width=24 src="img/cafe.svg" style="display:inline;vertical-align:middle;margin-right:5px;"/> support me on MatJ',
+    L: 120,
+    W: 250,
+    H: 30,
     BR: 20,
-    F : 18,
-    BD: '1px solid',
-    TA: 'center',
-    T : P.avatar.T_
-  }).H().down(async eobj => {
-    let amount = +prompt('you will send author some ICP, change it less or more', 0.1)
-    if(typeof (amount) == 'number' && amount > 0 && amount < DATA.icp_balance){
-      let result = await payOwner('359646224d9cd82d26f73cc9dcddbaa041f13ee5802560b65f58db0ed02b8cf2', amount)
-      if(result){
-        getBalance()
-        alert('thanks a lot!')
-      }
-      else{
-        alert('transfer failed')
-      }
-    }
-    else{
-      alert('the amount is unavailable')
-    }
+    F: 18,
+    BD: "1px solid",
+    TA: "center",
+    T: P.avatar.T_,
   })
-
+    .H()
+    .down(async (eobj) => {
+      let amount = +prompt(
+        "you will send author some ICP, change it less or more",
+        0.1
+      );
+      if (
+        typeof amount == "number" &&
+        amount > 0 &&
+        amount < DATA.icp_balance
+      ) {
+        let result = await payOwner(
+          "359646224d9cd82d26f73cc9dcddbaa041f13ee5802560b65f58db0ed02b8cf2",
+          amount
+        );
+        if (result) {
+          getBalance();
+          alert("thanks a lot!");
+        } else {
+          alert("transfer failed");
+        }
+      } else {
+        alert("the amount is unavailable");
+      }
+    });
 }
-

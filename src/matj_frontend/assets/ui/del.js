@@ -12,7 +12,7 @@
 //             console.log(m)
 //             if(m && m[1].trim()){
 //               LS['channel_name_' + i] = m[1].trim()
-//               let channel             = P_CHANNEL.channels[i]
+//               let channel             = P_CHANNEL.locals[i]
 //               channel.I(LS['channel_name_' + i])
 //             }
 //           }
@@ -22,37 +22,37 @@
 //   }
 // })
 
-onhashchange()
+onhashchange();
 
-function encodeShare(s){
-  let out = ''
-  for(let i = 0, l = s.length; i < l; i++){
-    let code = s.charCodeAt(i)
+function encodeShare(s) {
+  let out = "";
+  for (let i = 0, l = s.length; i < l; i++) {
+    let code = s.charCodeAt(i);
     //40-122
-    code += i - 40
-    code     = code % 83 + 40
-    out += String.fromCharCode(code)
+    code += i - 40;
+    code = (code % 83) + 40;
+    out += String.fromCharCode(code);
   }
-  return encodeURI(out)
+  return encodeURI(out);
 }
 
-function decodeShare(s){
-  s       = decodeURI(s)
-  let out = ''
-  for(let i = 0, l = s.length; i < l; i++){
-    let code = s.charCodeAt(i)
+function decodeShare(s) {
+  s = decodeURI(s);
+  let out = "";
+  for (let i = 0, l = s.length; i < l; i++) {
+    let code = s.charCodeAt(i);
     //40-122
-    code += -40 - i
-    code     = (code + 83) % 83 + 40
-    out += String.fromCharCode(code)
+    code += -40 - i;
+    code = ((code + 83) % 83) + 40;
+    out += String.fromCharCode(code);
   }
-  return out
+  return out;
 }
 
-window.onhashchange = async function(){
-  if(!window.INNER){
-    setTimeout(onhashchange, 200)
-    return
+window.onhashchange = async function () {
+  if (!window.INNER) {
+    setTimeout(onhashchange, 200);
+    return;
   }
 
   // let hash          = document.location.hash.slice(1);
@@ -60,7 +60,7 @@ window.onhashchange = async function(){
   // let i             = P_CHANNEL.LEN
   // LS['channel' + i] = await INNER.matj_default.principalget(share_url)
   //
-  // if(LS.focus_channel == i){
-  //   P_CHANNEL.selectChannel(i)
+  // if(LS.focus_local == i){
+  //   P_CHANNEL.selectLocal(i)
   // }
-}
+};
