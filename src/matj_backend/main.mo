@@ -65,27 +65,21 @@ actor Registry {
         if(update == false){
           out #= key;
           share_map.put(principalId, out);
-          "add"
+          "add "#out
         }
         else if(shared_str == out){
-          "same"
+          "same "#out
         }
         else{
           share_map.put(principalId, out);
-          "update"
+          "update "#out
         }
       };
       case null {
         share_map.put(principalId, key);
-        "new"
+        "new "#key
       };
     }
-  };
-
-  public shared(msg) func setshare(name : Text, code: Text, index : Text, title: Text, auther: Text, time: Text, size: Text) : async Text {
-    let principalId = Principal.toText(msg.caller);
-    map.put(principalId # name, code);
-    await share(index, title, auther, time, size);
   };
 
   public shared(msg) func unshare(index : Text) : async Text {
@@ -104,19 +98,19 @@ actor Registry {
         };
 
         if(shared_str == out){
-          "not exist"
+          "not_exist "#out
         }
         else if("" == out){
           share_map.delete(principalId);
-          "remove share"
+          "remove_share "#out
         }
         else{
           share_map.put(principalId, out);
-          "removed"
+          "removed "#out
         }
       };
       case null {
-        "no share"
+        "no_share"
       };
     }
   };

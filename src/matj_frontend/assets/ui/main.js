@@ -39,6 +39,7 @@ $(function () {
   });
 
   createCopyPage(main);
+  createAvatarPage(main);
   createJsArea(main);
   createMatjArea(main);
   createChannel(main);

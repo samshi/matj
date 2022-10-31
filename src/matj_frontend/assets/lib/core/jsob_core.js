@@ -1107,6 +1107,10 @@ var now = (Date.now() - (new Date('0000-01-01')))/87600000 //日期序列值表�
 
     //datetime
     getDatetime: function(format, t = $.MS()){
+      if(+t == 0){
+        return ''
+      }
+
       let d = new Date(+t)
       switch(format){
         case 'y':
@@ -1116,8 +1120,8 @@ var now = (Date.now() - (new Date('0000-01-01')))/87600000 //日期序列值表�
         case 'd':
           return d.getDate()
         case 'date':
-          return $.getDatetime('y', t) + '-'
-            + ('0'+$.getDatetime('m', t)).slice(-2) + '-'
+          return $.getDatetime('y', t)// + '-'
+            + ('0'+$.getDatetime('m', t)).slice(-2)// + '-'
             + ('0'+$.getDatetime('d', t)).slice(-2)
         case 'dort':
           let date = $.getDatetime('date', t)

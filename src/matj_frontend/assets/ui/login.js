@@ -1,28 +1,28 @@
-function login(f) {
+function login(f){
   var P = (W.P_LOGIN = f);
-  // $.C(f, {
-  //   id: 'login_box',
-  //   L : 0,
-  //   T : 0,
-  //   W : 388,
-  //   // H : 178,
-  //   BG: '#fff',
-  //   PD: 20,
-  //   BR: 5,
-  // })
+
+  P.connect_wallet = $.c(P, {
+    // MT: 25,
+    ML: 30,
+    id: "connect_wallet",
+    W : 120,
+    H : 50,
+    D : "inline-block",
+    I : "Connect Wallet:",
+    VA: 'bottom',
+    F : 16
+  })
 
   P.login_plug_box = $.c(P, {
-    MT: 25,
-    ML: 30,
+    // MT: 25,
+    ML: 10,
     id: "login_plug_box",
-    T: 100,
-    W: 168,
-    H: 100,
+    W : 100,
+    H : 50,
     PD: 8,
     BR: 10,
-    D: "inline-block",
+    D : "inline-block",
     TA: "center",
-    I: "",
   })
     .over((eobj) => {
       eobj.S({
@@ -36,19 +36,15 @@ function login(f) {
     })
     .down(async (_) => {
       var plug_is_connected = await connectPlug();
-      if (plug_is_connected) {
+      if(plug_is_connected){
         connectPlug2();
       }
     });
 
-  P.plug_img = $.c(
-    P.login_plug_box,
-    {
-      src: "img/plug.svg",
-      H: 100,
-    },
-    "img"
-  );
+  P.plug_img = $.c(P.login_plug_box, {
+    src: "img/plug.svg",
+    H  : 50,
+  }, "img");
 
   P.login_identity_box = $.c(P, P.login_plug_box.CSS_)
     .S({
@@ -67,64 +63,107 @@ function login(f) {
     })
     .down(connectIC);
 
-  P.identity_img = $.c(
-    P.login_identity_box,
-    {
-      src: "img/dfinity.png",
-      H: 134,
-      MT: -15,
-      ML: -5,
-    },
-    "img"
-  );
+  P.identity_img = $.c(P.login_identity_box, {
+    src: "img/dfinity.png",
+    H  : 70,
+    MT : -7,
+  }, "img");
 
-  P.login_plug_img = $.C(
-    P,
-    {
-      // F:16,
-      L: 50,
-      T: 20,
-      H: 30,
-      src: "img/plug.svg",
-    },
-    "img"
-  ).H();
+  // ========================================
+  P.login_plug_img = $.C(P, {
+    // F:16,
+    L  : 30,
+    T  : 20,
+    H  : 30,
+    src: "img/plug.svg",
+  }, "img").H();
 
-  P.login_identity_img = $.C(
-    P,
-    {
-      // F:16,
-      L: 50,
-      T: 27,
-      H: 20,
-      src: "img/dfinity.svg",
-    },
-    "img"
-  ).H();
+  P.login_identity_img = $.C(P, {
+    // F:16,
+    L  : 27,
+    T  : 26,
+    H  : 16,
+    src: "img/dfinity.svg",
+  }, "img").H();
 
   P.account_balance = $.C(P, {
-    F: 20,
-    L: 120,
-    T: P.login_plug_img.T_,
+    F: 13,
+    L: 67,
+    T: P.login_plug_img.T_ + 5,
   }).H();
 
-  P.logout_btn = $.C(
-    P,
-    {
-      L: 330,
-      T: P.account_balance.T_ + 3,
-      W: 70,
-      PD: "5px 10px",
-      I: "Logout",
-    },
-    "button"
-  )
+  P.id_avatar = $.C(P, {
+    L : 165,
+    T : P.login_plug_img.T_ + 2,
+    TS: 300,
+    CN: "avatar",
+    W : 24,
+    H : 24,
+  }, "img")
+    .H()
+    .over((eobj) => {
+      eobj.S({
+        L: 165 - 29,
+        T: P.login_plug_img.T_ - 20,
+        W: 82,
+        H: 82,
+        Z: 1,
+      });
+    })
+    .out((eobj) => {
+      eobj.S({
+        L: 165,
+        T: P.login_plug_img.T_ + 2,
+        W: 24,
+        H: 24,
+        Z: 0,
+      });
+    });
+
+  P.account = $.C(P, {
+    F    : 13,
+    L    : 200,
+    T    : P.account_balance.T_,
+    title: 'Copy'
+  }).H().down(eobj => {
+    P_COPY.copyContent(DATA.accountId);
+    eobj.S({title: "Copied"});
+
+    setTimeout((_) => {
+      eobj.S({title: "Copy"});
+    }, 5000);
+  });
+
+  P.copy = $.C(P, {
+    L  : 291,
+    T  : P.account_balance.T_ + 3,
+    W  : 12,
+    src: 'img/copy.webp'
+  }, 'img').down(eobj => {
+    P_COPY.copyContent(DATA.accountId);
+    P_COPY.copy_msg.V().S({
+      L: eobj.X + 10,
+      T: eobj.Y - 10,
+    })
+
+    setTimeout((_) => {
+      P_COPY.copy_msg.H()
+    }, 1000);
+  }).H()
+
+  P.logout_btn = $.C(P, {
+    L : 330,
+    T : P.account_balance.T_ - 5,
+    W : 70,
+    PD: "5px 10px",
+    I : "Logout",
+  }, "button")
     .H()
     .down((_) => {
-      if (DATA.login == "plug") {
+      if(DATA.login == "plug"){
         window.ic.plug.disconnect();
       }
-      DATA = {};
+      DATA  = {};
       // P_CHANNEL.share.H()
       var P = P_LOGIN;
 
@@ -133,36 +172,44 @@ function login(f) {
       P.account_balance.H();
       P.id_avatar.H();
       P.account.H();
+      P.copy.H();
       P.logout_btn.H();
-      P.account_copy.H();
       P.buymecafe.H();
       P.avatar.H();
 
+      P.connect_wallet.V();
       P.login_plug_box.V();
       P.login_identity_box.V();
 
-      for (let index in P_MATJ.timers) {
+      for(let index in P_MATJ.timers){
         delete P_MATJ.timers[index];
+        // 为什么要中断，因为已经disconnect了
+
         // P_CHANNEL.setLight(index, "#888");
         // P_CHANNEL.setMsg(index, "");
       }
+
+      for(let i in P_CHANNEL.remotes){
+        P_CHANNEL.remotes[i].H()
+      }
     });
 
-  P.id_avatar = $.C(
-    P,
-    {
-      L: 45,
-      T: P.account_balance.T_ + 40,
-      TS: 300,
-      CN: "avatar",
-    },
-    "img"
-  )
+  // ====================================
+  P.avatar = $.C(main, {
+    src: "img/samshi.jpeg",
+    L  : 45,
+    T  : 'calc(100% - 70px)',
+    W  : 30,
+    H  : 30,
+    BR : 20,
+    TS : 300,
+    BD : "1px solid #444",
+  }, "img")
     .H()
     .over((eobj) => {
       eobj.S({
         L: 45 - 26,
-        T: P.account_balance.T_ + 40 - 26,
+        T: 'calc(100% - 96px)',
         W: 82,
         H: 82,
         Z: 1,
@@ -171,107 +218,39 @@ function login(f) {
     .out((eobj) => {
       eobj.S({
         L: 45,
-        T: P.account_balance.T_ + 40,
+        T: 'calc(100% - 70px)',
         W: 30,
         H: 30,
         Z: 0,
       });
     });
 
-  P.account = $.C(P, {
-    F: 20,
-    L: 120,
-    T: P.id_avatar.T_ + 0,
-  }).H();
-
-  P.account_copy = $.C(
-    P,
-    {
-      L: P.logout_btn.L_,
-      T: P.id_avatar.T_,
-      W: 70,
-      PD: "5px 10px",
-      I: "Copy",
-    },
-    "button"
-  )
-    .H()
-    .down((eobj) => {
-      P_COPY.copyContent(DATA.accountId);
-      eobj.I("Copied");
-
-      setTimeout((_) => {
-        eobj.I("Copy");
-      }, 3000);
-    });
-
-  P.avatar = $.C(
-    P,
-    {
-      src: "img/samshi.jpeg",
-      L: 45,
-      T: P.id_avatar.T_ + 45,
-      W: 30,
-      H: 30,
-      BR: 20,
-      TS: 300,
-      BD: "1px solid #444",
-    },
-    "img"
-  )
-    .H()
-    .over((eobj) => {
-      eobj.S({
-        L: 45 - 26,
-        T: P.id_avatar.T_ + 40 - 26,
-        W: 82,
-        H: 82,
-        Z: 1,
-      });
-    })
-    .out((eobj) => {
-      eobj.S({
-        L: 45,
-        T: P.id_avatar.T_ + 40,
-        W: 30,
-        H: 30,
-        Z: 0,
-      });
-    });
-
-  P.buymecafe = $.C(P, {
-    I: '<img width=24 src="img/cafe.svg" style="display:inline;vertical-align:middle;margin-right:5px;"/> support me on MatJ',
-    L: 120,
-    W: 250,
-    H: 30,
-    BR: 20,
-    F: 18,
-    BD: "1px solid",
-    TA: "center",
-    T: P.avatar.T_,
+  P.buymecafe = $.C(main, {
+    I             : '<img width=24 src="img/cafe.svg" style="margin:0 0 0 10px;"/> <span style="line-height:30px;padding-right:10px;">support me on MatJ</span>',
+    L             : 100,
+    T             : P.avatar.T_,
+    W             : 277,
+    H             : 30,
+    BR            : 20,
+    F             : 14,
+    BD            : "1px solid #666", // TA: "center",
+    D             : 'flex',
+    justifyContent: 'space-evenly',
   })
     .H()
     .down(async (eobj) => {
-      let amount = +prompt(
-        "you will send author some ICP, change it less or more",
-        0.1
-      );
-      if (
-        typeof amount == "number" &&
-        amount > 0 &&
-        amount < DATA.icp_balance
-      ) {
-        let result = await payOwner(
-          "359646224d9cd82d26f73cc9dcddbaa041f13ee5802560b65f58db0ed02b8cf2",
-          amount
-        );
-        if (result) {
+      let amount = +prompt("you will send author (accountId: 359646224d9cd82d26f73cc9dcddbaa041f13ee5802560b65f58db0ed02b8cf2) some ICP, the fixed gas fee is 0.0001 ICP", 0.1);
+      if(typeof amount == "number" && amount > 0 && amount < DATA.icp_balance){
+        let result = await payOwner("359646224d9cd82d26f73cc9dcddbaa041f13ee5802560b65f58db0ed02b8cf2", amount);
+        if(result){
           getBalance();
           alert("thanks a lot!");
-        } else {
+        }
+        else{
           alert("transfer failed");
         }
-      } else {
+      }
+      else{
         alert("the amount is unavailable");
       }
     });

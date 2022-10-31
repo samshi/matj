@@ -64,3 +64,175 @@ window.onhashchange = async function () {
   //   P_CHANNEL.selectLocal(i)
   // }
 };
+
+//=================================================
+P.input_component = $.C(P.remote, {
+  L : 20,
+  W : 400,
+  H : 40,
+  BG: "#fff",
+  Z : 1,
+}).H();
+
+P.input  = $.C(P.input_component, {
+  W : P.locals[1].W_ - 8,
+  H : 34,
+  F : 20,
+  C : "#000000",
+  TA: "center",
+}, "input").keydown((eobj) => {
+  if(eobj.KEYCODE == 13){
+    P.ok.CLICK(P.ok);
+  }
+  else if(eobj.KEYCODE == 27){
+    P.cancel.CLICK(P.cancel);
+  }
+}, 1);
+P.ok     = $.C(P.input_component, {
+  L    : P.locals[1].W_ + 10,
+  W    : 45,
+  H    : 38,
+  F    : 20,
+  I    : "ok",
+  title: i,
+}, "button").click((eobj) => {
+  let index                   = P.focus_local;
+  let new_title               = P.input.val();
+  LS["channel_name_" + index] = new_title;
+  P.locals[index].I(new_title);
+
+  let source            = P_MATJ.editor.getValue();
+  let { title, auther } = P_MATJ.getDetail(source);
+  console.log(title, auther);
+
+  if(!title && !auther){
+    P_MATJ.addTitleAuther(new_title, LS.auther || "");
+  }
+  else{
+    P_MATJ.setTitleAuther(new_title, auther || LS.auther || "");
+  }
+
+  eobj.FATHER.H();
+});
+P.cancel = $.C(P.input_component, {
+  L: P.ok.L_ + P.ok.W_ + 10,
+  W: 75,
+  H: 38,
+  F: 20,
+  I: "cancle",
+}, "button").click((eobj) => {
+  eobj.FATHER.H();
+});
+
+P.more = $.C(P.remote, { I: "..." })
+  .down((eobj) => {
+    P.moreButtons.toggle().S({
+      L: eobj.L_ - 60,
+      T: eobj.T_ + 40,
+    });
+  })
+  .H();
+
+P.moreButtons = $.C(P.remote, {
+  // L: 20,
+  // T: P.T_ + P.locals[P.LEN].T_ + P.locals[P.LEN].H_ + 30,
+  PD: 4,
+  BG: "#eee",
+}).H();
+
+P.rename = $.c(P.moreButtons, {
+  W    : 80,
+  H    : 40,
+  F    : 20,
+  C    : "#000000",
+  TA   : "center",
+  I    : "rename",
+  title: i,
+}, "button").click((eobj) => {
+  let P     = P_CHANNEL;
+  let index = P.focus_local;
+  P.input_component.toggle().S({
+    T: P.locals[index].T_,
+  });
+  P.input.focusMe().val(P.locals[index].I_);
+  P.moreButtons.H();
+});
+
+//=================================================
+
+P.changeButtonText = () => {
+  P.share.I(P.checkShare(P.focus_local) ? "unshare" : "share");
+};
+
+P.setLight = (n, c) => {
+  P.locals[n].light.S({
+    BG: c,
+  });
+};
+
+P.checkLight = (n) => {
+  let P    = P_CHANNEL;
+  let eobj = P.locals[n];
+  let c    = LS["local" + eobj.index] ? "#888" : "";
+  P.setLight(n, c);
+};
+
+P.setMsg = (n, s) => {
+  let msg_eobj = P.locals[n].msg;
+  msg_eobj.I(s);
+  if(s == "pedding"){
+    msg_eobj.S({
+      CS: "pointer",
+    });
+  }
+  else{
+    msg_eobj.S({
+      CS: "",
+    });
+  }
+};
+
+P.max = () => {
+  P_CHANNEL.S({
+    H: main.H_ - P_CHANNEL.T_ - P_CHANNEL.PD_ * 2,
+  });
+};
+P.min = () => {
+  P_CHANNEL.S({
+    H: 38,
+  });
+};
+
+P.showTitleAuther = (source) => {
+  let index             = P_CHANNEL.focus_local;
+  let { title, auther } = P_MATJ.getDetail(source);
+  console.log(title, auther);
+  title = title || `untitled ${index}`;
+  if(auther != ""){
+    LS.auther = auther;
+  }
+  else if(LS.auther){
+    auther = ""; //LS.auther
+  }
+  P_CHANNEL.locals[index].I(title + " - " + auther);
+  // P_CHANNEL.showAuther(auther)
+
+  P_MATJ.setTitleAuther(title, auther);
+};
+
+P.showAuther = (auther) => {
+  P.auther.I(`auther: ${auther || LS.auther || "anonymous"}`);
+};
+
+//一开始就显示所有频道
+P.max();
+
+
+
+
+public shared(msg) func setshare(name : Text, code: Text, index : Text, title: Text, auther: Text, time: Text, size: Text) : async Text {
+  let principalId = Principal.toText(msg.caller);
+  map.put(principalId # name, code);
+
+  await share(index, title, auther, time, size)
+};

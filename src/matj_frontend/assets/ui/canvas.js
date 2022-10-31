@@ -1,4 +1,4 @@
-function createCopyPage(f){
+function createAvatarPage(f){
   var P = window.P_CANVAS = $.C(f, {
     L: -1000,
     W: 202,

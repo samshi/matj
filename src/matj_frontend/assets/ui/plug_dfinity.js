@@ -69,6 +69,7 @@ async function getBalance(){
   P_CHANNEL.afterLogin()
 
   var P = P_LOGIN
+  P.connect_wallet.H();
   P.login_plug_box.H()
   P.login_identity_box.H()
   if(DATA.login == 'plug'){
@@ -80,14 +81,14 @@ async function getBalance(){
   P.account_balance.V().I('get balance ...')
   P.id_avatar.V().S({src: P_CANVAS.accountToAvatar(DATA.accountId)})
   P.account.V().I(shortPrincipal(DATA.accountId))
+  P.copy.V()
   P.logout_btn.V()
-  P.account_copy.V()
 
   if(DATA.login == 'plug'){
     DATA.plug_balance = await myAwait('plug.requestBalance', window.ic.plug.requestBalance, undefined, window.ic.plug)
     DATA.plug_balance?.forEach(item => {
       if(item.symbol == 'ICP'){
-        P.account_balance.I(item.amount + ' ICP')
+        P.account_balance.I(Math.round(item.amount*10000)/10000 + ' ICP')
         DATA.icp_balance = item.amount
       }
     })

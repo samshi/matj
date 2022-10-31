@@ -47,19 +47,31 @@ function createMatjArea(f) {
     });
   });
 
-  P.show_readonly = $.C(f, {
-    L: 637,
-    T: 25,
-    F: 14,
-  });
+  P.copy_content = $.C(f, {
+    L: 630,
+    T: 20,
+    W: 24,
+    src: 'img/document-copy.svg',
+    title: 'copy file'
+  }, 'img').down(eobj=>{
+    P_COPY.copyContent(P.editor.getValue());
+    P_COPY.copy_msg.V().S({
+      L: eobj.X+15,
+      T: eobj.Y-10
+    })
+
+    setTimeout((_) => {
+      P_COPY.copy_msg.H()
+    }, 1000);
+  })
 
   P.input_auther = $.C(
     f,
     {
-      L: 637,
+      L: 677,
       T: 10,
-      W: 200,
-      F: 18,
+      W: 110,
+      F: 16,
       PD: 3,
       placeholder: "input auther name",
     },
@@ -67,10 +79,10 @@ function createMatjArea(f) {
   );
 
   P.input_title = $.C(f, {
-      L: 860,
+      L: 810,
       T: 10,
       W: 200,
-      F: 18,
+      F: 16,
       PD: 3,
       placeholder: "give file a title",
     },
@@ -90,19 +102,13 @@ function createMatjArea(f) {
     P_MATJ.willSave()
   });
 
-  P.input_share = $.C(f, {
-      L: 1080,
-      T: 10,
-      F: 18,
-      type: "checkbox",
-    },
-    "input"
-  )
-
   P.show_readonly = $.C(f, {
-    L: 637,
+    L: 760,
     T: 25,
     F: 14,
+    PD: '0 5px',
+    I: 'read only, any changes will be ignored!',
+    BG:'#ff8'
   });
 
   P.textarea = $.C(
@@ -181,16 +187,23 @@ function createMatjArea(f) {
 
     if (P.type === "remote") {
       detail_obj.auther= P.input_auther.val()
-      detail_obj.share = +P.input_share.val();
+      // detail_obj.share = +P.input_share.val();
     }
 
     //更新本地
     let new_line0 = P.detailToStr(detail_obj);
     let source = `${new_line0}` + code;
 
-    let index = P.type === "local" ? P_CHANNEL.focus_local : P_CHANNEL.focus_remote;
+    if(P.type===local){
+      index = P_CHANNEL.focus_local
+      LS['local'+index] = source;
+    }
+    else{
+      index = P_CHANNEL.focus_remote
+      LS[P_CHANNEL.getRemoteName(index)] = source;
+    }
     let name = P.type + index;
-    LS[name] = source;
+
     console.log('codeSave', name)
 
     // 更新显示
@@ -213,16 +226,16 @@ function createMatjArea(f) {
           return async function () {
             // P_CHANNEL.setLight(index, 'green')
             // P_CHANNEL.setMsg(index, 'uploading...')
+            P_MATJ.timers[index] = 0
             P_CHANNEL.freeze = true;
 
-            if(detail_obj.share){
+            let size = await INNER.matj.set(name, source);
+            console.log(source.length, size);
+
+            if(P_CHANNEL.checkShare(index)){
               // set share 二合一
-              let result = await P_MATJ.setshare(name, source, "" + index, detail_obj.title, detail_obj.auther, ''+detail_obj.time, ''+detail_obj.size)
+              let result = await INNER.matj.share("" + index, detail_obj.title, detail_obj.auther, ''+detail_obj.time, ''+detail_obj.size)
               console.log(result)
-            }
-            else{
-              let size = await INNER.matj.set(name, source);
-              console.log(source.length, size);
             }
             // P_CHANNEL.setLight(index, '#888')
             // P_CHANNEL.setMsg(index, 'saved')
@@ -247,43 +260,29 @@ function createMatjArea(f) {
     return s;
   };
 
-  P.addTitleAuther = (title, auther) => {
-    let source = P_MATJ.editor.getValue();
-    source =
-      `% title = ${title} % auther = ${auther} % time = ${$.MS()}\n` + source;
-    P_MATJ.editor.setValue(source);
-  };
-
-  P.setTitleAuther = (title, auther) => {
-    let source = P.editor.getValue();
-    let info = P.getDetail(source);
-    if (info.title != title || info.auther != auther) {
-      let line0_pos = source.indexOf("\n");
-      let new_line0 = `% title = ${title} % auther = ${auther} % time = ${$.MS()}\n`;
-      source = `${new_line0}\n` + source.slice(line0_pos);
-      P_MATJ.editor.setValue(source);
-    }
-  };
-
   P.getDetail = (source = "") => {
     let first_line_point = source.indexOf("\n");
     let line0 = source.slice(0, first_line_point).trim();
     if (!/^(\%\s*\w+\s*=[^%]*\s*)+$/.test(line0)) {
       return {
+        title:'',
+        auther:'',
+        time:'',
         code: source,
+        size: source.length
       };
     }
 
     let title = line0.match(/\%\s*title\s*\=([^%]+)/);
     let auther = line0.match(/\%\s*auther\s*\=([^%]+)/);
     let time = line0.match(/\%\s*time\s*\=([^%]+)/);
-    let share = line0.match(/\%\s*share\s*\=([^%]+)/);
+    // let share = line0.match(/\%\s*share\s*\=([^%]+)/);
     let code = source.slice(first_line_point + 1);
 
     return {
       title: title ? title[1].trim() : "",
       auther: auther ? auther[1].trim() : "",
-      share: share ? +share[1].trim() : "",
+      // share: share ? +share[1].trim() : "",
       time: time ? time[1].trim() : "",
       code,
       size: code.length
@@ -321,4 +320,24 @@ function createMatjArea(f) {
       "script"
     ).I(js_code);
   };
+
+
+  P.addTitleAuther = (title, auther) => {
+    let source = P_MATJ.editor.getValue();
+    source =
+      `% title = ${title} % auther = ${auther} % time = ${$.MS()}\n` + source;
+    P_MATJ.editor.setValue(source);
+  };
+
+  P.setTitleAuther = (title, auther) => {
+    let source = P.editor.getValue();
+    let info = P.getDetail(source);
+    if (info.title != title || info.auther != auther) {
+      let line0_pos = source.indexOf("\n");
+      let new_line0 = `% title = ${title} % auther = ${auther} % time = ${$.MS()}\n`;
+      source = `${new_line0}\n` + source.slice(line0_pos);
+      P_MATJ.editor.setValue(source);
+    }
+  };
+
 }

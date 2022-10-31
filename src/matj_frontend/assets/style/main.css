@@ -40,33 +40,69 @@ button[type="submit"] {
     /*display: flex;*/
     /*flex-wrap: nowrap;*/
     /*justify-content: space-between;*/
-    width: 388px;
+    width: 368px;
+    height: 38px;
     font-size: 18px;
     color: #000000;
-    border: 1px solid;
-    margin: 10px;
-    padding: 7px 10px;
+    border: 1px solid #666;
+    margin: 10px 0 0 20px;
+    padding: 2px 5px;
     border-radius: 7px;
-    cursor: pointer;
+    /*cursor: pointer;*/
 }
-.channel table{
+
+.channel table {
     width: 100%;
+    height: 38px
 }
-.channel div{
+
+.channel div {
     /*flex-grow: 2;*/
     /*border:1px solid;*/
     width: 33%;
-    vertical-align:middle;
-    line-height:20px;
-    font-family:monospace;
-}
-.avatar{
-    border-radius: 50%;
-    border: 1px solid #e0e0e0;
-    width: 30px;
+    vertical-align: middle;
+    line-height: 20px;
+    font-family: monospace;
 }
 
-#channel_box svg{
+.channel .channel_avatar {
+    width: 32px;
+}
+
+.channel .auther {
+    font-size: 13px;
+}
+
+.channel .title {
+    font-size: 14px;
+    font-weight: bold;
+    text-align: right;
+}
+
+.channel .size {
+    font-size: 12px;
+    text-align: right;
+    width: 45px;
+}
+
+.channel .time {
+    font-size: 12px;
+    text-align: right;
+    width: 60px;
+}
+
+.channel .channel_svg {
+    width: 24px;
+    text-align: right;
+}
+
+.avatar {
+    border-radius: 50%;
+    border: 1px solid #e0e0e0;
+    width: 24px;
+}
+
+#channel_box svg {
     margin: 6px 0 0 5px;
     width: 1em;
 }
