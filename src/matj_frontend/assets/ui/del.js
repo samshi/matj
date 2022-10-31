@@ -102,14 +102,14 @@ P.ok     = $.C(P.input_component, {
   P.locals[index].I(new_title);
 
   let source            = P_MATJ.editor.getValue();
-  let { title, auther } = P_MATJ.getDetail(source);
-  console.log(title, auther);
+  let { title, author } = P_MATJ.getDetail(source);
+  console.log(title, author);
 
-  if(!title && !auther){
-    P_MATJ.addTitleAuther(new_title, LS.auther || "");
+  if(!title && !author){
+    P_MATJ.addTitleAuthor(new_title, LS.author || "");
   }
   else{
-    P_MATJ.setTitleAuther(new_title, auther || LS.auther || "");
+    P_MATJ.setTitleAuthor(new_title, author || LS.author || "");
   }
 
   eobj.FATHER.H();
@@ -203,36 +203,54 @@ P.min = () => {
   });
 };
 
-P.showTitleAuther = (source) => {
+P.showTitleAuthor = (source) => {
   let index             = P_CHANNEL.focus_local;
-  let { title, auther } = P_MATJ.getDetail(source);
-  console.log(title, auther);
+  let { title, author } = P_MATJ.getDetail(source);
+  console.log(title, author);
   title = title || `untitled ${index}`;
-  if(auther != ""){
-    LS.auther = auther;
+  if(author != ""){
+    LS.author = author;
   }
-  else if(LS.auther){
-    auther = ""; //LS.auther
+  else if(LS.author){
+    author = ""; //LS.author
   }
-  P_CHANNEL.locals[index].I(title + " - " + auther);
-  // P_CHANNEL.showAuther(auther)
+  P_CHANNEL.locals[index].I(title + " - " + author);
+  // P_CHANNEL.showAuthor(author)
 
-  P_MATJ.setTitleAuther(title, auther);
+  P_MATJ.setTitleAuthor(title, author);
 };
 
-P.showAuther = (auther) => {
-  P.auther.I(`auther: ${auther || LS.auther || "anonymous"}`);
+P.showAuthor = (author) => {
+  P.author.I(`author: ${author || LS.author || "anonymous"}`);
 };
 
-//Ò»¿ªÊ¼¾ÍÏÔÊ¾ËùÓÐÆµµÀ
+//Ò»ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½
 P.max();
 
 
 
 
-public shared(msg) func setshare(name : Text, code: Text, index : Text, title: Text, auther: Text, time: Text, size: Text) : async Text {
+public shared(msg) func setshare(name : Text, code: Text, index : Text, title: Text, author: Text, time: Text, size: Text) : async Text {
   let principalId = Principal.toText(msg.caller);
   map.put(principalId # name, code);
 
-  await share(index, title, auther, time, size)
+  await share(index, title, author, time, size)
+};
+
+
+P.addTitleAuthor = (title, author) => {
+  let source = P_MATJ.editor.getValue();
+  source     = `% title = ${title} % author = ${author} % time = ${$.MS()}\n` + source;
+  P_MATJ.editor.setValue(source);
+};
+
+P.setTitleAuthor = (title, author) => {
+  let source = P.editor.getValue();
+  let info   = P.getDetail(source);
+  if(info.title != title || info.author != author){
+    let line0_pos = source.indexOf("\n");
+    let new_line0 = `% title = ${title} % author = ${author} % time = ${$.MS()}\n`;
+    source        = `${new_line0}\n` + source.slice(line0_pos);
+    P_MATJ.editor.setValue(source);
+  }
 };

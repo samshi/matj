@@ -41,9 +41,9 @@ actor Registry {
     map.get(principalname);
   };
 
-  public shared(msg) func share(index : Text, title: Text, auther: Text, time: Text, size: Text) : async Text {
+  public shared(msg) func share(index : Text, title: Text, author: Text, time: Text, size: Text) : async Text {
     let principalId = Principal.toText(msg.caller);
-    let key = "_"#index#"%"#title#"%"#auther#"%"#time#"%"#size#"=";
+    let key = "_"#index#"%"#title#"%"#author#"%"#time#"%"#size#"=";
 
     switch(share_map.get(principalId)){
       case (?shared_str) {

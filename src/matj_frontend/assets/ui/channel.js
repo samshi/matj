@@ -20,6 +20,13 @@ function createChannel(f){
   P.tab.DOWN({
     target_eobj: P.local_tab,
   });
+
+  P.unselectAll = ()=>{
+    P.unselectLocal()
+    P.unselectRemote()
+    P.showPublic()
+    P.showFavorite()
+  }
 }
 
 function createTab(P){
@@ -118,22 +125,18 @@ function createLocal(P){
 
     P_MATJ.type       = "local";
     P_MATJ.noOnChange = true; //不会触发codeSave
-    P_MATJ.input_auther.H();
+    P_MATJ.input_author.H();
     P_MATJ.input_title.val(detail.title || '').V();
-    // P_MATJ.input_share.H();
-    P_MATJ.is_readonly = false;
     P_MATJ.show_readonly.H();
 
     P_MATJ.noOnChange = true
     P_MATJ.editor.setValue(detail.code || '');
 
-    for(let i in P.locals){
-      let eobj = P.locals[i];
+    P.unselectAll()
 
-      eobj.S({
-        BG: n == eobj.index ? "#eee" : "",
-      });
-    }
+    P.locals[n].S({
+      BG: "#eee"
+    });
   };
 
   P.unselectLocal= ()=>{
@@ -199,36 +202,21 @@ function createRemote(P){
     P_MATJ.type       = "remote";
     P_MATJ.noOnChange = true; //不会触发codeSave
     P_MATJ.editor.setValue(detail.code);
-    P_MATJ.input_auther.val(detail.auther || '').V();
+    P_MATJ.input_author.val(detail.author || '').V();
     P_MATJ.input_title.val(detail.title || '').V();
-    // P_MATJ.input_share.S({ checked: detail.share }).V();
-    P_MATJ.is_readonly = false;
     P_MATJ.show_readonly.H();
 
     P_MATJ.noOnChange = true
     P_MATJ.editor.setValue(detail.code || '');
 
     // P.changeButtonText()
-    // P.showTitleAuther(code)
+    // P.showTitleAuthor(code)
 
-    for(let i in P.remotes){
-      let eobj = P.remotes[i];
+    P.unselectAll()
 
-      eobj.S({
-        BG: n == eobj.index ? "#eee" : "",
-      });
-
-      // eobj.light.S({
-      //   BG: LS['local' + eobj.index] ? '#888' : ''
-      // })
-    }
-
-    // P.more.S({
-    //   L: P.locals[n].W_ + 150,
-    //   T: P.locals[n].T_
-    // }).V()
-    //
-    // P.moreButtons.H()
+    P.remotes[n].S({
+      BG: "#eee"
+    });
   };
 
   P.unselectRemote = ()=>{
@@ -354,8 +342,8 @@ function createRemote(P){
         else{
           let remote_name = P.getRemoteName(index);
           let source = LS[remote_name] || ''
-          let { title, auther, time, size } = P_MATJ.getDetail(source);
-          share_str = await INNER.matj.share("" + index, title, auther, time, '' + size);
+          let { title, author, time, size } = P_MATJ.getDetail(source);
+          share_str = await INNER.matj.share("" + index, title, author, time, '' + size);
         }
 
         P.sharestr = share_str.split(' ').slice(1).join('')
@@ -421,30 +409,37 @@ function createPublic(P){
   P.public   = $.C(P, P.local.CSS_).S({ id: "public" });
   P.allshare = [];
 
+  P.createPubliceChannenl = (principalid, channelstr, nolimit)=>{
+    let [channel, title, author, time, size] = channelstr.split("%");
+    let item                     = principalid + "remote" + channel;
+
+    let s = ''
+    if(P.hasFavorite(item) || nolimit){
+      s += `<div onclick="P_CHANNEL.openpublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}">`
+      s += `<table>`
+      s += `<tr>`
+      s += `<td class="channel_avatar"><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
+      s += `<td class="author">${author}</td>`;
+      s += `<td class="title">${title}</td>`;
+      s += `<td class="size">${$.SIZE(size||0)}</td>`;
+      s += `<td class="time">${$.getDatetime("dort", time)}</td>`;
+      s += `<td class="channel_svg">${P.hasFavorite(item) ? SVG.favorite : SVG.unfavorite}</td>`;
+      s += `</tr>`
+      s += `</table>`
+      s += `</div>`
+    }
+
+    return s
+  }
+
   P.showPublic = function(){
     let s = "";
     P.allshare.forEach((pair) => {
       let principalid   = pair[0];
-      let sharedchannel = pair[1].slice(1, -1).split("=_");
+      let shared_channel = pair[1].slice(1, -1).split("=_");
 
-      sharedchannel.map((channelstr) => {
-        let [channel, title, auther, time, size] = channelstr.split("%");
-        let item                     = principalid + 'remote' + channel;
-
-        s += `<div onclick="P_CHANNEL.openpublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}">`
-        s += `<table>`
-        s += `<tr>`
-        s += `<td class="channel_avatar"><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
-        s += `<td class="auther">${auther}</td>`;
-        s += `<td class="title">${title}</td>`;
-        s += `<td class="size">${$.SIZE(size||0)}</td>`;
-        s += `<td class="time">${$.getDatetime("dort", time)}</td>`;
-        s += `<td class="channel_svg">${P.hasFavorite(item)
-                                                        ? SVG.favorite
-                                                        : SVG.unfavorite}</td>`;
-        s += `</tr>`
-        s += `</table>`
-        s += `</div>`
+      shared_channel.map((channel_str) => {
+        s += P.createPubliceChannenl(principalid, channel_str, 'nolimit')
       });
     });
 
@@ -504,8 +499,8 @@ function createPublic(P){
     }
 
     P_MATJ.type        = "public";
-    P_MATJ.is_readonly = true;
     P_MATJ.show_readonly.V();
+    P_MATJ.input_author.H()
     P_MATJ.input_title.H()
 
     let public_file_name = node.dataset.id + "remote" + node.dataset.channel;
@@ -515,10 +510,9 @@ function createPublic(P){
       P_MATJ.editor.setValue(detail_obj.code);
     })();
 
-    var brothers = node.parentNode.childNodes;
-    brothers.forEach((item) => {
-      item.style.background = item == node ? "#eee" : "";
-    });
+    P.unselectAll()
+
+    node.style.background = "#eee"
   };
 
   P.getPublicChannel();
@@ -542,31 +536,16 @@ function createFavorite(P){
     let s = "";
     P.allshare.forEach((pair) => {
       let principalid   = pair[0];
-      let sharedchannel = pair[1].slice(1, -1).split("=_");
+      let shared_channel = pair[1].slice(1, -1).split("=_");
 
-      sharedchannel.map((channelstr) => {
-        let [channel, title, auther, time, size] = channelstr.split("%");
-        let item                     = principalid + "remote" + channel;
-
-        if(P.hasFavorite(item)){
-          s += `<div onclick="P_CHANNEL.openpublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}">`
-          s += `<table>`
-          s += `<tr>`
-          s += `<td class="channel_avatar"><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
-          s += `<td class="auther">${auther}</td>`;
-          s += `<td class="title">${title}</td>`;
-          s += `<td class="size">${$.SIZE(size||0)}</td>`;
-          s += `<td class="time">${$.getDatetime("dort", time)}</td>`;
-          s += `<td class="channel_svg">${SVG.favorite}</td>`;
-          s += `</tr>`
-          s += `</table>`
-          s += `</div>`
-        }
+      shared_channel.map((channel_str) => {
+        s += P.createPubliceChannenl(principalid, channel_str)
       });
     });
 
     P.favorite.I(s);
   };
+
   P.hasFavorite  = function(item){
     // console.log(P.favorite_list, item, P.favorite_list.includes(item))
     return P.favorite_list.includes(item);
