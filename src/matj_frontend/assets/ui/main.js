@@ -49,10 +49,25 @@ $(function () {
 
   onresize();
 
-  // 切换上次的channel
-  setTimeout(function () {
-    P_CHANNEL.selectLocal(LS.focus_local || 1);
-  }, 100);
+  let hash = location.hash.slice(1)
+  let P = P_CHANNEL
+  if(/^\w{8}\d{1,2}$/.test(hash)){
+    P.addFavorite(hash)
+    P.tab.DOWN({
+      target_eobj: P.favorite_tab,
+    });
+  }
+  else{
+    // 切换上次的channel
+    P.tab.DOWN({
+      target_eobj: P.local_tab,
+    });
+
+    setTimeout(function () {
+      P.selectLocal(LS.focus_local || 1);
+    }, 100);
+  }
+
 });
 
 function RESIZE(eobj) {

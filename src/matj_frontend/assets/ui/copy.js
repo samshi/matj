@@ -7,11 +7,21 @@ function createCopyPage(f){
     type: 'text'
   }, 'input')
 
-  P.copyContent = (str) => {
+  P.copyContent = (str, msg, x, y) => {
     var P = P_COPY
     P.input.val(str)
     P.input.context.select()
     document.execCommand('copy')
+
+    P_COPY.copy_msg.V().S({
+      I: msg || 'Copied',
+      L: x + 15,
+      T: y - 10
+    })
+
+    setTimeout((_) => {
+      P_COPY.copy_msg.H()
+    }, 1000);
   }
 
   P.copy_msg = $.C(main, {

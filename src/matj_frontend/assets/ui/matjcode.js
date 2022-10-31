@@ -54,15 +54,7 @@ function createMatjArea(f){
     src  : 'img/document-copy.svg',
     title: 'copy file'
   }, 'img').down(eobj => {
-    P_COPY.copyContent(P.editor.getValue());
-    P_COPY.copy_msg.V().S({
-      L: eobj.X + 15,
-      T: eobj.Y - 10
-    })
-
-    setTimeout((_) => {
-      P_COPY.copy_msg.H()
-    }, 1000);
+    P_COPY.copyContent(P.editor.getValue(), 'file content copied', eobj.X, eobj.Y);
   })
 
   P.input_author = $.C(f, {
@@ -85,7 +77,7 @@ function createMatjArea(f){
     }
 
     P_MATJ.willSave()
-  });
+  }).H();
 
   P.input_title = $.C(f, {
     L          : 810,
@@ -107,7 +99,7 @@ function createMatjArea(f){
     }
 
     P_MATJ.willSave()
-  });
+  }).H();
 
   P.show_readonly = $.C(f, {
     L : 760,
@@ -117,7 +109,7 @@ function createMatjArea(f){
     PD: '0 5px',
     I : 'read only, any changes will be ignored!',
     BG: '#ff8'
-  });
+  }).H();
 
   P.textarea = $.C(P, {
     id: "matj_textarea",
@@ -208,9 +200,8 @@ function createMatjArea(f){
       index                              = P_CHANNEL.focus_remote
       LS[P_CHANNEL.getRemoteName(index)] = source;
     }
-    let name = P.type + index;
 
-    console.log('codeSave', name)
+    console.log('codeSave', P.type, index)
 
     // 更新显示
     detail_obj.size = code.length
@@ -227,14 +218,14 @@ function createMatjArea(f){
       // P_CHANNEL.setLight(index, '#f4d71a')
       // P_CHANNEL.setMsg(index, 'pedding')
       clearTimeout(P.timers[index]);
-      P.timers[index] = setTimeout((function(index, name, source){
+      P.timers[index] = setTimeout((function(index, source){
         return async function(){
           // P_CHANNEL.setLight(index, 'green')
           // P_CHANNEL.setMsg(index, 'uploading...')
           P_MATJ.timers[index] = 0
           P_CHANNEL.freeze     = true;
 
-          let size = await INNER.matj.set(name, source);
+          let size = await INNER.matj.set(''+index, source);
           console.log(source.length, size);
 
           if(P_CHANNEL.checkShare(index)){
@@ -247,7 +238,7 @@ function createMatjArea(f){
 
           P_CHANNEL.freeze = false;
         };
-      })(index, name, source), delay);
+      })(index, source), delay);
     }
     else{
       // P_CHANNEL.setLight(index, '#888')

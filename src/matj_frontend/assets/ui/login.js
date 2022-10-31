@@ -140,15 +140,7 @@ function login(f){
     W  : 12,
     src: 'img/copy.webp'
   }, 'img').down(eobj => {
-    P_COPY.copyContent(DATA.accountId);
-    P_COPY.copy_msg.V().S({
-      L: eobj.X + 10,
-      T: eobj.Y - 10,
-    })
-
-    setTimeout((_) => {
-      P_COPY.copy_msg.H()
-    }, 1000);
+    P_COPY.copyContent(DATA.accountId, 'accound id copied', eobj.X, eobj.Y);
   }).H()
 
   P.logout_btn = $.C(P, {

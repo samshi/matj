@@ -8,7 +8,6 @@ import Debug "mo:base/Debug";
 import Char "mo:base/Char";
 
 actor Registry {
-
   stable var entries : [(Text, Text)] = [];
   stable var share_entries : [(Text, Text)] = [];
 

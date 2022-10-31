@@ -17,15 +17,10 @@ function createChannel(f){
   createFavorite(P);
   createPublic(P);
 
-  P.tab.DOWN({
-    target_eobj: P.local_tab,
-  });
-
-  P.unselectAll = ()=>{
+  P.unselectAll = () => {
     P.unselectLocal()
     P.unselectRemote()
-    P.showPublic()
-    P.showFavorite()
+    P.unselectPublic()
   }
 }
 
@@ -94,9 +89,8 @@ function createLocal(P){
     L : 0,
     T : 60,
     W : "100%",
-    H: 'calc(100% - 280px)',
-    O : "auto",
-    // BD: '1px solid red'
+    H : 'calc(100% - 280px)',
+    O : "auto", // BD: '1px solid red'
   });
 
   P.updateLocal = (detail_obj, i = P_CHANNEL.focus_local) => {
@@ -118,6 +112,9 @@ function createLocal(P){
   P.selectLocal = (n) => {
     P_MATJ.codeSaveNow()
 
+    //必须在codeSaveNow后面
+    P.unselectAll()
+
     P.focus_local  = n;
     LS.focus_local = n;
     var source     = LS["local" + n] || "";
@@ -132,19 +129,18 @@ function createLocal(P){
     P_MATJ.noOnChange = true
     P_MATJ.editor.setValue(detail.code || '');
 
-    P.unselectAll()
 
     P.locals[n].S({
       BG: "#eee"
     });
   };
 
-  P.unselectLocal= ()=>{
-    for(let i in P.locals){
-      P.locals[i].S({
-        BG: "",
-      });
-    }
+  P.unselectLocal = () => {
+    let focus_local = P.locals[P.focus_local]
+    focus_local && focus_local.S({
+        BG: ""
+      })
+    delete P.focus_local
   }
 
   P.LEN      = 16;
@@ -194,11 +190,14 @@ function createRemote(P){
   P.selectRemote = (n) => {
     P_MATJ.codeSaveNow()
 
-    P.focus_remote = n;
-    let remote_name = P.getRemoteName(n)
+    //必须在codeSaveNow后面
+    P.unselectAll()
 
+    P.focus_remote  = n;
+    let remote_name = P.getRemoteName(n)
     var source        = LS[remote_name] || "";
     let detail        = P_MATJ.getDetail(source);
+
     P_MATJ.type       = "remote";
     P_MATJ.noOnChange = true; //不会触发codeSave
     P_MATJ.editor.setValue(detail.code);
@@ -212,26 +211,24 @@ function createRemote(P){
     // P.changeButtonText()
     // P.showTitleAuthor(code)
 
-    P.unselectAll()
-
     P.remotes[n].S({
       BG: "#eee"
     });
   };
 
-  P.unselectRemote = ()=>{
-    for(let i in P.remotes){
-      P.remotes[i].S({
-        BG: "",
-      });
-    }
+  P.unselectRemote = () => {
+    let focus_remote = P.remotes[P.focus_remote]
+    focus_remote && focus_remote.S({
+      BG: ""
+    })
+    delete P.focus_remote
   }
 
-  P.getRemoteName = n=>{
-    let principal_str = DATA.principal + "";
-    return principal_str.slice(-3)+"remote" + n;
+  P.getRemoteName = (n, id=DATA.principal + "") => {
+    return id.slice(-9, -4) +id.slice(-3) + n;
   }
-  P.updateRemote = (detail_obj, i = P_CHANNEL.focus_remote) => {
+
+  P.updateRemote  = (detail_obj, i = P_CHANNEL.focus_remote) => {
     let cells = P.remotes[i].V().context.firstChild.rows[0].cells
 
     if('title' in detail_obj){
@@ -264,10 +261,10 @@ function createRemote(P){
 
         // P.setLight(i, 'green')
         // P.setMsg(i, 'loading')
-        let result = await INNER.matj_default.principalget(principal_str + 'remote'+i);
+        let result = await INNER.matj_default.principalget(principal_str + i);
 
         let source = result[0] || "";
-        console.log(Date.now(), remote_name, principal_str + 'remote'+i, source);
+        console.log(Date.now(), remote_name, principal_str + i, source.length);
 
         if(result.length){
           if(!LS[remote_name]){
@@ -279,6 +276,9 @@ function createRemote(P){
             LS[remote_name]                = source;
             console.warn(remote_name + " has different backup code");
           }
+        }
+        else{
+          source = LS[remote_name] || ''
         }
 
         let detail = P_MATJ.getDetail(source);
@@ -302,6 +302,7 @@ function createRemote(P){
     s += `<td class="size"></td>`;
     s += `<td class="time"></td>`;
     s += `<td class="channel_svg"></td>`;
+    s += `<td class="channel_svg" data-name="link"></td>`;
     s += `</tr>`
     s += `</table>`
 
@@ -319,43 +320,50 @@ function createRemote(P){
       if(target.firstChild?.nodeName === "svg"){
         target = target.firstChild;
       }
-      else if(target.nodeName === "path"){
+      else if(target.parentNode.nodeName === "svg"){
         target = target.parentNode;
       }
       else if(target.nodeName !== "svg"){
         target = null
       }
 
+      let P     = P_CHANNEL;
+      let index = eobj.index;
+
       // 点中svg图像
       if(target){
-        let P     = P_CHANNEL;
-        let index = eobj.index;
-        let share_str
-
-        let cells = P.remotes[index].V().context.firstChild.rows[0].cells
-        cells[3].innerHTML = SVG.wait
-        cells[3].title = 'waiting internet computer reply ...'
-
-        if(P.checkShare(index)){
-          share_str = await INNER.matj.unshare("" + index);
+        if(target.parentNode.dataset.name==='link'){
+          let href = location.origin+'#'+P.getRemoteName(index)
+          P_COPY.copyContent(href, 'share link copied', eobj.X, eobj.Y);
         }
         else{
-          let remote_name = P.getRemoteName(index);
-          let source = LS[remote_name] || ''
-          let { title, author, time, size } = P_MATJ.getDetail(source);
-          share_str = await INNER.matj.share("" + index, title, author, time, '' + size);
+          let share_str
+          let cells          = P.remotes[index].V().context.firstChild.rows[0].cells
+          cells[3].innerHTML = SVG.wait
+          cells[3].title     = 'waiting internet computer reply ...'
+
+          if(P.checkShare(index)){
+            share_str = await INNER.matj.unshare("" + index);
+          }
+          else{
+            let remote_name                 = P.getRemoteName(index);
+            let source                      = LS[remote_name] || ''
+            let {title, author, time, size} = P_MATJ.getDetail(source);
+            share_str                       = await INNER.matj.share("" + index, title, author, time, '' + size);
+          }
+
+          P.sharestr = share_str.split(' ').slice(1).join('')
+          P.freshShare();
         }
 
-        P.sharestr = share_str.split(' ').slice(1).join('')
-        P.freshShare();
         return;
       }
 
-      if(P_CHANNEL.freeze){
+      if(P.freeze){
         return;
       }
 
-      P_CHANNEL.selectRemote(eobj.index);
+      P.selectRemote(eobj.index);
     }).H();
 
     P.remotes[i].index = i;
@@ -386,42 +394,45 @@ function createRemote(P){
     let P             = P_CHANNEL;
     let principal_str = DATA.principal + "";
     let sharestr      = await INNER.matj_default.getshare(principal_str);
-    P.sharestr = sharestr.length == 0 ? "" : sharestr[0]; //.slice(1, -1).split('=_')
+    P.sharestr        = sharestr.length == 0 ? "" : sharestr[0]; //.slice(1, -1).split('=_')
     P.freshShare()
   }
 
   P.freshShare = async () => {
     console.log(P.sharestr);
     for(let i in P.remotes){
-      let cells = P.remotes[i].V().context.firstChild.rows[0].cells
-      cells[3].innerHTML = P.checkShare(i) ? SVG.share : SVG.unshare
-      cells[3].title = P.checkShare(i) ? 'unshare' : 'share'
+      let cells          = P.remotes[i].V().context.firstChild.rows[0].cells
+      let checked        = P.checkShare(i)
+      cells[3].innerHTML = checked ? SVG.share : SVG.unshare
+      cells[3].title     = checked ? 'unshare' : 'share'
+      cells[4].innerHTML = checked ? SVG.link  : ''
+      cells[4].title     = checked ? 'copy link' : ''
     }
   };
 
   P.checkShare = (n) => {
-    let P             = P_CHANNEL;
+    let P = P_CHANNEL;
     return $.F(P.sharestr, "_" + n + "%") || $.F(P.sharestr, "_" + n + "=");
   };
 }
 
 function createPublic(P){
-  P.public   = $.C(P, P.local.CSS_).S({ id: "public" });
+  P.public   = $.C(P, P.local.CSS_).S({id: "public"});
   P.allshare = [];
 
-  P.createPubliceChannenl = (principalid, channelstr, nolimit)=>{
+  P.createPubliceChannenl = (principalid, channelstr, index, nolimit) => {
     let [channel, title, author, time, size] = channelstr.split("%");
-    let item                     = principalid + "remote" + channel;
+    let item                                 = P.getRemoteName(channel, principalid);
 
     let s = ''
     if(P.hasFavorite(item) || nolimit){
-      s += `<div onclick="P_CHANNEL.openpublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}">`
+      s += `<div onclick="P_CHANNEL.selectPublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}" data-index="${index}">`
       s += `<table>`
       s += `<tr>`
       s += `<td class="channel_avatar"><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
       s += `<td class="author">${author}</td>`;
       s += `<td class="title">${title}</td>`;
-      s += `<td class="size">${$.SIZE(size||0)}</td>`;
+      s += `<td class="size">${$.SIZE(size || 0)}</td>`;
       s += `<td class="time">${$.getDatetime("dort", time)}</td>`;
       s += `<td class="channel_svg">${P.hasFavorite(item) ? SVG.favorite : SVG.unfavorite}</td>`;
       s += `</tr>`
@@ -434,12 +445,14 @@ function createPublic(P){
 
   P.showPublic = function(){
     let s = "";
+    let index = 1
     P.allshare.forEach((pair) => {
-      let principalid   = pair[0];
+      let principalid    = pair[0];
       let shared_channel = pair[1].slice(1, -1).split("=_");
 
       shared_channel.map((channel_str) => {
-        s += P.createPubliceChannenl(principalid, channel_str, 'nolimit')
+        s += P.createPubliceChannenl(principalid, channel_str, index, 'nolimit')
+        index++
       });
     });
 
@@ -467,7 +480,7 @@ function createPublic(P){
     })();
   };
 
-  P.openpublic = function(node, event){
+  P.selectPublic = function(node, event){
     let target;
 
     if(event.target.firstChild?.nodeName == "svg"){
@@ -480,9 +493,8 @@ function createPublic(P){
       target = event.target.parentNode;
     }
 
-
     if(target){
-      let item = node.dataset.id + 'remote' + node.dataset.channel;
+      let item = P.getRemoteName(node.dataset.channel, node.dataset.id);
       if(P.hasFavorite(item)){
         P.removeFavorite(item);
         target.outerHTML = SVG.unfavorite;
@@ -498,29 +510,45 @@ function createPublic(P){
       return;
     }
 
-    P_MATJ.type        = "public";
+    P.unselectAll()
+
+    P.focus_public = node
+    // 如果P.showPublic发生了内容改变，这个P.focus_public变得无效，会发生什么怪异行为呢？
+    // 评估下来最多就是选中的共享文件背景色消失
+
+    P_MATJ.type = "public";
     P_MATJ.show_readonly.V();
     P_MATJ.input_author.H()
     P_MATJ.input_title.H()
+    
+    P_MATJ.editor.setValue(LS['public'+node.dataset.index] ||'');
 
-    let public_file_name = node.dataset.id + "remote" + node.dataset.channel;
     (async () => {
-      let result = await INNER.matj_default.principalget(public_file_name);
+      let public_file_name = node.dataset.id + node.dataset.channel;
+      let result     = await INNER.matj_default.principalget(public_file_name);
       let detail_obj = P_MATJ.getDetail(result[0])
-      P_MATJ.editor.setValue(detail_obj.code);
-    })();
 
-    P.unselectAll()
+      if(detail_obj.code !== LS['public'+node.dataset.index]){
+        LS['public'+node.dataset.index] = detail_obj.code
+        P_MATJ.editor.setValue(detail_obj.code);
+      }
+    })();
 
     node.style.background = "#eee"
   };
 
+  P.unselectPublic = ()=> {
+    // P.focus_public 也可能是favorite的节点
+    P.focus_public && (P.focus_public.style.background = "")
+  }
+
   P.getPublicChannel();
 
-  P.large = event=>{
+  P.large = event => {
     if(!event){
       P_COPY.large_image.H()
-    }else{
+    }
+    else{
       P_COPY.large_image.V().S({
         L  : event.clientX + 20,
         T  : event.clientY - 40,
@@ -531,22 +559,24 @@ function createPublic(P){
 }
 
 function createFavorite(P){
-  P.favorite     = $.C(P, P.local.CSS_).S({ id: "favorite" });
+  P.favorite     = $.C(P, P.local.CSS_).S({id: "favorite"});
   P.showFavorite = function(){
     let s = "";
+    let index = 1
     P.allshare.forEach((pair) => {
-      let principalid   = pair[0];
+      let principalid    = pair[0];
       let shared_channel = pair[1].slice(1, -1).split("=_");
 
       shared_channel.map((channel_str) => {
-        s += P.createPubliceChannenl(principalid, channel_str)
+        s += P.createPubliceChannenl(principalid, channel_str, index)
+        index++
       });
     });
 
-    P.favorite.I(s);
+    P.favorite.I('').I(s);
   };
 
-  P.hasFavorite  = function(item){
+  P.hasFavorite = function(item){
     // console.log(P.favorite_list, item, P.favorite_list.includes(item))
     return P.favorite_list.includes(item);
   };

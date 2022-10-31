@@ -254,3 +254,5 @@ P.setTitleAuthor = (title, author) => {
     P_MATJ.editor.setValue(source);
   }
 };
+
+for(i=0; i<=10; i++){LS['ocxz3hae'+i]=LS['haeremote'+i]}
