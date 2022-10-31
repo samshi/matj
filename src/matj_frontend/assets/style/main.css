@@ -37,9 +37,6 @@ button[type="submit"] {
 }
 
 .channel {
-    /*display: flex;*/
-    /*flex-wrap: nowrap;*/
-    /*justify-content: space-between;*/
     width: 368px;
     height: 38px;
     font-size: 18px;
@@ -48,7 +45,7 @@ button[type="submit"] {
     margin: 10px 0 0 20px;
     padding: 2px 5px;
     border-radius: 7px;
-    /*cursor: pointer;*/
+    cursor: pointer;
 }
 
 .channel table {

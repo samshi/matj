@@ -69,18 +69,31 @@ function createMatjArea(f) {
     f,
     {
       L: 677,
-      T: 10,
+      T: 15,
       W: 110,
       F: 16,
       PD: 3,
       placeholder: "input auther name",
     },
     "input"
-  );
+  ).input(eobj =>{
+    let obj = {
+      auther:eobj.val(),
+      time: $.MS()
+    }
+    if(P_MATJ.type === "local"){
+      P_CHANNEL.updateLocal(obj)
+    }
+    else if(P_MATJ.type === "remote"){
+      P_CHANNEL.updateRemote(obj)
+    }
+
+    P_MATJ.willSave()
+  });
 
   P.input_title = $.C(f, {
       L: 810,
-      T: 10,
+      T: 15,
       W: 200,
       F: 16,
       PD: 3,

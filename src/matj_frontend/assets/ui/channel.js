@@ -131,10 +131,18 @@ function createLocal(P){
       let eobj = P.locals[i];
 
       eobj.S({
-        C: n == eobj.index ? "red" : "",
+        BG: n == eobj.index ? "#eee" : "",
       });
     }
   };
+
+  P.unselectLocal= ()=>{
+    for(let i in P.locals){
+      P.locals[i].S({
+        BG: "",
+      });
+    }
+  }
 
   P.LEN      = 16;
   P.locals   = {};
@@ -154,7 +162,7 @@ function createLocal(P){
 
     P.locals[i] = $.c(P.local, {
       I : s,
-      CN: "channel",
+      CN: 'channel',
     }).click((eobj) => {
       // P_CHANNEL.openlocal(eobj)
       if(P_CHANNEL.freeze){
@@ -207,7 +215,7 @@ function createRemote(P){
       let eobj = P.remotes[i];
 
       eobj.S({
-        C: n == eobj.index ? "red" : "",
+        BG: n == eobj.index ? "#eee" : "",
       });
 
       // eobj.light.S({
@@ -222,6 +230,14 @@ function createRemote(P){
     //
     // P.moreButtons.H()
   };
+
+  P.unselectRemote = ()=>{
+    for(let i in P.remotes){
+      P.remotes[i].S({
+        BG: "",
+      });
+    }
+  }
 
   P.getRemoteName = n=>{
     let principal_str = DATA.principal + "";
@@ -303,7 +319,7 @@ function createRemote(P){
 
     P.remotes[i] = $.c(P.remote, {
       I : s,
-      CN: "channel", // L : 20,
+      CN: 'channel', // L : 20,
       // T : 60 * (i - 1) + 20,
       // W : 250,
       // H : 40,
@@ -413,7 +429,7 @@ function createPublic(P){
 
       sharedchannel.map((channelstr) => {
         let [channel, title, auther, time, size] = channelstr.split("%");
-        let item                     = principalid + "channel" + channel;
+        let item                     = principalid + 'remote' + channel;
 
         s += `<div onclick="P_CHANNEL.openpublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}">`
         s += `<table>`
@@ -471,7 +487,7 @@ function createPublic(P){
 
 
     if(target){
-      let item = node.dataset.id + "channel" + node.dataset.channel;
+      let item = node.dataset.id + 'remote' + node.dataset.channel;
       if(P.hasFavorite(item)){
         P.removeFavorite(item);
         target.outerHTML = SVG.unfavorite;
@@ -530,7 +546,7 @@ function createFavorite(P){
 
       sharedchannel.map((channelstr) => {
         let [channel, title, auther, time, size] = channelstr.split("%");
-        let item                     = principalid + "channel" + channel;
+        let item                     = principalid + "remote" + channel;
 
         if(P.hasFavorite(item)){
           s += `<div onclick="P_CHANNEL.openpublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}">`
