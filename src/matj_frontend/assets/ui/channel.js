@@ -520,7 +520,7 @@ function createPublic(P){
     P_MATJ.show_readonly.V();
     P_MATJ.input_author.H()
     P_MATJ.input_title.H()
-    
+
     P_MATJ.editor.setValue(LS['public'+node.dataset.index] ||'');
 
     (async () => {

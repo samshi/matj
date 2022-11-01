@@ -1,12 +1,11 @@
 {
-  "name": "matj_frontend",
+  "name": "MatJ",
   "version": "0.1.0",
-  "description": "Internet Computer starter application",
+  "description": "MatJ, a online js math library for matlab script",
   "keywords": [
-    "Internet Computer",
-    "Motoko",
+    "mathmatic",
     "JavaScript",
-    "Canister"
+    "matlab"
   ],
   "scripts": {
     "build": "webpack",
