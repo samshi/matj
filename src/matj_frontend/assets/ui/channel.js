@@ -14,7 +14,6 @@ function createChannel(f){
   createTab(P);
   createLocal(P);
   createRemote(P);
-  createFavorite(P);
   createPublic(P);
 
   P.unselectAll = () => {
@@ -44,40 +43,34 @@ function createTab(P){
     P.public_tab.S(target == P.public_tab ? css_focus : css_blur);
     P.local_tab.S(target == P.local_tab ? css_focus : css_blur);
     P.remote_tab.S(target == P.remote_tab ? css_focus : css_blur);
-    P.favorite_tab.S(target == P.favorite_tab ? css_focus : css_blur);
 
     P.local.V(target == P.local_tab);
     P.remote.V(target == P.remote_tab);
     P.public.V(target == P.public_tab);
-    P.favorite.V(target == P.favorite_tab);
 
     if(target == P.public_tab){
       P_CHANNEL.getPublicChannel();
     }
   });
 
-  P.public_tab   = $.C(P.tab, {
-    I : "public",
-    L : "50%",
+  P.remote_tab   = $.C(P.tab, {
+    I : "remote",
+    L : "33%",
     T : 0,
-    W : "calc(25% - 1px)",
+    W : "calc(33% - 1px)",
     PD: "5px 0",
     BD: "1px solid #000", // BG:'red',
     TA: "center",
   });
-  P.local_tab    = $.C(P.tab, P.public_tab.CSS_).S({
+  P.local_tab    = $.C(P.tab, P.remote_tab.CSS_).S({
     I                     : "local",
     L                     : 0,
     borderTopLeftRadius   : "2em",
     borderBottomLeftRadius: "2em",
   });
-  P.remote_tab   = $.C(P.tab, P.public_tab.CSS_).S({
-    I: "remote",
-    L: "25%",
-  });
-  P.favorite_tab = $.C(P.tab, P.public_tab.CSS_).S({
-    I                      : "favorite",
-    L                      : "75%",
+  P.public_tab = $.C(P.tab, P.remote_tab.CSS_).S({
+    I                      : "public",
+    L                      : "66%",
     borderTopRightRadius   : "2em",
     borderBottomRightRadius: "2em",
   });
@@ -418,6 +411,42 @@ function createRemote(P){
 
 function createPublic(P){
   P.public   = $.C(P, P.local.CSS_).S({id: "public"});
+
+  P.public_filter = $.C(P.public, {
+    L: 20,
+    T: 0,
+    W: 'calc(100% - 32px)',
+    H: 40,
+  })
+
+  P.public_filter_input = $.C(P.public_filter, {
+    W: 'calc(100% - 70px)',
+    H: 'calc(100% - 10px)',
+    F: 16,
+    PD: '3px 10px',
+    placeholder: 'name title filter',
+    value: LS.public_filter || ''
+  }, 'input').input(eobj=>{
+    console.log(eobj.val())
+    LS.public_filter = eobj.val()
+    P.publicFilter()
+  })
+
+  P.public_filter_favorite = $.C(P.public_filter, {
+    I:LS.public_isfavorite=='1' ? SVG.favorite : SVG.unfavorite,
+    L: 'calc(100% - 40px)'
+  }).down(eobj=>{
+    let isfavorite = eobj.I_ == SVG.favorite
+    eobj.I(isfavorite ? SVG.unfavorite : SVG.favorite)
+    LS.public_isfavorite = isfavorite ? 0 : 1
+    P.publicFilter()
+  })
+
+  P.public_channel = $.C(P.public, {
+    T: 50,
+    W: '100%',
+  })
+
   P.allshare = [];
 
   P.createPubliceChannenl = (principalid, channelstr, index, nolimit) => {
@@ -429,7 +458,7 @@ function createPublic(P){
       s += `<div onclick="P_CHANNEL.selectPublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}" data-index="${index}">`
       s += `<table>`
       s += `<tr>`
-      s += `<td class="channel_avatar"><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
+      s += `<td class="channel_avatar" title="${item}"><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
       s += `<td class="author">${author}</td>`;
       s += `<td class="title">${title}</td>`;
       s += `<td class="size">${$.SIZE(size || 0)}</td>`;
@@ -456,8 +485,49 @@ function createPublic(P){
       });
     });
 
-    P.public.I(s);
+    P.public_channel.I(s);
+
+    P.publicFilter()
   };
+
+  P.publicFilter = () =>{
+    clearTimeout(P.public_filter_timer)
+    P.public_filter_timer = setTimeout(function(){
+      console.log(LS.public_filter)
+      console.log(LS.public_isfavorite)
+      console.log(P.public_channel.context.children)
+
+      let filter = LS.public_filter.split(/\s+/)
+
+      let channels = P.public_channel.context.children
+      let cells, item, auther, title, favorite, show
+      for(let i=0, l=channels.length; i<l; i++){
+        cells = channels[i].children[0].rows[0].cells
+
+        item   = cells[0].title
+        auther = cells[1].innerHTML
+        title  = cells[2].innerHTML
+        is_favorite = P.hasFavorite(item)
+
+        show = true
+        if(LS.public_isfavorite=='1' && !is_favorite){
+          show = false
+        }
+        else{
+          for(let j=0, jl=filter.length; j<jl; j++){
+            if(!$.F(auther, filter[j]) && !$.F(title, filter[j])){
+              show = false
+              break
+            }
+          }
+        }
+
+        channels[i].style.display = show ? '' : 'none'
+        console.log(item, auther, title, is_favorite, show)
+      }
+    }, 200)
+
+  }
 
   P.getPublicChannel = () => {
     let P = P_CHANNEL;
@@ -476,7 +546,6 @@ function createPublic(P){
       console.log(P.allshare);
 
       P.showPublic();
-      P.showFavorite();
     })();
   };
 
@@ -506,7 +575,7 @@ function createPublic(P){
         console.log("addFavorite", item);
       }
 
-      P.showFavorite();
+      P.publicFilter()
       return;
     }
 
@@ -556,25 +625,6 @@ function createPublic(P){
       })
     }
   }
-}
-
-function createFavorite(P){
-  P.favorite     = $.C(P, P.local.CSS_).S({id: "favorite"});
-  P.showFavorite = function(){
-    let s = "";
-    let index = 1
-    P.allshare.forEach((pair) => {
-      let principalid    = pair[0];
-      let shared_channel = pair[1].slice(1, -1).split("=_");
-
-      shared_channel.map((channel_str) => {
-        s += P.createPubliceChannenl(principalid, channel_str, index)
-        index++
-      });
-    });
-
-    P.favorite.I('').I(s);
-  };
 
   P.hasFavorite = function(item){
     // console.log(P.favorite_list, item, P.favorite_list.includes(item))
@@ -618,6 +668,7 @@ function createFavorite(P){
   };
 
   P.favorite_list = P.getFavorite();
+
 }
 
 //for(var i in LS){if(/\d{6}/.test(i.slice(-6))){delete LS[i]}}

@@ -1454,7 +1454,7 @@ var now = (Date.now() - (new Date('0000-01-01')))/87600000 //日期序列值表�
 
           //border
           else if(i == 'BD'){
-            if(y[0] == '#'){
+            if(!/^\d+px\s/.test(y)){
               y = '1px solid ' + y
             }
             z.border = y
