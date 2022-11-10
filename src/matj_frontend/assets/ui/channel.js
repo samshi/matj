@@ -82,7 +82,7 @@ function createLocal(P){
     L : 0,
     T : 60,
     W : "100%",
-    H : 'calc(100% - 280px)',
+    H : 'calc(100% - 195px)',
     O : "auto", // BD: '1px solid red'
   });
 
@@ -173,6 +173,7 @@ function createLocal(P){
 function createRemote(P){
   P.remote = $.C(P, P.local.CSS_).S({
     id: "remote",
+    H : 'calc(100% - 260px)',
   });
 
   P.login_box = $.c(P.remote, {
@@ -497,7 +498,7 @@ function createPublic(P){
       console.log(LS.public_isfavorite)
       console.log(P.public_channel.context.children)
 
-      let filter = LS.public_filter.split(/\s+/)
+      let filter = (LS.public_filter || '').split(/\s+/)
 
       let channels = P.public_channel.context.children
       let cells, item, auther, title, favorite, show
@@ -562,8 +563,8 @@ function createPublic(P){
       target = event.target.parentNode;
     }
 
+    let item = P.getRemoteName(node.dataset.channel, node.dataset.id);
     if(target){
-      let item = P.getRemoteName(node.dataset.channel, node.dataset.id);
       if(P.hasFavorite(item)){
         P.removeFavorite(item);
         target.outerHTML = SVG.unfavorite;
@@ -590,15 +591,15 @@ function createPublic(P){
     P_MATJ.input_author.H()
     P_MATJ.input_title.H()
 
-    P_MATJ.editor.setValue(LS['public'+node.dataset.index] ||'');
+    P_MATJ.editor.setValue(LS['public_'+item] ||'');
 
     (async () => {
       let public_file_name = node.dataset.id + node.dataset.channel;
       let result     = await INNER.matj_default.principalget(public_file_name);
       let detail_obj = P_MATJ.getDetail(result[0])
 
-      if(detail_obj.code !== LS['public'+node.dataset.index]){
-        LS['public'+node.dataset.index] = detail_obj.code
+      if(detail_obj.code !== LS['public_'+item]){
+        LS['public_'+item] = detail_obj.code
         P_MATJ.editor.setValue(detail_obj.code);
       }
     })();

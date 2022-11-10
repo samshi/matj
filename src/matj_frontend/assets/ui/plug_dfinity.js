@@ -107,8 +107,9 @@ async function getBalance(){
     }
   }
 
-  P.buymecafe.V()
-  P.avatar.V()
+  if(DATA.login){
+    P.support.V()
+  }
 }
 
 function shortPrincipal(s){
