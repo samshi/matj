@@ -2,19 +2,19 @@ function createJsArea(f){
   var P = P_JS = $.C(f, {
     id : 'id_js_area',
     L  : 430,
-    T  : 50,
+    T  : 52,
     W  : 800,
-    H  : f.H_ - 75,
+    H  : f.H_ - 67,
     M  : 0,
-    PD : 2,
+    PD : 1,
     B  : 10,
-    PDB: 10,
+    // PDB: 10,
     F  : 16,
     O  : 'auto',
     Z  : 1,
     FF : 'monospace',
     BG : '#009',
-  })
+  }).H()
 
   P.show = $.C(f, {
     I : 'view js code',

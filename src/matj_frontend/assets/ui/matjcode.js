@@ -1,8 +1,8 @@
 function createMatjArea(f){
   var P = (P_MATJ = $.C(f, P_JS.CSS_).S({
     id: "id_matj_area",
-    BG: "#900",
-  }));
+    BG: "#000",
+  })).V();
 
   P.show_mat_code_button = $.C(f, {
     I : "matj code",
@@ -111,6 +111,18 @@ function createMatjArea(f){
     BG: '#ff8'
   }).H();
 
+  P.message = $.C(f, {
+    L : 1100,
+    T : 20,
+    W : 28,
+    H : 28,
+    src: 'img/message.svg'
+  }, 'img').down(_=>{
+    P_MATJ.outbox.S({
+      H:P_MATJ.outbox.H_ == main.H_ / 2 ? P_JS.H_ : main.H_ / 2
+    })
+  })
+
   P.textarea = $.C(P, {
     id: "matj_textarea",
   }, "textarea");
@@ -135,7 +147,10 @@ function createMatjArea(f){
     P.context = elt;
   }, option);
 
-  $("#id_matj_mirror").S({ H: "calc(100% + 8px" });
+  $("#id_matj_mirror").S({ H: "100%" });
+
+  // codemirror 会把 id_matj_area 改名 id_matj_mirror，新创建一个 id_matj_area，插入 id_matj_mirror
+  P_MATJ.outbox = $("#id_matj_area")
 
   P.editor.on("change", function(cm, change_obj){
     if(P_MATJ.noOnChange){

@@ -41,6 +41,7 @@ $(function () {
   createCopyPage(main);
   createAvatarPage(main);
   createJsArea(main);
+  createMessageArea(main);
   createMatjArea(main);
   createChannel(main);
   createOutputArea(main);

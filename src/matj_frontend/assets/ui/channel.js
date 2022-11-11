@@ -4,11 +4,12 @@ function createChannel(f){
     L : 0,
     T : 80,
     W : 388,
-    H : "100%", // H : 38,//580,
+    H : "calc(100% - 136px)", // H : 38,//580,
     BG: "#fff",
     PD: 20,
     BR: 5,
     O : "hidden",
+    // BD: 'red'
   }));
 
   createTab(P);
@@ -82,8 +83,9 @@ function createLocal(P){
     L : 0,
     T : 60,
     W : "100%",
-    H : 'calc(100% - 195px)',
+    H : 'calc(100% - 61px)',
     O : "auto", // BD: '1px solid red'
+    // BG: 'yellow'
   });
 
   P.updateLocal = (detail_obj, i = P_CHANNEL.focus_local) => {
@@ -118,6 +120,7 @@ function createLocal(P){
     P_MATJ.input_author.H();
     P_MATJ.input_title.val(detail.title || '').V();
     P_MATJ.show_readonly.H();
+    P_MATJ.message.H();
 
     P_MATJ.noOnChange = true
     P_MATJ.editor.setValue(detail.code || '');
@@ -173,7 +176,7 @@ function createLocal(P){
 function createRemote(P){
   P.remote = $.C(P, P.local.CSS_).S({
     id: "remote",
-    H : 'calc(100% - 260px)',
+    H : 'calc(100% - 136px)',
   });
 
   P.login_box = $.c(P.remote, {
@@ -198,16 +201,16 @@ function createRemote(P){
     P_MATJ.input_author.val(detail.author || '').V();
     P_MATJ.input_title.val(detail.title || '').V();
     P_MATJ.show_readonly.H();
+    P_MATJ.message.V();
 
     P_MATJ.noOnChange = true
     P_MATJ.editor.setValue(detail.code || '');
 
-    // P.changeButtonText()
-    // P.showTitleAuthor(code)
-
     P.remotes[n].S({
       BG: "#eee"
     });
+
+    P_MESSAGE.getMessage()
   };
 
   P.unselectRemote = () => {
@@ -494,9 +497,9 @@ function createPublic(P){
   P.publicFilter = () =>{
     clearTimeout(P.public_filter_timer)
     P.public_filter_timer = setTimeout(function(){
-      console.log(LS.public_filter)
-      console.log(LS.public_isfavorite)
-      console.log(P.public_channel.context.children)
+      // console.log(LS.public_filter)
+      // console.log(LS.public_isfavorite)
+      // console.log(P.public_channel.context.children)
 
       let filter = (LS.public_filter || '').split(/\s+/)
 
@@ -524,7 +527,7 @@ function createPublic(P){
         }
 
         channels[i].style.display = show ? '' : 'none'
-        console.log(item, auther, title, is_favorite, show)
+        // console.log(item, auther, title, is_favorite, show)
       }
     }, 200)
 
@@ -588,14 +591,16 @@ function createPublic(P){
 
     P_MATJ.type = "public";
     P_MATJ.show_readonly.V();
+    P_MATJ.message.V();
+
     P_MATJ.input_author.H()
     P_MATJ.input_title.H()
 
     P_MATJ.editor.setValue(LS['public_'+item] ||'');
 
+    P_MATJ.public_file_name = node.dataset.id + node.dataset.channel;
     (async () => {
-      let public_file_name = node.dataset.id + node.dataset.channel;
-      let result     = await INNER.matj_default.principalget(public_file_name);
+      let result     = await INNER.matj_default.principalget(P_MATJ.public_file_name);
       let detail_obj = P_MATJ.getDetail(result[0])
 
       if(detail_obj.code !== LS['public_'+item]){
@@ -605,6 +610,8 @@ function createPublic(P){
     })();
 
     node.style.background = "#eee"
+
+    P_MESSAGE.getMessage()
   };
 
   P.unselectPublic = ()=> {

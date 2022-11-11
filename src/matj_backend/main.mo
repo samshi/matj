@@ -6,22 +6,27 @@ import Principal "mo:base/Principal";
 import Nat "mo:base/Nat";
 import Debug "mo:base/Debug";
 import Char "mo:base/Char";
+import Time "mo:base/Time";
+import Int "mo:base/Int";
 
 actor Registry {
   stable var entries : [(Text, Text)] = [];
   stable var share_entries : [(Text, Text)] = [];
+  stable var message_entries : [(Text, Text)] = [];
 
-  let map = Map.fromIter<Text,Text>(entries.vals(), 10, Text.equal, Text.hash);
-  let share_map = Map.fromIter<Text,Text>(share_entries.vals(), 10, Text.equal, Text.hash);
+  let map         = Map.fromIter<Text,Text>(entries.vals(), 10, Text.equal, Text.hash);
+  let share_map   = Map.fromIter<Text,Text>(share_entries.vals(), 10, Text.equal, Text.hash);
+  let message_map = Map.fromIter<Text,Text>(message_entries.vals(), 10, Text.equal, Text.hash);
 
   public query(msg) func who() : async Text{
     Principal.toText(msg.caller)
   };
 
-  public shared(msg) func set(name : Text, code: Text) : async Nat {
+  //================ channel ====================
+  public shared(msg) func set(index: Text, code: Text) : async Nat {
     let principalId = Principal.toText(msg.caller);
-    map.put(principalId # name, code);
-    switch(map.get(principalId # name)){
+    map.put(principalId # index, code);
+    switch(map.get(principalId # index)){
       case (?source){
         Text.size(source);
       };
@@ -31,16 +36,17 @@ actor Registry {
     }
   };
 
-  public query(msg) func get(name : Text) : async ?Text {
+  public query(msg) func get(index: Text) : async ?Text {
     let principalId = Principal.toText(msg.caller);
-    map.get(principalId # name);
+    map.get(principalId # index);
   };
 
-  public query func principalget(principalname : Text) : async ?Text {
-    map.get(principalname);
+  public query func principalget(principalIdIndex : Text) : async ?Text {
+    map.get(principalIdIndex);
   };
 
-  public shared(msg) func share(index : Text, title: Text, author: Text, time: Text, size: Text) : async Text {
+  //================ share ====================
+  public shared(msg) func share(index:Text, title: Text, author: Text, time: Text, size: Text) : async Text {
     let principalId = Principal.toText(msg.caller);
     let key = "_"#index#"%"#title#"%"#author#"%"#time#"%"#size#"=";
 
@@ -81,7 +87,7 @@ actor Registry {
     }
   };
 
-  public shared(msg) func unshare(index : Text) : async Text {
+  public shared(msg) func unshare(index: Text) : async Text {
     let principalId = Principal.toText(msg.caller);
 
     switch(share_map.get(principalId)){
@@ -122,7 +128,30 @@ actor Registry {
     Iter.toArray(share_map.entries());
   };
 
-  private func extract(t : Text, i : Nat, k : Nat) : Text {
+  //================ message ====================
+  public shared(msg) func message(principalIdIndexG: Text, name: Text, action: Text, message: Text) : async Text {
+    let principalId = Principal.toText(msg.caller);
+    let now = Int.toText(Int.abs(Time.now())/1000000);
+    let new_message = principalId#"^"#now#"^"#name#"^"#action#"^"#message;
+
+    switch(message_map.get(principalIdIndexG)){
+      case (?message_str) {
+        message_map.put(principalIdIndexG, message_str#"=_"#new_message);
+        "add "#now
+      };
+      case null {
+        message_map.put(principalIdIndexG, new_message);
+        "new "#now
+      };
+    }
+  };
+
+  public query func getmessage(principalIdIndexG: Text) : async ?Text {
+    message_map.get(principalIdIndexG);
+  };
+
+  //================ tool ====================
+  private func extract(t: Text, i: Nat, k: Nat) : Text {
     let size = t.size();
     var j = k;
     if(k > size){
@@ -148,13 +177,16 @@ actor Registry {
     return r;
   };
 
+  //================ upgrade ====================
   system func preupgrade() {
     entries := Iter.toArray(map.entries());
     share_entries := Iter.toArray(share_map.entries());
+    message_entries := Iter.toArray(message_map.entries());
   };
 
   system func postupgrade() {
     entries := [];
     share_entries := [];
+    message_entries := [];
   };
 }
