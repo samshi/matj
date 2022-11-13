@@ -255,10 +255,6 @@ function createMatjArea(f){
         };
       })(index, source), delay);
     }
-    else{
-      // P_CHANNEL.setLight(index, '#888')
-      // P_CHANNEL.setMsg(index, '')
-    }
   };
 
   P.detailToStr = (detail_obj) => {
@@ -313,13 +309,24 @@ function createMatjArea(f){
       iframe_head.script_id.R();
     }
 
-    var js_code = "var t0=Date.now()\n";
-    // js_code += 'function runMatJ(){\n'
-    js_code += "window.clearAll && window.clearAll();\n";
-    js_code += P_JS.editor.getValue() + "\n";
-    // js_code += '}\n'
-    // js_code += 'runMatJ()\n'
-    js_code += "showVariable()";
+    var js_code = `
+var t0=Date.now()
+window.clearAll && window.clearAll();
+try{
+  ${P_JS.editor.getValue()}
+  if(!window.showVariable){
+    setTimeout(showVariable, 3000)
+  }else{
+    showVariable()
+  }
+}catch(e){
+  if(!window.showVariable){
+    setTimeout(function(){showVariable(e.message)}, 3000)
+  }else{
+    showVariable(e.message)
+  }
+}
+`
 
     iframe_head.script_id = $.c($(iframe_head), {
       type: "text/javascript",

@@ -256,3 +256,25 @@ P.setTitleAuthor = (title, author) => {
 };
 
 for(i=0; i<=10; i++){LS['ocxz3hae'+i]=LS['haeremote'+i]}
+
+
+// P.locals[i].light = $.C(P.remote, {
+//   L : P.locals[i].W_ + 30,
+//   T : P.locals[i].T_ + 10,
+//   W : 20,
+//   H : 20,
+//   BR: 10, // BD: 'gray'
+// })
+//
+// P.locals[i].msg = $.C(P.remote, {
+//   L : P.locals[i].light.L_ + 30,
+//   T : P.locals[i].T_ + 5,
+//   W : 80,
+//   H : 30,
+//   LH: 30,
+//   F : 16, // BD: '1px solid'
+// }).down(eobj => {
+//   if(eobj.I_ == 'pedding'){
+//     P_MATJ.codeSave(10)
+//   }
+// })

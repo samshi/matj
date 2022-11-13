@@ -2,13 +2,12 @@ function createChannel(f){
   var P = (W.P_CHANNEL = $.C(f, {
     id: "channel_box",
     L : 0,
-    T : 80,
-    W : 388,
-    H : "calc(100% - 136px)", // H : 38,//580,
+    T : 127,
+    W : 428,
+    H : "calc(100% - 140px)", // H : 38,//580,
     BG: "#fff",
-    PD: 20,
     BR: 5,
-    O : "hidden",
+    O : "auto",
     // BD: 'red'
   }));
 
@@ -28,7 +27,7 @@ function createTab(P){
   P.tab = $.C(P, {
     id: "tab",
     L : 10,
-    T : 10,
+    T : 20,
     F : 18,
     W : "calc(100% - 20px)", // BG:'gray'
   }).down((eobj) => {
@@ -81,12 +80,30 @@ function createLocal(P){
   P.local = $.C(P, {
     id: "local",
     L : 0,
-    T : 60,
+    T : 70,
     W : "100%",
-    H : 'calc(100% - 61px)',
+    H : 'calc(100% - 80px)',
     O : "auto", // BD: '1px solid red'
     // BG: 'yellow'
   });
+
+  P.local_channels = $.c(P.local)
+  P.add = $.c(P.local, {src:'img/add.svg', W:30, PD: 10}, 'img').down(_=>{
+    let j = local.j
+    P.locals[j] = $.c(P.local_channels, {
+      I : s,
+      CN: 'channel',
+    }).click((eobj) => {
+      // P_CHANNEL.openlocal(eobj)
+      if(P_CHANNEL.freeze){
+        return;
+      }
+
+      P_CHANNEL.selectLocal(eobj.index);
+    });
+
+    P.locals[j].index = j;
+  })
 
   P.updateLocal = (detail_obj, i = P_CHANNEL.focus_local) => {
     let cells = P.locals[i].context.firstChild.rows[0].cells
@@ -95,12 +112,8 @@ function createLocal(P){
       cells[0].innerHTML = detail_obj.title
     }
 
-    if(detail_obj.size){
-      cells[1].innerHTML = $.SIZE(detail_obj.size)
-    }
-
     if(detail_obj.time){
-      cells[2].innerHTML = $.getDatetime("dort", detail_obj.time)
+      cells[1].innerHTML = (detail_obj.size ? $.SIZE(detail_obj.size) : '') + '<br>' +$.getDatetime("dort", detail_obj.time)
     }
   }
 
@@ -126,7 +139,7 @@ function createLocal(P){
     P_MATJ.editor.setValue(detail.code || '');
 
 
-    P.locals[n].S({
+    P.locals[n] && P.locals[n].S({
       BG: "#eee"
     });
   };
@@ -139,50 +152,71 @@ function createLocal(P){
     delete P.focus_local
   }
 
-  P.LEN      = 16;
+  P.LEN      = 20;
   P.locals   = {};
   P.sharestr = "";
 
-  for(var i = 1; i <= P.LEN; i++){
-    var source     = LS["local" + i];
+  let s = `<table>`
+  s += `<tr>`
+  s += `<td class="title"></td>`;
+  s += `<td class="sizetime"></td>`;
+  s += `</tr>`
+  s += `</table>`
+  let j=1
+  for(var i = 1; i <= j+P.LEN; i++){
+    let source     = LS["local" + i];
     let detail_obj = P_MATJ.getDetail(source);
-
-    let s = `<table>`
-    s += `<tr>`
-    s += `<td class="title" style="text-align:left"></td>`;
-    s += `<td class="size"></td>`;
-    s += `<td class="time"></td>`;
-    s += `</tr>`
-    s += `</table>`
-
-    P.locals[i] = $.c(P.local, {
-      I : s,
-      CN: 'channel',
-    }).click((eobj) => {
-      // P_CHANNEL.openlocal(eobj)
-      if(P_CHANNEL.freeze){
-        return;
+    if(detail_obj.size){
+      if(i!==j){
+        LS["local" + j] = LS["local" + i]
+        delete LS["local" + i]
       }
+      P.locals[j] = $.c(P.local_channels, {
+        I : s,
+        CN: 'channel',
+      }).click((eobj) => {
+        // P_CHANNEL.openlocal(eobj)
+        if(P_CHANNEL.freeze){
+          return;
+        }
 
-      P_CHANNEL.selectLocal(eobj.index);
-    });
+        P_CHANNEL.selectLocal(eobj.index);
+      });
 
-    P.locals[i].index = i;
+      P.locals[j].index = j;
 
-    P.updateLocal(detail_obj, i)
+      P.updateLocal(detail_obj, j)
+
+      j++
+    }
   }
+
+  local.j = j
 }
 
 function createRemote(P){
   P.remote = $.C(P, P.local.CSS_).S({
     id: "remote",
-    H : 'calc(100% - 136px)',
+    // BG: 'blue'
   });
 
-  P.login_box = $.c(P.remote, {
-    // id: 'login_box',
-    H: 74,
-  });
+  let msg = `Connect Wallet and get 10 remote channels
+  
+  Why need connect wallet?
+  1. you will get a unique identity
+  2. obtain 10 remote channels for free
+  3. remote channels can be edited by diffirent device
+  4. remote channels can be published to share code with others
+  5. to leave message on a shared channel
+  6. you may get some denote by your shared channel or your contributed message 
+  `
+  P.alert_message = $.C(P.remote, {
+    I: msg.replace(/\n/g, '<br/>'),
+    PD: '20px 40px',
+    W: 'calc(100% - 80px)',
+    F: 14
+  })
+  P.remote_channels = $.C(P.remote, {BG:'#fff'}).H()
 
   P.selectRemote = (n) => {
     P_MATJ.codeSaveNow()
@@ -229,27 +263,23 @@ function createRemote(P){
     let cells = P.remotes[i].V().context.firstChild.rows[0].cells
 
     if('title' in detail_obj){
-      cells[0].innerHTML = detail_obj.title
+      cells[1].innerHTML = detail_obj.title
     }
 
-    if('size' in detail_obj){
-      cells[1].innerHTML = detail_obj.size ? $.SIZE(detail_obj.size) : ''
+    if(detail_obj.time){
+      cells[2].innerHTML = (detail_obj.size ? $.SIZE(detail_obj.size) : '') + '<br>' +$.getDatetime("dort", detail_obj.time)
     }
-
-    if('time' in detail_obj){
-      cells[2].innerHTML = $.getDatetime("dort", detail_obj.time)
-    }
-
-    // cells[3].innerHTML = detail_obj.share ? SVG.share : SVG.unshare
   }
 
   P.afterLogin = () => {
+    P_CHANNEL.remote_channels.V()
     P_CHANNEL.getRemoteCode();
   };
 
   P.getRemoteCode = () => {
     let P             = P_CHANNEL;
     let principal_str = DATA.principal + "";
+    P.getShare()
 
     for(let i = 1; i <= 10; i++){
       //并行读取所有远程内容
@@ -281,13 +311,8 @@ function createRemote(P){
         let detail = P_MATJ.getDetail(source);
 
         P.updateRemote(detail, i)
-
-        // P.checkLight(i)
-        // P.setMsg(i, LS[name] ? 'loaded' : 'empty')
       })();
     }
-
-    P.getShare()
   };
 
   P.RLEN    = 10;
@@ -295,15 +320,15 @@ function createRemote(P){
   for(let i = 1; i <= P.RLEN; i++){
     let s = `<table>`
     s += `<tr>`
-    s += `<td class="title" style="text-align:left"></td>`;
-    s += `<td class="size"></td>`;
-    s += `<td class="time"></td>`;
+    s += `<td class="index">${i}</td>`;
+    s += `<td class="title"></td>`;
+    s += `<td class="sizetime"></td>`;
     s += `<td class="channel_svg"></td>`;
     s += `<td class="channel_svg" data-name="link"></td>`;
     s += `</tr>`
     s += `</table>`
 
-    P.remotes[i] = $.c(P.remote, {
+    P.remotes[i] = $.c(P.remote_channels, {
       I : s,
       CN: 'channel', // L : 20,
       // T : 60 * (i - 1) + 20,
@@ -364,27 +389,6 @@ function createRemote(P){
     }).H();
 
     P.remotes[i].index = i;
-
-    // P.locals[i].light = $.C(P.remote, {
-    //   L : P.locals[i].W_ + 30,
-    //   T : P.locals[i].T_ + 10,
-    //   W : 20,
-    //   H : 20,
-    //   BR: 10, // BD: 'gray'
-    // })
-    //
-    // P.locals[i].msg = $.C(P.remote, {
-    //   L : P.locals[i].light.L_ + 30,
-    //   T : P.locals[i].T_ + 5,
-    //   W : 80,
-    //   H : 30,
-    //   LH: 30,
-    //   F : 16, // BD: '1px solid'
-    // }).down(eobj => {
-    //   if(eobj.I_ == 'pedding'){
-    //     P_MATJ.codeSave(10)
-    //   }
-    // })
   }
 
   P.getShare = async () => {
@@ -396,11 +400,14 @@ function createRemote(P){
   }
 
   P.freshShare = async () => {
-    console.log(P.sharestr);
+    if(!P.sharestr){
+      return
+    }
+
     for(let i in P.remotes){
       let cells          = P.remotes[i].V().context.firstChild.rows[0].cells
       let checked        = P.checkShare(i)
-      cells[3].innerHTML = checked ? SVG.share : SVG.unshare
+      cells[3].innerHTML = checked ? SVG.share : cells[1].innerHTML ? SVG.unshare : ''
       cells[3].title     = checked ? 'unshare' : 'share'
       cells[4].innerHTML = checked ? SVG.link  : ''
       cells[4].title     = checked ? 'copy link' : ''
@@ -414,11 +421,14 @@ function createRemote(P){
 }
 
 function createPublic(P){
-  P.public   = $.C(P, P.local.CSS_).S({id: "public"});
+  P.public   = $.C(P, P.local.CSS_).S({
+    id: "public",
+    // BG: 'green'
+  });
 
   P.public_filter = $.C(P.public, {
     L: 20,
-    T: 0,
+    T: 5,
     W: 'calc(100% - 32px)',
     H: 40,
   })
@@ -465,8 +475,7 @@ function createPublic(P){
       s += `<td class="channel_avatar" title="${item}"><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
       s += `<td class="author">${author}</td>`;
       s += `<td class="title">${title}</td>`;
-      s += `<td class="size">${$.SIZE(size || 0)}</td>`;
-      s += `<td class="time">${$.getDatetime("dort", time)}</td>`;
+      s += `<td class="sizetime">${$.SIZE(size || 0)}<br/>${$.getDatetime("dort", time)}</td>`;
       s += `<td class="channel_svg">${P.hasFavorite(item) ? SVG.favorite : SVG.unfavorite}</td>`;
       s += `</tr>`
       s += `</table>`
@@ -678,5 +687,3 @@ function createPublic(P){
   P.favorite_list = P.getFavorite();
 
 }
-
-//for(var i in LS){if(/\d{6}/.test(i.slice(-6))){delete LS[i]}}

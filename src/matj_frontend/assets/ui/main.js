@@ -28,14 +28,19 @@ $(function () {
 
   $.C(main, {
     L: 0,
-    T: 20,
-    W: 388 + 40,
+    T: 8,
+    W: 428,
     F: 30,
     FF: "STSongti-SC-Bold, STSongti-SC",
     FW: "bold",
     C: "#000000",
     TA: "center",
+    title: 'support MatJ',
     I: 'MatJ <span style="font-size:20px;color:#666">a js math library for matlab script</span>',
+  }).down(_ => {
+    if(DATA.icp_balance){
+      P_LOGIN.support.toggle()
+    }
   });
 
   createCopyPage(main);
@@ -46,7 +51,7 @@ $(function () {
   createChannel(main);
   createOutputArea(main);
 
-  login(P_CHANNEL.login_box);
+  createLogin(main);
 
   onresize();
 

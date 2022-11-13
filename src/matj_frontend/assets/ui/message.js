@@ -63,10 +63,10 @@ function createMessageArea(f){
   P.message_area = $.C(P, {
     L : 0,
     T : t,
-    PD: 10,
+    PDB: 10,
     BD: '#000',
-    W : P.W_ - 21,
-    H : P.H_ - t - 21,
+    W : P.W_ - 2,
+    H : P.H_ - t - 11,
     BG: '#fff',
     O : 'auto'
   })
@@ -112,7 +112,7 @@ function createMessageArea(f){
 
     return message_file
   }
-  P.showMessage    = function(all_message){
+  P.showMessage    = function(all_message=''){
     // motoko let new_message = principalId#"^"#now#"^"#name#"^"#action#"^"#message;
     // add: message_str#"=_"#new_message
     // new: new_message
@@ -135,25 +135,22 @@ function createMessageArea(f){
     all.push(all_message.slice(pos0))
 
     let s = ''
-    all.forEach((item, index) => {
-      if(index % 5 === 0){
-        s += '<table><tr>'
-        s += `<td><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(item)}"/></td>`
-      }
-      else if(index % 5 === 1){
-        s += `<td>${new Date(+item.slice(0, 13)).toLocaleString()}</td>`
-      }
-      else if(index % 5 === 2){
-        s += `<td>${item}</td>`
-      }
-      else if(index % 5 === 3){
-        s += `<td>${item}</td>`
-      }
-      else if(index % 5 === 4){
-        s += `<td>${item}</td>`
-        s += '</tr></table>'
-      }
-    })
+    for(let i=0, l=all.length; i<l; i+=5){
+      let [principalId, time, name, action, message] = all.slice(i, i+5)
+      s += '<div class="channel">'
+      s += '<table><tr>'
+      s += `<td class="channel_avatar" title="${principalId}">`
+      s += `<img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalId)}"/>`
+      s += `</td>`
+      s += `<td class="sizetime" style="text-align:left;">${name}<br/>${$.getDatetime("dort", time)}</td>`
+      s += `<td class="message">${message.replace(/\n/g, '<br/>')}</td>`
+      s += `<td class="channel_svg">${SVG.good}<br><span>1</span></td>`;
+      s += `<td class="channel_svg">${SVG.bad}<br><span>1</span></td>`;
+      s += `<td class="channel_svg">${SVG.donate}<br><span>0.1</span></td>`;
+
+      s += '</tr></table></div>'
+    }
+
     P.message_area.I(s+s+s+s)
   }
 }

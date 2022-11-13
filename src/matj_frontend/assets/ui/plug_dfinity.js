@@ -84,11 +84,12 @@ async function getBalance(){
   P.copy.V()
   P.logout_btn.V()
 
+  let signal = ' <span style="color:#888;">ICP</span>'
   if(DATA.login == 'plug'){
     DATA.plug_balance = await myAwait('plug.requestBalance', window.ic.plug.requestBalance, undefined, window.ic.plug)
     DATA.plug_balance?.forEach(item => {
       if(item.symbol == 'ICP'){
-        P.account_balance.I(Math.round(item.amount*10000)/10000 + ' ICP')
+        P.account_balance.I(Math.round(item.amount*10000)/10000 + signal)
         DATA.icp_balance = item.amount
       }
     })
@@ -99,16 +100,12 @@ async function getBalance(){
       var num_icp_balance = parseInt(balance.e8s) / 1e8
 
       DATA.icp_balance = num_icp_balance
-      P.account_balance.I(num_icp_balance + ' ICP')
+      P.account_balance.I(num_icp_balance + signal)
     }
     else{
       P.account_balance.I('get balance failed')
       return
     }
-  }
-
-  if(DATA.login){
-    P.support.V()
   }
 }
 
@@ -127,6 +124,7 @@ async function payOwner(to_address, price){
     }
 
     var plug_result = await myAwait('plug.requestTransfer', window.ic.plug.requestTransfer, params, window.ic.plug)
+    console.log('payOwner', price, plug_result)
     if(plug_result.height){
       return true
     }
@@ -142,6 +140,7 @@ async function payOwner(to_address, price){
     }
 
     var ic_result = await myAwait('authActor.send_dfx', INNER.authActor.send_dfx, args)
+    console.log('payOwner', price, ic_result)
     if(parseInt(ic_result)){
       return true
     }

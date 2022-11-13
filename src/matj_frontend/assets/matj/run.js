@@ -165,7 +165,7 @@ function clearAll(){
   TABLE_TR = []
 }
 
-function showVariable(){
+function showVariable(err){
   let table = $.C(OUTPUT_PAGES[0], {
     L: 20,
     T: 40, // W: PLOT.W + 2
@@ -186,6 +186,13 @@ function showVariable(){
   }, 'table')
 
   s = ''
+
+  if(err){
+    // VLIST.err = 1
+    // window.err = err
+    OUTPUT_PAGES[0].I(`error: ${err}`)
+  }
+
   for(let variable in VLIST){
     if(VLIST.hasOwnProperty(variable)){
       s += '<tr>'
