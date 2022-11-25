@@ -100,7 +100,7 @@ async function internetIdentity(){
           matj     : await matj_promise,
         })
 
-        await window.afterLogin()
+        await window.afterLoginIC()
       },
       onError         : (e) => {
         console.log('authClient.login onError', e)

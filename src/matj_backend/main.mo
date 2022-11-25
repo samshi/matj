@@ -10,23 +10,59 @@ import Time "mo:base/Time";
 import Int "mo:base/Int";
 
 actor Registry {
-  stable var entries : [(Text, Text)] = [];
-  stable var share_entries : [(Text, Text)] = [];
+  stable var channel_entries : [(Text, Text)] = [];
+  stable var share_entries   : [(Text, Text)] = [];
   stable var message_entries : [(Text, Text)] = [];
+  stable var profile_entries : [(Text, Text)] = [];
 
-  let map         = Map.fromIter<Text,Text>(entries.vals(), 10, Text.equal, Text.hash);
+  let channel_map = Map.fromIter<Text,Text>(channel_entries.vals(), 10, Text.equal, Text.hash);
   let share_map   = Map.fromIter<Text,Text>(share_entries.vals(), 10, Text.equal, Text.hash);
   let message_map = Map.fromIter<Text,Text>(message_entries.vals(), 10, Text.equal, Text.hash);
+  let profile_map = Map.fromIter<Text,Text>(profile_entries.vals(), 10, Text.equal, Text.hash);
 
+  //================ upgrade ====================
+  system func preupgrade() {
+    channel_entries := Iter.toArray(channel_map.entries());
+    share_entries   := Iter.toArray(share_map.entries());
+    message_entries := Iter.toArray(message_map.entries());
+    profile_entries := Iter.toArray(profile_map.entries());
+  };
+
+  system func postupgrade() {
+    channel_entries := [];
+    share_entries   := [];
+    message_entries := [];
+    profile_entries := [];
+  };
+
+  //================ test ====================
   public query(msg) func who() : async Text{
     Principal.toText(msg.caller)
   };
 
-  //================ channel ====================
-  public shared(msg) func set(index: Text, code: Text) : async Nat {
+  //================ profile ====================
+  public shared(msg) func profile(profile: Text) : async Nat {
     let principalId = Principal.toText(msg.caller);
-    map.put(principalId # index, code);
-    switch(map.get(principalId # index)){
+    profile_map.put(principalId, profile);
+    switch(profile_map.get(principalId)){
+      case (?info){
+        Text.size(info);
+      };
+      case null {
+        0
+      };
+    }
+  };
+
+  public query func getprofile(principalId: Text) : async ?Text {
+    profile_map.get(principalId);
+  };
+
+  //================ channel ====================
+  public shared(msg) func channel(index: Text, code: Text) : async Nat {
+    let principalId = Principal.toText(msg.caller);
+    channel_map.put(principalId # index, code);
+    switch(channel_map.get(principalId # index)){
       case (?source){
         Text.size(source);
       };
@@ -36,13 +72,13 @@ actor Registry {
     }
   };
 
-  public query(msg) func get(index: Text) : async ?Text {
+  public query(msg) func getmychannel(index: Text) : async ?Text {
     let principalId = Principal.toText(msg.caller);
-    map.get(principalId # index);
+    channel_map.get(principalId # index);
   };
 
-  public query func principalget(principalIdIndex : Text) : async ?Text {
-    map.get(principalIdIndex);
+  public query func getchannel(principalIdIndex : Text) : async ?Text {
+    channel_map.get(principalIdIndex);
   };
 
   //================ share ====================
@@ -177,16 +213,4 @@ actor Registry {
     return r;
   };
 
-  //================ upgrade ====================
-  system func preupgrade() {
-    entries := Iter.toArray(map.entries());
-    share_entries := Iter.toArray(share_map.entries());
-    message_entries := Iter.toArray(message_map.entries());
-  };
-
-  system func postupgrade() {
-    entries := [];
-    share_entries := [];
-    message_entries := [];
-  };
 }

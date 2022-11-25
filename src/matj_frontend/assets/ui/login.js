@@ -1,7 +1,6 @@
 function createLogin(f){
   var P = (W.P_LOGIN = $.C(f, {
-    id: 'login_box',
-    // BG: '#eee',
+    id: 'login_box', // BG: '#eee',
     L : 0,
     T : 52,
     W : 428,
@@ -9,23 +8,22 @@ function createLogin(f){
   }))
 
   P.connect_wallet = $.C(P, {
-    T : 12+15,
-    L : 44,
+    L : 162,
+    T : 16,
     id: "connect_wallet", // W : 120,
     // H : 50,
     // D : "inline-block",
     // I : '<span style="font-size:16px;color:#000">Connect Wallet:</span><ul style="margin:5px 0 0 0; padding-inline-start:13px"><li>share code public<li>leave public message<li>earn by contribute</li>', // VA: 'bottom',
-    I: 'Connect Wallet :',
+    I : 'Connect<br/>Wallet :',
     F : 16,
-    // LH: 12,
-    // C : '#666'
+    TA: 'center'
   })
 
   P.login_plug_box = $.C(P, {
-    L : 180,
+    L : 232,
     T : 7,
     id: "login_plug_box",
-    W : 100,
+    W : 86,
     H : 60,
     BR: 10,
     D : "inline-block",
@@ -42,6 +40,7 @@ function createLogin(f){
       });
     })
     .down(async (_) => {
+      P.connect_wallet.H()
       P.plug_wait.V()
       P.login_identity_box.H()
       P.plug_img.H()
@@ -58,14 +57,14 @@ function createLogin(f){
 
   P.plug_img = $.C(P.login_plug_box, {
     src: "img/plug.svg",
-    L  : 35,
-    T  : 4,
+    L  : 27,
+    T  : 5,
     H  : 50,
   }, "img");
 
   P.plug_wait = $.C(P.login_plug_box, {
     I: SVG.wait,
-    L: 30,
+    L: 25,
     T: 10,
     W: 40,
     H: 40
@@ -73,7 +72,7 @@ function createLogin(f){
 
   P.login_identity_box = $.C(P, P.login_plug_box.CSS_)
     .S({
-      L : 285,
+      L : 319,
       id: "login_identity_box",
     })
     .over((eobj) => {
@@ -87,6 +86,7 @@ function createLogin(f){
       });
     })
     .down(() => {
+      P.connect_wallet.H()
       P.identity_wait.V()
       P.login_plug_box.H()
       P.identity_img.H()
@@ -95,49 +95,36 @@ function createLogin(f){
 
   P.identity_img = $.C(P.login_identity_box, {
     src: "img/dfinity.png",
-    L  : 3,
-    T  : -3,
-    H  : 70,
+    L  : 0,
+    T  : 0,
+    H  : 65,
   }, "img");
 
   P.identity_wait = $.C(P.login_identity_box, P.plug_wait.CSS_).H()
 
   // ========================================
-  P.login_plug_img = $.C(P, {
-    // F:16,
-    L  : 30,
-    T  : 37,
-    H  : 30,
-    src: "img/plug.svg",
-  }, "img").H();
-
-  P.login_identity_img = $.C(P, {
-    // F:16,
-    L  : 27,
-    T  : P.login_plug_img.T_ + 7,
-    H  : 16,
-    src: "img/dfinity.svg",
-  }, "img").H();
-
-  P.account_balance = $.C(P, {
-    F: 13,
-    L: 67,
-    T: P.login_plug_img.T_ + 5,
-  }).H();
-
+  let _l      = 175
+  let _t      = 38
+  P.myname    = $.C(P, {
+    L : 20,
+    T : _t,
+    F : 16,
+    W : _l - 20,
+    TA: 'center'
+  })
   P.id_avatar = $.C(P, {
-    L : 165,
-    T : P.login_plug_img.T_ + 2,
+    L : _l,
+    T : _t,
     TS: 300,
     CN: "avatar",
-    W : 24,
-    H : 24,
+    W : 30,
+    H : 30,
   }, "img")
     .H()
     .over((eobj) => {
       eobj.S({
-        L: 165 - 29,
-        T: P.login_plug_img.T_ - 20,
+        L: _l - 26,
+        T: _t - 26,
         W: 82,
         H: 82,
         Z: 1,
@@ -145,18 +132,18 @@ function createLogin(f){
     })
     .out((eobj) => {
       eobj.S({
-        L: 165,
-        T: P.login_plug_img.T_ + 2,
-        W: 24,
-        H: 24,
+        L: _l,
+        T: _t,
+        W: 30,
+        H: 30,
         Z: 0,
       });
     });
 
   P.account = $.C(P, {
     F    : 13,
-    L    : 200,
-    T    : P.account_balance.T_,
+    L    : _l + 40,
+    T    : _t - 2,
     title: 'Copy'
   }).H().down(eobj => {
     P_COPY.copyContent(DATA.accountId);
@@ -168,19 +155,41 @@ function createLogin(f){
   });
 
   P.copy = $.C(P, {
-    L  : 291,
-    T  : P.account_balance.T_ + 3,
+    L  : _l + 130,
+    T  : _t + 1,
     W  : 12,
     src: 'img/copy.webp'
   }, 'img').down(eobj => {
     P_COPY.copyContent(DATA.accountId, 'accound id copied', eobj.X, eobj.Y);
   }).H()
 
+  P.account_balance = $.C(P, {
+    F: 12,
+    L: P.account.L_,
+    T: _t + 17,
+  }).H()
+
+  P.login_plug_img = $.C(P, {
+    // F:16,
+    L  : _l + 130,
+    T  : _t + 17,
+    H  : 18,
+    src: "img/plug.svg",
+  }, "img").H();
+
+  P.login_identity_img = $.C(P, {
+    // F:16,
+    L  : _l + 127,
+    T  : _t + 22,
+    H  : 8,
+    src: "img/dfinity.svg",
+  }, "img").H();
+
   P.logout_btn = $.C(P, {
-    L : 330,
-    T : P.account_balance.T_ - 5,
-    W : 70,
-    PD: "5px 10px",
+    L : 350,
+    T : _t,
+    W : 54,
+    PD: "5px 0",
     I : "Logout",
   }, "button")
     .H()
@@ -225,10 +234,32 @@ function createLogin(f){
       }
     });
 
-  // ====================================
-  P.support = $.C(P, {}).H()
+  P.afterLogin = function(){
+    var P = P_LOGIN
+    P.connect_wallet.H();
+    P.login_plug_box.H()
+    P.login_identity_box.H()
+    if(DATA.login == 'plug'){
+      P.login_plug_img.V()
+    }
+    else if(DATA.login == 'ic'){
+      P.login_identity_img.V()
+    }
+    P.account_balance.V().I('get balance ...')
+    P.id_avatar.V().S({src: P_CANVAS.accountToAvatar(DATA.accountId)})
+    P.account.V().I(shortPrincipal(DATA.accountId))
+    P.copy.V()
+    P.logout_btn.V()
+  }
 
-  P.avatar_t = 4
+  P.showBalance = function(){
+    let signal = ' <span style="color:#888;">ICP</span>'
+    P.account_balance.I(Math.round(DATA.icp_balance * 10000) / 10000 + signal)
+  }
+  // ====================================
+  P.support     = $.C(P, {}).H()
+
+  P.avatar_t = 0
   P.avatar_l = 85
   P.avatar   = $.C(P.support, {
     src: "img/samshi.jpeg",

@@ -240,7 +240,7 @@ function createMatjArea(f){
           P_MATJ.timers[index] = 0
           P_CHANNEL.freeze     = true;
 
-          let size = await INNER.matj.set(''+index, source);
+          let size = await INNER.matj.channel(''+index, source);
           console.log(source.length, size);
 
           if(P_CHANNEL.checkShare(index)){

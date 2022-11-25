@@ -46,7 +46,7 @@ button[type="submit"] {
     margin: 10px 20px 0 20px;
     padding: 2px 5px;
     border-radius: 7px;
-    cursor: pointer;
+    /*cursor: pointer;*/
 }
 
 .channel table {
@@ -60,7 +60,7 @@ button[type="submit"] {
     /*flex-grow: 2;*/
     /*border:1px solid;*/
     width: 33%;
-    vertical-align: middle;
+    /*vertical-align: middle;*/
     line-height: 20px;
     font-family: monospace;
 }
@@ -100,6 +100,16 @@ button[type="submit"] {
     width: 16px;
 }
 
+.channel span{
+    font-size:12px;
+    line-height:12px;
+    text-align:center;
+}
+
+.public {
+    cursor: pointer
+}
+
 .channel .message {
     font-size: 14px;
     line-height: 16px;
@@ -108,10 +118,12 @@ button[type="submit"] {
     font-family: monospace;
     /*width: 80%;*/
 }
-.channel span{
-    font-size:12px;
-    line-height:12px;
-    text-align:center;
+
+.message tr{
+    vertical-align: top;
+}
+.message .channel_svg{
+    cursor: pointer;
 }
 
 .avatar {

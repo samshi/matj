@@ -58,39 +58,36 @@ async function connectIC(){
   }
 }
 
-async function afterLogin(){
+async function afterLoginIC(){
   DATA.principal = INNER.principal
   DATA.accountId = INNER.address
   DATA.login     = 'ic'
-  await getBalance()
+  getBalance()
 }
 
 async function getBalance(){
+  let profile = await INNER.matj_default.getprofile(''+DATA.principal)
+  DATA.myname = profile[0]
+  while(!DATA.myname){
+    DATA.myname = (prompt('Welcome to the MatJ world! please input your name')).trim()
+    if(DATA.myname){
+      let res = await INNER.matj.profile(DATA.myname)
+      console.log(res)
+    }
+  }
+
+  P_LOGIN.myname.I(DATA.myname)
+
   P_CHANNEL.afterLogin()
 
-  var P = P_LOGIN
-  P.connect_wallet.H();
-  P.login_plug_box.H()
-  P.login_identity_box.H()
-  if(DATA.login == 'plug'){
-    P.login_plug_img.V()
-  }
-  else if(DATA.login == 'ic'){
-    P.login_identity_img.V()
-  }
-  P.account_balance.V().I('get balance ...')
-  P.id_avatar.V().S({src: P_CANVAS.accountToAvatar(DATA.accountId)})
-  P.account.V().I(shortPrincipal(DATA.accountId))
-  P.copy.V()
-  P.logout_btn.V()
+  P_LOGIN.afterLogin()
 
-  let signal = ' <span style="color:#888;">ICP</span>'
   if(DATA.login == 'plug'){
     DATA.plug_balance = await myAwait('plug.requestBalance', window.ic.plug.requestBalance, undefined, window.ic.plug)
     DATA.plug_balance?.forEach(item => {
       if(item.symbol == 'ICP'){
-        P.account_balance.I(Math.round(item.amount*10000)/10000 + signal)
         DATA.icp_balance = item.amount
+        P_LOGIN.showBalance()
       }
     })
   }
@@ -100,7 +97,7 @@ async function getBalance(){
       var num_icp_balance = parseInt(balance.e8s) / 1e8
 
       DATA.icp_balance = num_icp_balance
-      P.account_balance.I(num_icp_balance + signal)
+      P_LOGIN.showBalance()
     }
     else{
       P.account_balance.I('get balance failed')

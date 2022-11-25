@@ -206,7 +206,7 @@ function createRemote(P){
   1. you will get a unique identity
   2. obtain 10 remote channels for free
   3. remote channels can be edited by diffirent device
-  4. remote channels can be published to share code with others
+  4. remote channels can be published to share channel with others
   5. to leave message on a shared channel
   6. you may get some denote by your shared channel or your contributed message 
   `
@@ -288,10 +288,10 @@ function createRemote(P){
 
         // P.setLight(i, 'green')
         // P.setMsg(i, 'loading')
-        let result = await INNER.matj_default.principalget(principal_str + i);
+        let result = await INNER.matj_default.getchannel(principal_str + i);
 
         let source = result[0] || "";
-        console.log(Date.now(), remote_name, principal_str + i, source.length);
+        // console.log(Date.now(), remote_name, principal_str + i, source.length);
 
         if(result.length){
           if(!LS[remote_name]){
@@ -441,7 +441,7 @@ function createPublic(P){
     placeholder: 'name title filter',
     value: LS.public_filter || ''
   }, 'input').input(eobj=>{
-    console.log(eobj.val())
+    // console.log(eobj.val())
     LS.public_filter = eobj.val()
     P.publicFilter()
   })
@@ -469,7 +469,7 @@ function createPublic(P){
 
     let s = ''
     if(P.hasFavorite(item) || nolimit){
-      s += `<div onclick="P_CHANNEL.selectPublic(this, event)" class="channel"  data-id="${principalid}" data-channel="${channel}" data-index="${index}">`
+      s += `<div onclick="P_CHANNEL.selectPublic(this, event)" class="channel public"  data-id="${principalid}" data-channel="${channel}" data-index="${index}">`
       s += `<table>`
       s += `<tr>`
       s += `<td class="channel_avatar" title="${item}"><img class="avatar" onmouseover="P_CHANNEL.large(event)" onmouseout="P_CHANNEL.large()" src="${P_CANVAS.principalToAvatar(principalid)}"/></td>`;
@@ -556,7 +556,7 @@ function createPublic(P){
       //   ['bd2wg-k5qgq-hxlt4-km3ub-65vbo-sm2s2-byexk-vowwq-ubcgi-ocxz3-hae', '_6%charts%samshi=_4%for loop%samshi=_7%factor%samshi='],
       //   ['jxod7-ldlti-mmxc6-rrojx-peixc-vskod-pmv7f-aroz7-wtrys-eq3xg-kqe', '_3%todolist%samshi=']
       // ]
-      console.log(P.allshare);
+      console.log('P.allshare', P.allshare);
 
       P.showPublic();
     })();
@@ -609,7 +609,8 @@ function createPublic(P){
 
     P_MATJ.public_file_name = node.dataset.id + node.dataset.channel;
     (async () => {
-      let result     = await INNER.matj_default.principalget(P_MATJ.public_file_name);
+      let result     = await INNER.matj_default.getchannel(P_MATJ.public_file_name);
+      console.log(P_MATJ.public_file_name, result)
       let detail_obj = P_MATJ.getDetail(result[0])
 
       if(detail_obj.code !== LS['public_'+item]){
