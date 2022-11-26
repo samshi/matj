@@ -59,10 +59,10 @@ actor Registry {
   };
 
   //================ channel ====================
-  public shared(msg) func channel(index: Text, code: Text) : async Nat {
+  public shared(msg) func channel(channel: Text, code: Text) : async Nat {
     let principalId = Principal.toText(msg.caller);
-    channel_map.put(principalId # index, code);
-    switch(channel_map.get(principalId # index)){
+    channel_map.put(principalId # channel, code);
+    switch(channel_map.get(principalId # channel)){
       case (?source){
         Text.size(source);
       };
@@ -72,9 +72,9 @@ actor Registry {
     }
   };
 
-  public query(msg) func getmychannel(index: Text) : async ?Text {
+  public query(msg) func getmychannel(channel: Text) : async ?Text {
     let principalId = Principal.toText(msg.caller);
-    channel_map.get(principalId # index);
+    channel_map.get(principalId # channel);
   };
 
   public query func getchannel(principalIdIndex : Text) : async ?Text {
@@ -82,7 +82,7 @@ actor Registry {
   };
 
   //================ share ====================
-  public shared(msg) func share(index:Text, title: Text, author: Text, time: Text, size: Text) : async Text {
+  public shared(msg) func share(index: Text, title: Text, author: Text, time: Text, size: Text) : async Text {
     let principalId = Principal.toText(msg.caller);
     let key = "_"#index#"%"#title#"%"#author#"%"#time#"%"#size#"=";
 

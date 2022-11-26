@@ -223,10 +223,6 @@ function createLogin(f){
 
       for(let index in P_MATJ.timers){
         delete P_MATJ.timers[index];
-        // 为什么要中断，因为已经disconnect了
-
-        // P_CHANNEL.setLight(index, "#888");
-        // P_CHANNEL.setMsg(index, "");
       }
 
       for(let i in P_CHANNEL.remotes){

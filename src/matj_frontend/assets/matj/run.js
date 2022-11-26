@@ -110,11 +110,12 @@ $(function(){
 })
 
 function focusPage(page_name){
-  LS.page_name = page_name
-
   if(!page_name){
+    delete LS.page_name
     return
   }
+
+  LS.page_name = page_name
 
   // console.log('focusPage', LS.page_name)
 
@@ -149,11 +150,6 @@ function clearAll(){
   // OUTPUT_PAGES[3].I('')
   TIME_AREA.I('')
 
-  //加载的库似乎有变量泄漏：length
-  // window.length 属性返回在当前窗口中frames的数量（包括IFRAMES）。
-  // console.log('length before', window['length'])
-  // delete window.length
-  // console.log('length after', window['length'])
   for(let key in VLIST){
     if(VLIST.hasOwnProperty(key)){
       delete VLIST[key]

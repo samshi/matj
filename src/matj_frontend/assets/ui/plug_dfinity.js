@@ -123,8 +123,9 @@ async function payOwner(to_address, price){
     var plug_result = await myAwait('plug.requestTransfer', window.ic.plug.requestTransfer, params, window.ic.plug)
     console.log('payOwner', price, plug_result)
     if(plug_result.height){
-      return true
+      return plug_result.height
     }
+    return 'error'
   }
   else{
     var args = {
@@ -139,7 +140,8 @@ async function payOwner(to_address, price){
     var ic_result = await myAwait('authActor.send_dfx', INNER.authActor.send_dfx, args)
     console.log('payOwner', price, ic_result)
     if(parseInt(ic_result)){
-      return true
+      return parseInt(ic_result)
     }
+    return 'error'
   }
 }

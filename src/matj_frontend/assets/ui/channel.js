@@ -197,18 +197,17 @@ function createLocal(P){
 function createRemote(P){
   P.remote = $.C(P, P.local.CSS_).S({
     id: "remote",
-    // BG: 'blue'
   });
 
   let msg = `Connect Wallet and get 10 remote channels
-  
+
   Why need connect wallet?
   1. you will get a unique identity
   2. obtain 10 remote channels for free
   3. remote channels can be edited by diffirent device
   4. remote channels can be published to share channel with others
   5. to leave message on a shared channel
-  6. you may get some denote by your shared channel or your contributed message 
+  6. you may get some denote by your shared channel or your contributed message
   `
   P.alert_message = $.C(P.remote, {
     I: msg.replace(/\n/g, '<br/>'),
