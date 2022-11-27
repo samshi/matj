@@ -1,12 +1,12 @@
 {
   "canisters": {
-    "matj_backend": {
+    "matj": {
       "main": "src/matj_backend/main.mo",
       "type": "motoko"
     },
-    "matj_frontend": {
+    "matj_assets": {
       "dependencies": [
-        "matj_backend"
+        "matj"
       ],
       "frontend": {
         "entrypoint": "src/matj_frontend/src/index.html"

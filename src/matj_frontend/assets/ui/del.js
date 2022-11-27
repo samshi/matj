@@ -229,13 +229,13 @@ P.max();
 
 
 
-
-public shared(msg) func setshare(name : Text, code: Text, index : Text, title: Text, author: Text, time: Text, size: Text) : async Text {
-  let principalId = Principal.toText(msg.caller);
-  map.put(principalId # name, code);
-
-  await share(index, title, author, time, size)
-};
+// motoko
+// public shared(msg) func setshare(name : Text, code: Text, index : Text, title: Text, author: Text, time: Text, size: Text) : async Text {
+//   let principalId = Principal.toText(msg.caller);
+//   map.put(principalId # name, code);
+//
+//   await share(index, title, author, time, size)
+// };
 
 
 P.addTitleAuthor = (title, author) => {
