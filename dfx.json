@@ -1,12 +1,12 @@
 {
   "canisters": {
-    "matj": {
+    "matj_backend": {
       "main": "src/matj_backend/main.mo",
       "type": "motoko"
     },
-    "matj_assets": {
+    "matj_frontend": {
       "dependencies": [
-        "matj"
+        "matj_backend"
       ],
       "frontend": {
         "entrypoint": "src/matj_frontend/src/index.html"
@@ -22,12 +22,6 @@
     "build": {
       "args": "",
       "packtool": ""
-    }
-  },
-  "networks": {
-    "local": {
-      "bind": "127.0.0.1:8000",
-      "type": "ephemeral"
     }
   },
   "version": 1

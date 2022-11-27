@@ -28,9 +28,9 @@ function initCanisterIds(){
 
 initCanisterIds()
 
-import {matj as matj_default} from "../../declarations/matj";
+import {matj_backend as matj_default} from "../../declarations/matj_backend";
 
-import {idlFactory as matj_idl} from '../../declarations/matj/matj.did.js'
+import {idlFactory as matj_idl} from '../../declarations/matj_backend/matj_backend.did.js'
 
 const matjCreateActor     = async (identity) => {
   const agent = new HttpAgent({identity})
