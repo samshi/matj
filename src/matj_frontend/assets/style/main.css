@@ -53,6 +53,7 @@ button[type="submit"] {
     width: 100%;
     height: 32px;
 }
+
 /*.channel td{*/
 /*    vertical-align: top;*/
 /*}*/
@@ -69,6 +70,7 @@ button[type="submit"] {
     width: 32px;
     font-size: 12px;
 }
+
 .channel .channel_avatar {
     width: 32px;
 }
@@ -96,14 +98,15 @@ button[type="submit"] {
     text-align: center;
     width: 36px;
 }
+
 .channel svg {
     width: 16px;
 }
 
-.channel span{
-    font-size:12px;
-    line-height:12px;
-    text-align:center;
+.channel span {
+    font-size: 12px;
+    line-height: 12px;
+    text-align: center;
 }
 
 .public {
@@ -119,10 +122,11 @@ button[type="submit"] {
     /*width: 80%;*/
 }
 
-.message tr{
+.message tr {
     vertical-align: top;
 }
-.message .channel_svg{
+
+.message .channel_svg {
     cursor: pointer;
 }
 
@@ -130,6 +134,10 @@ button[type="submit"] {
     border-radius: 50%;
     border: 1px solid #e0e0e0;
     width: 24px;
+}
+
+#floatbox .avatar {
+    margin: 5px;
 }
 
 #channel_box svg {

@@ -7,8 +7,7 @@ function createChannel(f){
     H : "calc(100% - 140px)", // H : 38,//580,
     BG: "#fff",
     BR: 5,
-    O : "auto",
-    // BD: 'red'
+    O : "auto", // BD: 'red'
   }));
 
   createTab(P);
@@ -49,11 +48,11 @@ function createTab(P){
     P.public.V(target == P.public_tab);
 
     if(target == P.public_tab){
-      P_CHANNEL.getPublicChannel();
+      P.getPublicChannel();
     }
   });
 
-  P.remote_tab   = $.C(P.tab, {
+  P.remote_tab = $.C(P.tab, {
     I : "remote",
     L : "33%",
     T : 0,
@@ -62,7 +61,7 @@ function createTab(P){
     BD: "1px solid #000", // BG:'red',
     TA: "center",
   });
-  P.local_tab    = $.C(P.tab, P.remote_tab.CSS_).S({
+  P.local_tab  = $.C(P.tab, P.remote_tab.CSS_).S({
     I                     : "local",
     L                     : 0,
     borderTopLeftRadius   : "2em",
@@ -88,8 +87,12 @@ function createLocal(P){
   });
 
   P.local_channels = $.c(P.local)
-  P.add = $.c(P.local, {src:'img/add.svg', W:30, PD: 10}, 'img').down(_=>{
-    let j = local.j
+  P.add            = $.c(P.local, {
+    src: 'img/add.svg',
+    W  : 30,
+    PD : 10
+  }, 'img').down(_ => {
+    let j       = local.j
     P.locals[j] = $.c(P.local_channels, {
       I : s,
       CN: 'channel',
@@ -113,7 +116,9 @@ function createLocal(P){
     }
 
     if(detail_obj.time){
-      cells[1].innerHTML = (detail_obj.size ? $.SIZE(detail_obj.size) : '') + '<br>' +$.getDatetime("dort", detail_obj.time)
+      cells[1].innerHTML = (detail_obj.size
+                            ? $.SIZE(detail_obj.size)
+                            : '') + '<br>' + $.getDatetime("dort", detail_obj.time)
     }
   }
 
@@ -138,7 +143,6 @@ function createLocal(P){
     P_MATJ.noOnChange = true
     P_MATJ.editor.setValue(detail.code || '');
 
-
     P.locals[n] && P.locals[n].S({
       BG: "#eee"
     });
@@ -147,8 +151,8 @@ function createLocal(P){
   P.unselectLocal = () => {
     let focus_local = P.locals[P.focus_local]
     focus_local && focus_local.S({
-        BG: ""
-      })
+      BG: ""
+    })
     delete P.focus_local
   }
 
@@ -162,12 +166,12 @@ function createLocal(P){
   s += `<td class="sizetime"></td>`;
   s += `</tr>`
   s += `</table>`
-  let j=1
-  for(var i = 1; i <= j+P.LEN; i++){
+  let j = 1
+  for(var i = 1; i <= j + P.LEN; i++){
     let source     = LS["local" + i];
     let detail_obj = P_MATJ.getDetail(source);
     if(detail_obj.size){
-      if(i!==j){
+      if(i !== j){
         LS["local" + j] = LS["local" + i]
         delete LS["local" + i]
       }
@@ -199,7 +203,7 @@ function createRemote(P){
     id: "remote",
   });
 
-  let msg = `Connect Wallet and get 10 remote channels
+  let msg           = `Connect Wallet and get 10 remote channels
 
   Why need connect wallet?
   1. you will get a unique identity
@@ -209,13 +213,13 @@ function createRemote(P){
   5. to leave message on a shared channel
   6. you may get some denote by your shared channel or your contributed message
   `
-  P.alert_message = $.C(P.remote, {
-    I: msg.replace(/\n/g, '<br/>'),
+  P.alert_message   = $.C(P.remote, {
+    I : msg.replace(/\n/g, '<br/>'),
     PD: '20px 40px',
-    W: 'calc(100% - 80px)',
-    F: 14
+    W : 'calc(100% - 80px)',
+    F : 14
   })
-  P.remote_channels = $.C(P.remote, {BG:'#fff'}).H()
+  P.remote_channels = $.C(P.remote, {BG: '#fff'}).H()
 
   P.selectRemote = (n) => {
     P_MATJ.codeSaveNow()
@@ -225,8 +229,8 @@ function createRemote(P){
 
     P.focus_remote  = n;
     let remote_name = P.getRemoteName(n)
-    var source        = LS[remote_name] || "";
-    let detail        = P_MATJ.getDetail(source);
+    var source      = LS[remote_name] || "";
+    let detail      = P_MATJ.getDetail(source);
 
     P_MATJ.type       = "remote";
     P_MATJ.noOnChange = true; //不会触发codeSave
@@ -254,11 +258,11 @@ function createRemote(P){
     delete P.focus_remote
   }
 
-  P.getRemoteName = (n, id=DATA.principal + "") => {
-    return id.slice(-9, -4) +id.slice(-3) + n;
+  P.getRemoteName = (n, id = DATA.principal + "") => {
+    return id.slice(-9, -4) + id.slice(-3) + n;
   }
 
-  P.updateRemote  = (detail_obj, i = P_CHANNEL.focus_remote) => {
+  P.updateRemote = (detail_obj, i = P_CHANNEL.focus_remote) => {
     let cells = P.remotes[i].V().context.firstChild.rows[0].cells
 
     if('title' in detail_obj){
@@ -266,7 +270,9 @@ function createRemote(P){
     }
 
     if(detail_obj.time){
-      cells[2].innerHTML = (detail_obj.size ? $.SIZE(detail_obj.size) : '') + '<br>' +$.getDatetime("dort", detail_obj.time)
+      cells[2].innerHTML = (detail_obj.size
+                            ? $.SIZE(detail_obj.size)
+                            : '') + '<br>' + $.getDatetime("dort", detail_obj.time)
     }
   }
 
@@ -353,8 +359,8 @@ function createRemote(P){
 
       // 点中svg图像
       if(target){
-        if(target.parentNode.dataset.name==='link'){
-          let href = location.origin+'#'+P.getRemoteName(index)
+        if(target.parentNode.dataset.name === 'link'){
+          let href = location.origin + '#' + P.getRemoteName(index)
           P_COPY.copyContent(href, 'share link copied', eobj.X, eobj.Y);
         }
         else{
@@ -367,10 +373,15 @@ function createRemote(P){
             share_str = await INNER.matj.unshare("" + index);
           }
           else{
-            let remote_name                 = P.getRemoteName(index);
-            let source                      = LS[remote_name] || ''
-            let {title, author, time, size} = P_MATJ.getDetail(source);
-            share_str                       = await INNER.matj.share("" + index, title, author, time, '' + size);
+            let remote_name = P.getRemoteName(index);
+            let source      = LS[remote_name] || ''
+            let {
+                  title,
+                  author,
+                  time,
+                  size
+                }           = P_MATJ.getDetail(source);
+            share_str       = await INNER.matj.share("" + index, title, author, time, '' + size);
           }
 
           P.sharestr = share_str.split(' ').slice(1).join('')
@@ -406,9 +417,11 @@ function createRemote(P){
     for(let i in P.remotes){
       let cells          = P.remotes[i].V().context.firstChild.rows[0].cells
       let checked        = P.checkShare(i)
-      cells[3].innerHTML = checked ? SVG.share : cells[1].innerHTML ? SVG.unshare : ''
+      cells[3].innerHTML = checked ? SVG.share : cells[1].innerHTML
+                                                 ? SVG.unshare
+                                                 : ''
       cells[3].title     = checked ? 'unshare' : 'share'
-      cells[4].innerHTML = checked ? SVG.link  : ''
+      cells[4].innerHTML = checked ? SVG.link : ''
       cells[4].title     = checked ? 'copy link' : ''
     }
   };
@@ -420,9 +433,8 @@ function createRemote(P){
 }
 
 function createPublic(P){
-  P.public   = $.C(P, P.local.CSS_).S({
-    id: "public",
-    // BG: 'green'
+  P.public = $.C(P, P.local.CSS_).S({
+    id: "public", // BG: 'green'
   });
 
   P.public_filter = $.C(P.public, {
@@ -433,22 +445,22 @@ function createPublic(P){
   })
 
   P.public_filter_input = $.C(P.public_filter, {
-    W: 'calc(100% - 70px)',
-    H: 'calc(100% - 10px)',
-    F: 16,
-    PD: '3px 10px',
+    W          : 'calc(100% - 70px)',
+    H          : 'calc(100% - 10px)',
+    F          : 16,
+    PD         : '3px 10px',
     placeholder: 'name title filter',
-    value: LS.public_filter || ''
-  }, 'input').input(eobj=>{
+    value      : LS.public_filter || ''
+  }, 'input').input(eobj => {
     // console.log(eobj.val())
     LS.public_filter = eobj.val()
     P.publicFilter()
   })
 
   P.public_filter_favorite = $.C(P.public_filter, {
-    I:LS.public_isfavorite=='1' ? SVG.favorite : SVG.unfavorite,
+    I: LS.public_isfavorite == '1' ? SVG.favorite : SVG.unfavorite,
     L: 'calc(100% - 40px)'
-  }).down(eobj=>{
+  }).down(eobj => {
     let isfavorite = eobj.I_ == SVG.favorite
     eobj.I(isfavorite ? SVG.unfavorite : SVG.favorite)
     LS.public_isfavorite = isfavorite ? 0 : 1
@@ -475,7 +487,9 @@ function createPublic(P){
       s += `<td class="author">${author}</td>`;
       s += `<td class="title">${title}</td>`;
       s += `<td class="sizetime">${$.SIZE(size || 0)}<br/>${$.getDatetime("dort", time)}</td>`;
-      s += `<td class="channel_svg">${P.hasFavorite(item) ? SVG.favorite : SVG.unfavorite}</td>`;
+      s += `<td class="channel_svg">${P.hasFavorite(item)
+                                      ? SVG.favorite
+                                      : SVG.unfavorite}</td>`;
       s += `</tr>`
       s += `</table>`
       s += `</div>`
@@ -485,7 +499,7 @@ function createPublic(P){
   }
 
   P.showPublic = function(){
-    let s = "";
+    let s     = "";
     let index = 1
     P.allshare.forEach((pair) => {
       let principalid    = pair[0];
@@ -502,7 +516,7 @@ function createPublic(P){
     P.publicFilter()
   };
 
-  P.publicFilter = () =>{
+  P.publicFilter = () => {
     clearTimeout(P.public_filter_timer)
     P.public_filter_timer = setTimeout(function(){
       // console.log(LS.public_filter)
@@ -513,20 +527,20 @@ function createPublic(P){
 
       let channels = P.public_channel.context.children
       let cells, item, auther, title, favorite, show
-      for(let i=0, l=channels.length; i<l; i++){
+      for(let i = 0, l = channels.length; i < l; i++){
         cells = channels[i].children[0].rows[0].cells
 
-        item   = cells[0].title
-        auther = cells[1].innerHTML
-        title  = cells[2].innerHTML
+        item        = cells[0].title
+        auther      = cells[1].innerHTML
+        title       = cells[2].innerHTML
         is_favorite = P.hasFavorite(item)
 
         show = true
-        if(LS.public_isfavorite=='1' && !is_favorite){
+        if(LS.public_isfavorite == '1' && !is_favorite){
           show = false
         }
         else{
-          for(let j=0, jl=filter.length; j<jl; j++){
+          for(let j = 0, jl = filter.length; j < jl; j++){
             if(!$.F(auther, filter[j]) && !$.F(title, filter[j])){
               show = false
               break
@@ -604,16 +618,16 @@ function createPublic(P){
     P_MATJ.input_author.H()
     P_MATJ.input_title.H()
 
-    P_MATJ.editor.setValue(LS['public_'+item] ||'');
+    P_MATJ.editor.setValue(LS['public_' + item] || '');
 
     P_MATJ.public_file_name = node.dataset.id + node.dataset.channel;
     (async () => {
-      let result     = await INNER.matj_default.getchannel(P_MATJ.public_file_name);
+      let result = await INNER.matj_default.getchannel(P_MATJ.public_file_name);
       console.log(P_MATJ.public_file_name, result)
       let detail_obj = P_MATJ.getDetail(result[0])
 
-      if(detail_obj.code !== LS['public_'+item]){
-        LS['public_'+item] = detail_obj.code
+      if(detail_obj.code !== LS['public_' + item]){
+        LS['public_' + item] = detail_obj.code
         P_MATJ.editor.setValue(detail_obj.code);
       }
     })();
@@ -621,9 +635,11 @@ function createPublic(P){
     node.style.background = "#eee"
 
     P_MESSAGE.getMessage()
+
+    P_MATJ.message.DOWN()
   };
 
-  P.unselectPublic = ()=> {
+  P.unselectPublic = () => {
     // P.focus_public 也可能是favorite的节点
     P.focus_public && (P.focus_public.style.background = "")
   }

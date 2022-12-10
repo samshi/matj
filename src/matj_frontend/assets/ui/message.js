@@ -1,10 +1,11 @@
 function createMessageArea(f){
-  var P = (P_MESSAGE = $.C(f, {
+  const P = (P_MESSAGE = $.C(f, {
     id: "id_message_area",
     L : P_JS.L_,
     T : P_JS.T_ + main.H_ / 2 + 1,
     W : P_JS.W_,
     H : main.H_ / 2 - P_JS.T_ - 15,
+    Z : 30
   }))
 
   P.input_message = $.C(P, {
@@ -142,44 +143,72 @@ function createMessageArea(f){
       switch(action){
         case 'U':
           i = msg
-          if(!all[i].up){
-            all[i].up = {}
+          if(!all[i].U){
+            all[i].U = {}
           }
-          all[i].up[principalId] = (all[i].up[principalId] || 0) + 1
+
+          if(!all[i].U[principalId]){
+            all[i].U[principalId] = []
+          }
+          all[i].U[principalId].push(obj) //= (all[i].U[principalId] || 0) + 1
           break
         case 'N':
           i = msg
-          if(!all[i].down){
-            all[i].down = {}
+          if(!all[i].N){
+            all[i].N = {}
           }
-          all[i].down[principalId] = (all[i].down[principalId] || 0) + 1
+
+          if(!all[i].N[principalId]){
+            all[i].N[principalId] = []
+          }
+          all[i].N[principalId].push(obj)
+
+          // all[i].N[principalId] = (all[i].N[principalId] || 0) + 1
           break
         case 'D':
           let amount, result
           [i, amount, result] = msg.split(' ')
-          if(!all[i].donate){
-            all[i].donate = {}
+          obj.amount          = +amount
+          obj.result          = result
+          if(!all[i].D){
+            all[i].D = {}
           }
-          all[i].donate[principalId] = (all[i].donate[principalId] || 0) + amount * 1
+
+          if(!all[i].D[principalId]){
+            all[i].D[principalId] = []
+          }
+          all[i].D[principalId].push(obj)
+
+          // all[i].D[principalId] = (all[i].D[principalId] || 0) + amount * 1
           break
         default:
-          // all的数量只有留言的数量，up/down/donate信息都嵌入了，比all_message的数量少
+          // all的数量只有留言的数量，U/N/donate信息都嵌入了，比all_message的数量少
           obj.index = all.length
           all.push(obj)
       }
     }
 
     all.sort((a, b) => {
-      let kau = P.sum(a.up)
-      let kan = P.sum(a.down)
-      let kbu = P.sum(b.up)
-      let kbn = P.sum(b.down)
+      let kau = P.total(a.U)
+      let kan = P.total(a.N)
+      let kbu = P.total(b.U)
+      let kbn = P.total(b.N)
       return kau - kan < kbu - kbn ? 1 : -1
     })
 
     let s = ''
     for(let i = 0, l = all.length; i < l; i++){
-      let { index, principalId, time, auther, action, msg, up, down, donate } = all[i]
+      let {
+            index,
+            principalId,
+            time,
+            auther,
+            action,
+            msg,
+            U,
+            N,
+            D
+          } = all[i]
       s += '<div class="channel message">'
       // index是自然顺序，不会改变，i是排序后的顺序，会变
       s += `<table><tr data-principalId="${principalId}" data-index="${index}" data-i="${i}">`
@@ -188,9 +217,9 @@ function createMessageArea(f){
       s += `</td>`
       s += `<td class="sizetime" style="text-align:left;">${auther}<br/>${$.getDatetime("dort", time)}</td>`
       s += `<td class="message">${msg.replace(/\n/g, '<br/>')}</td>`
-      s += `<td class="channel_svg" onclick="P_MESSAGE.up(this)">${SVG.good}<br><span>${P_MESSAGE.sumCnt(up)}</span></td>`;
-      s += `<td class="channel_svg" onclick="P_MESSAGE.down(this)">${SVG.bad}<br><span>${P_MESSAGE.sumCnt(down)}</span></td>`;
-      s += `<td class="channel_svg" onclick="P_MESSAGE.donate(this)">${SVG.donate}<br><span>${P_MESSAGE.sumCnt(donate)}</span></td>`;
+      s += `<td class="channel_svg" onclick="P_MESSAGE.click(this)" onmouseover="P_MESSAGE.over(this, event)" onmouseout="P_MESSAGE.out(this)" data-act="U">${SVG.U}<br><span>${P_MESSAGE.totalCnt(U)}</span></td>`;
+      s += `<td class="channel_svg" onclick="P_MESSAGE.click(this)" onmouseover="P_MESSAGE.over(this, event)" onmouseout="P_MESSAGE.out(this)" data-act="N">${SVG.N}<br><span>${P_MESSAGE.totalCnt(N)}</span></td>`;
+      s += `<td class="channel_svg" onclick="P_MESSAGE.click(this)" onmouseover="P_MESSAGE.over(this, event)" onmouseout="P_MESSAGE.out(this)" data-act="D">${SVG.D}<br><span>${P_MESSAGE.totalCnt(D)}</span></td>`;
 
       s += '</tr></table></div>'
     }
@@ -199,84 +228,119 @@ function createMessageArea(f){
     P.all = all
   }
 
-  P.cnt    = function(obj){
+  P.cnt      = function(obj){
     return obj ? Object.keys(obj).length : 0
   }
-  P.sum    = function(obj){
-    return obj ? Object.values(obj).reduce((x, y) => {
-      return x + y
-    }) : 0
+  P.total    = function(obj){
+    let total = 0
+    for(let principalId in obj){
+      total += P.sum(obj[principalId])
+    }
+    return total
   }
-  P.sumCnt = function(obj){
-    return obj ? P.sum(obj) + '/' + P.cnt(obj) : ' '
+  P.sum      = function(arr){
+    return arr.reduce((x, y) => {
+      return x + (y.amount || 1)
+    }, 0)
   }
-  P.up     = function(node){
+  P.totalCnt = function(obj){
+    return obj ? P.total(obj) + '/' + P.cnt(obj) : ' '
+  }
+  P.click    = async function(node){
     if(!INNER.matj){
-      alert('please connect wallet before send up')
+      alert('please connect wallet first')
       return
     }
 
+    let act     = node.dataset.act
     let dataset = node.parentNode.dataset
     let i       = dataset.i
     let index   = dataset.index
 
-    P.setMessage('U', index)
+    let principalId = DATA.principal + ''
+    let obj         = P.all[i][act] || {}
 
-    if(!P.all[i].up){
-      P.all[i].up = {}
+    if(act === 'D'){
+      let to_principalId = dataset.principalid; //dataset change key to lowercase
+      let account        = INNER.principalToAccountAddress(to_principalId)
+      let amount         = prompt('how much to D')
+      let result         = await payOwner(account, amount);
+      getBalance()
+
+      P.setMessage(act, `${index} ${amount} ${result}`)
+      obj[principalId] = (obj[principalId] || 0) + amount * 1
     }
-    let principalId          = DATA.principal + ''
-    P.all[i].up[principalId] = (P.all[i].up[principalId] || 0) + 1
-
-    P.update(node, P.all[i].up)
-  }
-  P.down   = function(node){
-    if(!INNER.matj){
-      alert('please connect wallet before send down')
-      return
+    else{
+      P.setMessage(act, index)
+      obj[principalId] = (obj[principalId] || 0) + 1
     }
-
-    let dataset = node.parentNode.dataset
-    let i       = dataset.i
-    let index   = dataset.index
-
-    P.setMessage('N', index)
-
-    if(!P.all[i].down){
-      P.all[i].down = {}
-    }
-    let principalId            = DATA.principal + ''
-    P.all[i].down[principalId] = (P.all[i].down[principalId] || 0) + 1
-
-    P.update(node, P.all[i].down)
+    P.update(node, obj)
+    P.all[i][act] = obj
   }
 
   P.update = function(node, obj){
     node.innerHTML = node.innerHTML.replace(/\<span\>.*\<\/span\>/, d => {
-      return `<span>${P.sumCnt(obj)}</span>`
+      return `<span>${P.totalCnt(obj)}</span>`
     })
   }
 
-  P.donate = async function(node){
-    let dataset     = node.parentNode.dataset
-    let principalId = dataset.principalid; //dataset change key to lowercase
-    let account     = INNER.principalToAccountAddress(principalId)
-    let amount      = prompt('how much to donate')
-    let i           = dataset.i
-    let index       = dataset.index
-    console.log('donate', principalId, account, amount, P.all[i].auther)
-    let result = await payOwner(account, amount);
-    console.log(result)
+  P.floatbox = $.C(P, {
+    id            : 'floatbox',
+    D             : 'flex',
+    flexWrap      : 'wrap',
+    justifyContent: 'space-around',
+    maxWidth      : '160px',
+    BG            : '#fff',
+    BD            : '#888',
+    PD            : 3,
+    BR            : 20,
+    F             : 12,
+    alignItems    : 'center'
+  }).H()
 
-    P.setMessage('D', `${index} ${amount} ${result}`)
-
-    if(!P.all[i].donate){
-      P.all[i].donate = {}
+  P.over = function(node, e){
+    let P = P_MESSAGE
+    clearTimeout(P.timer)
+    if(P.floatbox.isV() && P.node === node){
+      return
     }
-    let from_principalId              = DATA.principal + ''
-    P.all[i].donate[from_principalId] = (P.all[i].donate[from_principalId] || 0) + amount * 1
 
-    P.update(node, P.all[i].donate)
-    getBalance()
+    P.node      = node
+    let act     = node.dataset.act
+    let dataset = node.parentNode.dataset
+    let i       = dataset.i
+
+    if(!P.all[i][act]){
+      P.out()
+    }
+
+    let s = ''
+    for(let principalId in P.all[i][act]){
+      s += `<div style="display:inline-block; padding:2px 5px;text-align:center;"><img class="avatar" src="${P_CANVAS.principalToAvatar(principalId)}"/>` + '<span>' + P.all[i][act][principalId][0].auther + '<br>' + (P.sum(P.all[i][act][principalId]) || '') + '</span></div>'
+    }
+
+    const pos = node.getBoundingClientRect()
+    P.floatbox.V().S({
+      A: 0.01,
+      I: s //[s, s, s, s, s, s, s, s, s, s, s, s].slice(0, Math.floor(Math.random()*12)).join('')
+    })
+
+    setTimeout(() => {
+      let P              = P_MESSAGE
+      const clientWidth  = P.floatbox.context.clientWidth
+      const clientHeight = P.floatbox.context.clientHeight
+      s && P.floatbox.S({
+        L: pos.left - P.L_ - clientWidth / 2 + 16,
+        T: pos.top - P.T_ - clientHeight - 10,
+        A: 1
+      })
+    }, 200)
+
+  }
+  P.out  = function(node, e){
+    let P   = P_MESSAGE
+    P.timer = setTimeout(() => {
+      P_MESSAGE.floatbox.H()
+    }, 2)
   }
 }
