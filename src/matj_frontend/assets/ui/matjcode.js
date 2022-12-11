@@ -2,6 +2,7 @@ function createMatjArea(f){
   var P = (P_MATJ = $.C(f, P_JS.CSS_).S({
     id: "id_matj_area",
     BG: "#000",
+    Z : 40
   })).V();
 
   P.show_mat_code_button = $.C(f, {
@@ -112,14 +113,14 @@ function createMatjArea(f){
   }).H();
 
   P.message = $.C(f, {
-    L : 1100,
-    T : 20,
-    W : 28,
-    H : 28,
+    L  : 1100,
+    T  : 20,
+    W  : 28,
+    H  : 28,
     src: 'img/message.svg'
-  }, 'img').down(_=>{
+  }, 'img').down(_ => {
     P_MATJ.outbox.S({
-      H:P_MATJ.outbox.H_ == main.H_ / 2 ? P_JS.H_ : main.H_ / 2
+      H: P_MATJ.outbox.H_ == main.H_ / 2 ? P_JS.H_ : main.H_ / 2
     })
   })
 
@@ -147,7 +148,7 @@ function createMatjArea(f){
     P.context = elt;
   }, option);
 
-  $("#id_matj_mirror").S({ H: "100%" });
+  $("#id_matj_mirror").S({H: "100%"});
 
   // codemirror 会把 id_matj_area 改名 id_matj_mirror，新创建一个 id_matj_area，插入 id_matj_mirror
   P_MATJ.outbox = $("#id_matj_area")
@@ -240,7 +241,7 @@ function createMatjArea(f){
           P_MATJ.timers[index] = 0
           P_CHANNEL.freeze     = true;
 
-          let size = await INNER.matj.channel(''+index, source);
+          let size = await INNER.matj.channel('' + index, source);
           console.log(source.length, size);
 
           if(P_CHANNEL.checkShare(index)){
