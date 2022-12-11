@@ -410,9 +410,9 @@ function createRemote(P){
   }
 
   P.freshShare = async () => {
-    if(!P.sharestr){
-      return
-    }
+    // if(!P.sharestr){
+    //   return
+    // }
 
     for(let i in P.remotes){
       let cells          = P.remotes[i].V().context.firstChild.rows[0].cells
