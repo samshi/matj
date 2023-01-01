@@ -132,8 +132,9 @@ button[type="submit"] {
 
 .avatar {
     border-radius: 50%;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #000;
     width: 24px;
+    background: #fff;
 }
 
 #floatbox .avatar {
