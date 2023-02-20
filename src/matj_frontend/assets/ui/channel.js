@@ -20,6 +20,8 @@ function createChannel(f){
     P.unselectRemote()
     P.unselectPublic()
   }
+
+  P.select_color = '#d5f3f8'
 }
 
 function createTab(P){
@@ -48,8 +50,15 @@ function createTab(P){
     P.public.V(target == P.public_tab);
 
     if(target == P.public_tab){
+      P_MATJ.toggle_message.V()
       P.getPublicChannel();
     }
+    else{
+      P_MATJ.toggle_message.H()
+    }
+    P_MATJ.outbox.S({
+      H: P_JS.H_
+    })
   });
 
   P.remote_tab = $.C(P.tab, {
@@ -86,15 +95,29 @@ function createLocal(P){
     // BG: 'yellow'
   });
 
+  P.LEN       = 20;
+  P.locals    = {};
+  P.sharestr  = "";
+  P.table_str = `<table><tr><td class="title"></td><td class="sizetime"></td></tr></table>`
+
   P.local_channels = $.c(P.local)
-  P.add            = $.c(P.local, {
+  P.add_button     = $.c(P.local, {
     src: 'img/add.svg',
     W  : 30,
     PD : 10
   }, 'img').down(_ => {
-    let j       = local.j
+    const j = P.local_next_index
+    P.addChannel(j)
+    LS['local' + j] = `%title=untitled%time=${Date.now()}\n`
+    const source    = LS['local' + j]
+    let detail_obj  = P_MATJ.getDetail(source);
+    P.updateLocal(detail_obj, j)
+    P.selectLocal(j)
+  })
+
+  P.addChannel = function(j){
     P.locals[j] = $.c(P.local_channels, {
-      I : s,
+      I : P.table_str,
       CN: 'channel',
     }).click((eobj) => {
       // P_CHANNEL.openlocal(eobj)
@@ -106,7 +129,9 @@ function createLocal(P){
     });
 
     P.locals[j].index = j;
-  })
+
+    P.local_next_index = j + 1
+  }
 
   P.updateLocal = (detail_obj, i = P_CHANNEL.focus_local) => {
     let cells = P.locals[i].context.firstChild.rows[0].cells
@@ -136,15 +161,15 @@ function createLocal(P){
     P_MATJ.type       = "local";
     P_MATJ.noOnChange = true; //不会触发codeSave
     P_MATJ.input_author.H();
-    P_MATJ.input_title.val(detail.title || '').V();
+    P_MATJ.input_title.val(detail.title || 'untitled').V();
     P_MATJ.show_readonly.H();
-    P_MATJ.message.H();
+    P_MATJ.toggle_message.H();
 
     P_MATJ.noOnChange = true
     P_MATJ.editor.setValue(detail.code || '');
 
     P.locals[n] && P.locals[n].S({
-      BG: "#eee"
+      BG: P.select_color
     });
   };
 
@@ -156,46 +181,37 @@ function createLocal(P){
     delete P.focus_local
   }
 
-  P.LEN      = 20;
-  P.locals   = {};
-  P.sharestr = "";
-
-  let s = `<table>`
-  s += `<tr>`
-  s += `<td class="title"></td>`;
-  s += `<td class="sizetime"></td>`;
-  s += `</tr>`
-  s += `</table>`
-  let j = 1
-  for(var i = 1; i <= j + P.LEN; i++){
-    let source     = LS["local" + i];
-    let detail_obj = P_MATJ.getDetail(source);
-    if(detail_obj.size){
-      if(i !== j){
-        LS["local" + j] = LS["local" + i]
-        delete LS["local" + i]
-      }
-      P.locals[j] = $.c(P.local_channels, {
-        I : s,
-        CN: 'channel',
-      }).click((eobj) => {
-        // P_CHANNEL.openlocal(eobj)
-        if(P_CHANNEL.freeze){
-          return;
+  P.createChannels = function(){
+    let j = 1
+    for(var i = 1; i <= j + P.LEN; i++){
+      let source     = LS["local" + i];
+      let detail_obj = P_MATJ.getDetail(source);
+      if(detail_obj.size){
+        if(i !== j){
+          LS["local" + j] = LS["local" + i]
+          delete LS["local" + i]
         }
 
-        P_CHANNEL.selectLocal(eobj.index);
-      });
+        P.addChannel(j)
 
-      P.locals[j].index = j;
+        P.updateLocal(detail_obj, j)
 
-      P.updateLocal(detail_obj, j)
-
-      j++
+        j++
+      }
     }
+
+    P.local_next_index = j
   }
 
-  local.j = j
+  //==================================================
+
+  P.createChannels()
+
+  if(P.local_next_index == 1){
+    // 没有本地文件
+    LS['local1'] = `%title=test%time=${Date.now()}\nSIZE = 3\nA = magic(SIZE)\nB = inv(A)\nC = A * B\neye(SIZE) - C`
+    P.createChannels()
+  }
 }
 
 function createRemote(P){
@@ -235,19 +251,21 @@ function createRemote(P){
     P_MATJ.type       = "remote";
     P_MATJ.noOnChange = true; //不会触发codeSave
     P_MATJ.editor.setValue(detail.code);
-    P_MATJ.input_author.val(detail.author || '').V();
+    P_MATJ.input_author.val(detail.author || DATA.myname).V();
     P_MATJ.input_title.val(detail.title || '').V();
     P_MATJ.show_readonly.H();
-    P_MATJ.message.V();
+    P_MATJ.toggle_message.V();
 
     P_MATJ.noOnChange = true
     P_MATJ.editor.setValue(detail.code || '');
 
     P.remotes[n].S({
-      BG: "#eee"
+      BG: P.select_color
     });
 
     P_MESSAGE.getMessage()
+
+    P.freshShare()
   };
 
   P.unselectRemote = () => {
@@ -271,8 +289,8 @@ function createRemote(P){
 
     if(detail_obj.time){
       cells[2].innerHTML = (detail_obj.size
-                            ? $.SIZE(detail_obj.size)
-                            : '') + '<br>' + $.getDatetime("dort", detail_obj.time)
+                            ? $.SIZE(detail_obj.size) + '<br>' + $.getDatetime("dort", detail_obj.time)
+                            : '')
     }
   }
 
@@ -501,19 +519,36 @@ function createPublic(P){
   P.showPublic = function(){
     let s     = "";
     let index = 1
+
+    let hash  = location.hash.slice(1)
+    let focus = ''
     P.allshare.forEach((pair) => {
       let principalid    = pair[0];
       let shared_channel = pair[1].slice(1, -1).split("=_");
 
       shared_channel.map((channel_str) => {
-        s += P.createPubliceChannenl(principalid, channel_str, index, 'nolimit')
+        let [channel, title, author, time, size] = channel_str.split("%");
+
+        // console.log(principalid, channel_str, index, P.getRemoteName(index, principalid))
+        if(hash == P.getRemoteName(channel, principalid)){
+          focus = P.createPubliceChannenl(principalid, channel_str, index, 'nolimit')
+        }
+        else{
+          s += P.createPubliceChannenl(principalid, channel_str, index, 'nolimit')
+        }
         index++
       });
     });
 
+    s = focus + s
     P.public_channel.I(s);
 
     P.publicFilter()
+    if(focus && P.share_init){
+      P.share_init = false //第一次加载显示分享的文件
+      const node   = P.public_channel.context.firstChild
+      P.selectPublic(node)
+    }
   };
 
   P.publicFilter = () => {
@@ -578,14 +613,16 @@ function createPublic(P){
   P.selectPublic = function(node, event){
     let target;
 
-    if(event.target.firstChild?.nodeName == "svg"){
-      target = event.target.firstChild;
-    }
-    else if(event.target.nodeName == "svg"){
-      target = event.target;
-    }
-    else if(event.target.nodeName == "path"){
-      target = event.target.parentNode;
+    if(event){
+      if(event.target.firstChild?.nodeName == "svg"){
+        target = event.target.firstChild;
+      }
+      else if(event.target.nodeName == "svg"){
+        target = event.target;
+      }
+      else if(event.target.nodeName == "path"){
+        target = event.target.parentNode;
+      }
     }
 
     let item = P.getRemoteName(node.dataset.channel, node.dataset.id);
@@ -613,7 +650,7 @@ function createPublic(P){
 
     P_MATJ.type = "public";
     P_MATJ.show_readonly.V();
-    P_MATJ.message.V();
+    P_MATJ.toggle_message.V();
 
     P_MATJ.input_author.H()
     P_MATJ.input_title.H()
@@ -632,11 +669,11 @@ function createPublic(P){
       }
     })();
 
-    node.style.background = "#eee"
+    node.style.background = P.select_color
 
     P_MESSAGE.getMessage()
 
-    P_MATJ.message.DOWN()
+    P_MATJ.toggle_message.DOWN()
   };
 
   P.unselectPublic = () => {

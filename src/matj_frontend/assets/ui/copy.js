@@ -3,9 +3,10 @@ function createCopyPage(f){
     L: -1000
   })
 
+  // input传值会把换行去掉
   P.input = $.c(P, {
-    type: 'text'
-  }, 'input')
+    // type: 'text'
+  }, 'textarea')
 
   P.copyContent = (str, msg, x, y) => {
     var P = P_COPY
@@ -36,8 +37,8 @@ function createCopyPage(f){
 
   P.large_image = $.C(main, {
     CN: 'avatar',
-    W: 80,
-    Z: 100,
+    W : 80,
+    Z : 100,
   }, 'img').H()
 }
 

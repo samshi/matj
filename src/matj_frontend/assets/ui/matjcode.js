@@ -14,17 +14,25 @@ function createMatjArea(f){
     F : 14,
     BD: "2px solid #900",
   }).down((eobj) => {
-    console.log("matj");
+    // 装载编辑器后，#id_matj_area被替代了，所以不能用 P_MATJ
+    if($("#id_matj_area").isH()){
+      $("#id_matj_area").V();
+      $("#id_js_area").H();
+      P_MESSAGE.V()
+    }
+    else if(DATA.accountId && DATA.accountId.slice(-5) == 'b8cf2'){
+      $('#id_js_area').V()
+      $('#id_matj_area').H()
 
-    $("#id_matj_area").V();
-    $("#id_js_area").H();
-  });
+      P_MESSAGE.H()
+    }
+  }).H();
 
   P.zoomin = $.C(f, {
     I : "+",
-    L : 550,
-    T : 10,
-    PD: "2px 8px",
+    L : 433,
+    T : 16,
+    PD: "0px 7px 2px",
     BR: 5,
     F : 18,
     BD: "2px solid #900",
@@ -34,14 +42,9 @@ function createMatjArea(f){
     });
   });
 
-  P.zoomout = $.C(f, {
-    I : "-",
-    L : 590,
-    T : 10,
-    PD: "2px 8px",
-    BR: 5,
-    F : 18,
-    BD: "2px solid #900",
+  P.zoomout = $.C(f, P.zoomin.CSS_).S({
+    I: "-",
+    L: 475,
   }).down((eobj) => {
     P_MATJ.S({
       F: P_MATJ.F_ * 1 - 2,
@@ -49,7 +52,7 @@ function createMatjArea(f){
   });
 
   P.copy_content = $.C(f, {
-    L    : 630,
+    L    : 518,
     T    : 20,
     W    : 24,
     src  : 'img/document-copy.svg',
@@ -58,10 +61,22 @@ function createMatjArea(f){
     P_COPY.copyContent(P.editor.getValue(), 'file content copied', eobj.X, eobj.Y);
   })
 
+  P.toggle_message = $.C(f, {
+    L  : 552,
+    T  : 20,
+    W  : 28,
+    H  : 28,
+    src: 'img/message.svg'
+  }, 'img').down(_ => {
+    P_MATJ.outbox.S({
+      H: P_MATJ.outbox.H_ == main.H_ / 2 ? P_JS.H_ : main.H_ / 2
+    })
+  })
+
   P.input_author = $.C(f, {
-    L          : 677,
+    L          : 592,
     T          : 15,
-    W          : 110,
+    W          : 93,
     F          : 16,
     PD         : 3,
     placeholder: "input author name",
@@ -81,9 +96,9 @@ function createMatjArea(f){
   }).H();
 
   P.input_title = $.C(f, {
-    L          : 810,
+    L          : 703,
     T          : 15,
-    W          : 200,
+    W          : 171,
     F          : 16,
     PD         : 3,
     placeholder: "give file a title",
@@ -103,7 +118,7 @@ function createMatjArea(f){
   }).H();
 
   P.show_readonly = $.C(f, {
-    L : 760,
+    L : 608,
     T : 25,
     W : 255,
     F : 14,
@@ -111,18 +126,6 @@ function createMatjArea(f){
     I : 'read only, any changes will be ignored!',
     BG: '#ff8'
   }).H();
-
-  P.message = $.C(f, {
-    L  : 1100,
-    T  : 20,
-    W  : 28,
-    H  : 28,
-    src: 'img/message.svg'
-  }, 'img').down(_ => {
-    P_MATJ.outbox.S({
-      H: P_MATJ.outbox.H_ == main.H_ / 2 ? P_JS.H_ : main.H_ / 2
-    })
-  })
 
   P.textarea = $.C(P, {
     id: "matj_textarea",

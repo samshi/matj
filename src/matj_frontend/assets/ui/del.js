@@ -24,33 +24,33 @@
 
 onhashchange();
 
-function encodeShare(s) {
+function encodeShare(s){
   let out = "";
-  for (let i = 0, l = s.length; i < l; i++) {
+  for(let i = 0, l = s.length; i < l; i++){
     let code = s.charCodeAt(i);
     //40-122
     code += i - 40;
-    code = (code % 83) + 40;
+    code     = (code % 83) + 40;
     out += String.fromCharCode(code);
   }
   return encodeURI(out);
 }
 
-function decodeShare(s) {
-  s = decodeURI(s);
+function decodeShare(s){
+  s       = decodeURI(s);
   let out = "";
-  for (let i = 0, l = s.length; i < l; i++) {
+  for(let i = 0, l = s.length; i < l; i++){
     let code = s.charCodeAt(i);
     //40-122
     code += -40 - i;
-    code = ((code + 83) % 83) + 40;
+    code     = ((code + 83) % 83) + 40;
     out += String.fromCharCode(code);
   }
   return out;
 }
 
-window.onhashchange = async function () {
-  if (!window.INNER) {
+window.onhashchange = async function(){
+  if(!window.INNER){
     setTimeout(onhashchange, 200);
     return;
   }
@@ -101,8 +101,11 @@ P.ok     = $.C(P.input_component, {
   LS["channel_name_" + index] = new_title;
   P.locals[index].I(new_title);
 
-  let source            = P_MATJ.editor.getValue();
-  let { title, author } = P_MATJ.getDetail(source);
+  let source = P_MATJ.editor.getValue();
+  let {
+        title,
+        author
+      }      = P_MATJ.getDetail(source);
   console.log(title, author);
 
   if(!title && !author){
@@ -124,7 +127,7 @@ P.cancel = $.C(P.input_component, {
   eobj.FATHER.H();
 });
 
-P.more = $.C(P.remote, { I: "..." })
+P.more = $.C(P.remote, {I: "..."})
   .down((eobj) => {
     P.moreButtons.toggle().S({
       L: eobj.L_ - 60,
@@ -204,8 +207,11 @@ P.min = () => {
 };
 
 P.showTitleAuthor = (source) => {
-  let index             = P_CHANNEL.focus_local;
-  let { title, author } = P_MATJ.getDetail(source);
+  let index = P_CHANNEL.focus_local;
+  let {
+        title,
+        author
+      }     = P_MATJ.getDetail(source);
   console.log(title, author);
   title = title || `untitled ${index}`;
   if(author != ""){
@@ -227,8 +233,6 @@ P.showAuthor = (author) => {
 //һ��ʼ����ʾ����Ƶ��
 P.max();
 
-
-
 // motoko
 // public shared(msg) func setshare(name : Text, code: Text, index : Text, title: Text, author: Text, time: Text, size: Text) : async Text {
 //   let principalId = Principal.toText(msg.caller);
@@ -236,7 +240,6 @@ P.max();
 //
 //   await share(index, title, author, time, size)
 // };
-
 
 P.addTitleAuthor = (title, author) => {
   let source = P_MATJ.editor.getValue();
@@ -255,8 +258,9 @@ P.setTitleAuthor = (title, author) => {
   }
 };
 
-for(i=0; i<=10; i++){LS['ocxz3hae'+i]=LS['haeremote'+i]}
-
+for(i = 0; i <= 10; i++){
+  LS['ocxz3hae' + i] = LS['haeremote' + i]
+}
 
 // P.locals[i].light = $.C(P.remote, {
 //   L : P.locals[i].W_ + 30,

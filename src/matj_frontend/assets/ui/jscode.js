@@ -1,19 +1,18 @@
 function createJsArea(f){
   var P = P_JS = $.C(f, {
-    id : 'id_js_area',
-    L  : 430,
-    T  : 52,
-    W  : 800,
-    H  : f.H_ - 67,
-    M  : 0,
-    PD : 1,
-    B  : 10,
-    // PDB: 10,
-    F  : 16,
-    O  : 'auto',
-    Z  : 1,
-    FF : 'monospace',
-    BG : '#009',
+    id: 'id_js_area',
+    L : 430,
+    T : 52,
+    W : (IW - 430 - 22) / 2,
+    H : f.H_ - 67,
+    M : 0,
+    PD: 1,
+    B : 10, // PDB: 10,
+    F : 16,
+    O : 'auto',
+    Z : 1,
+    FF: 'monospace',
+    BG: '#009',
   }).H()
 
   P.show = $.C(f, {
@@ -40,8 +39,7 @@ function createJsArea(f){
     autoCloseBrackets: true,
     autoCloseTags    : true,
     foldGutter       : true,
-    lineWrapping     : true,
-    // theme            : 'base16-light',
+    lineWrapping     : true, // theme            : 'base16-light',
     gutters          : [
       'breakpoints', 'CodeMirror-linenumbers', 'CodeMirror-foldgutter'
     ],
@@ -56,5 +54,5 @@ function createJsArea(f){
     P.context = elt
   }, option)
 
-  $('#id_js_mirror').S({H: 'calc(100% + 8px'})
+  $('#id_js_mirror').S({H: '100%'})
 }

@@ -9,12 +9,12 @@ $(function(){
     page_name = page_names[index]
     var btn   = $.C(main, {
       id: 'btn'+index,
-      L : 20 + index * 150,
+      L : 20 + index * 125,
       T : 20,
       I : page_name,
       H : 30,
       LH: 30,
-      W : 120,
+      W : 110,
       F : 16,
       BR: 15,
       TA: 'center',

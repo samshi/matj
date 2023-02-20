@@ -1,6 +1,7 @@
 async function connectPlug(){
   if(!window?.ic?.plug){
-    alert('plug extension not install')
+    // alert('plug extension not install')
+    document.location = ('https://chrome.google.com/webstore/detail/plug/cfbfdhimifdmdehjmkdobpcjfefblkjm')
     return
   }
   console.log(window.ic.plug && 'Plug and play!')
@@ -13,7 +14,9 @@ async function connectPlug(){
   ]
   const plug_is_connected = await myAwait('plug requestConnect', window?.ic?.plug?.requestConnect, {
     whitelist: DATA.whitelist,
-    host     : /ic0\.app/.test(location.href) ? 'https://boundary.ic0.app' : 'http://localhost:8000'
+    host     : /ic0\.app/.test(location.href)
+               ? 'https://boundary.ic0.app'
+               : 'http://localhost:8000'
   }, window?.ic?.plug)
 
   const connectionState = plug_is_connected ? 'allowed' : 'denied'
@@ -66,17 +69,9 @@ async function afterLoginIC(){
 }
 
 async function getBalance(){
-  let profile = await INNER.matj_default.getprofile(''+DATA.principal)
-  DATA.myname = profile[0]
-  while(!DATA.myname){
-    DATA.myname = (prompt('Welcome to the MatJ world! please input your name')).trim()
-    if(DATA.myname){
-      let res = await INNER.matj.profile(DATA.myname)
-      console.log(res)
-    }
-  }
+  await P_LOGIN.getProfile()
 
-  P_LOGIN.myname.I(DATA.myname)
+  P_LOGIN.promptName()
 
   P_CHANNEL.afterLogin()
 

@@ -1,12 +1,11 @@
 {
-  "name": "matj",
+  "name": "MatJ",
   "version": "0.1.0",
-  "description": "Internet Computer starter application",
+  "description": "MatJ, a online js math library for matlab script",
   "keywords": [
-    "Internet Computer",
-    "Motoko",
+    "mathmatic",
     "JavaScript",
-    "Canister"
+    "matlab"
   ],
   "scripts": {
     "build": "webpack",
@@ -42,7 +41,6 @@
     "last 2 edge version"
   ],
   "dependencies": {
-    "@dfinity/auth-client": "^0.15.3",
-    "yarn": "^1.22.19"
+    "@dfinity/auth-client": "0.15.3"
   }
 }

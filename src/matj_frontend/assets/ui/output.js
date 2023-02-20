@@ -4,7 +4,7 @@ function createOutputArea(f){
     id : 'id_output',
     L  : P_MATJ.L_ + P_MATJ.W_ + 10,
     T  : 0,
-    W  : 800,
+    W  : P_JS.W_,
     H  : f.H_ - 25,
     M  : 0,
     PD : 5,
@@ -12,7 +12,7 @@ function createOutputArea(f){
     Z  : 20,
     BD : '1px solid',
     BG : '#fff'
-  }, 'iframe').over(_=>{
+  }, 'iframe').over(_ => {
     //鼠标移动其上，刷新一次，除非代码再次改动
     if(!P_MATJ.code_changed){
       return
@@ -30,10 +30,10 @@ function createOutputArea(f){
     BR: 5,
     F : 19,
     BD: '2px solid #4aac0c',
-    C: '#fff',
-    BG:'#4aac0c',
+    C : '#fff',
+    BG: '#4aac0c',
     TA: 'center'
-  }).down(_=>{
+  }).down(_ => {
     P_MATJ.codeRun()
   })
 }
