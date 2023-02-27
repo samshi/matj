@@ -1,0 +1,11 @@
+curl -sLv -X POST \
+    -H 'Content-Type: application/json' \
+    https://ic0.app/registrations \
+    --data @- <<EOF
+{
+    "name": "matj.fun"
+}
+EOF
+
+curl -sLv -X GET \
+    https://ic0.app/registrations/e5d777e9cfbac150e8e32cf34fe26f97cb516cb4d44cda552dc1af20dcb35d67

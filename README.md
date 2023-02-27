@@ -43,5 +43,8 @@ npm start
 
 Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 8000.
 
-# youtube
-https://youtu.be/K3SOZrNJMZc
+# social
+https://youtu.be/imDRLLJKgIA
+https://forum.dfinity.org/t/web-dapp-for-matlab-scripts/18598
+https://twitter.com/samshi03184604/status/1627735798929035264?s=20
+https://dirt-jaguar-6a2.notion.site/Let-s-get-you-some-attention-c7eaabbc87d142f5baa92096cadc181f
